@@ -1,4 +1,4 @@
-```html
+```html id="8x3p1h"
 <!DOCTYPE html>
 <html>
 <head>
@@ -40,16 +40,21 @@
 
     .layer {
       position: absolute;
-      width: 100%;
-      height: 100%;
       image-rendering: pixelated;
     }
 
+    /* equipment positioning */
+    #base { width: 100%; }
+    #helmet { top: 0; left: 25px; width: 60%; }
+    #chest { top: 40px; left: 25px; width: 60%; }
+    #weapon { top: 50px; left: 90px; width: 40%; }
+    #shoes { top: 90px; left: 35px; width: 50%; }
+
     .pet {
       position: absolute;
-      right: -40px;
+      right: -50px;
       bottom: 0;
-      font-size: 40px;
+      width: 60px;
     }
 
     .inventory {
@@ -62,16 +67,26 @@
       border: 1px solid #334155;
       padding: 5px;
       cursor: pointer;
-      text-align: center;
       font-size: 12px;
+      text-align: center;
     }
 
-    .common { color: gray; }
-    .rare { color: blue; }
-    .unique { color: purple; }
-    .legendary { color: gold; }
+    .battle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-    button { margin: 3px; }
+    .bar {
+      height: 10px;
+      background: #1e293b;
+      margin: 5px 0;
+    }
+
+    .fill {
+      height: 100%;
+      background: red;
+    }
 
   </style>
 </head>
@@ -92,14 +107,10 @@
       <img id="chest" class="layer">
       <img id="weapon" class="layer">
       <img id="shoes" class="layer">
-      <div id="pet" class="pet">🐾</div>
+      <img id="pet" class="pet" src="https://kenney.nl/assets/animal-pack/PNG/Round/bee.png">
     </div>
 
     <div id="stats"></div>
-
-    <button onclick="setRole('child')">Child</button>
-    <button onclick="setRole('parent')">Parent</button>
-    <p id="mode"></p>
   </div>
 
   <!-- QUESTS -->
@@ -110,25 +121,36 @@
     <div id="quests"></div>
   </div>
 
-  <!-- INVENTORY -->
+  <!-- BATTLE -->
   <div class="panel">
+    <h3>Battle</h3>
+
+    <div class="battle">
+      <div>
+        <img src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png" width="80">
+        <div class="bar"><div id="playerHP" class="fill"></div></div>
+      </div>
+
+      <div>
+        <img id="monster" src="https://kenney.nl/assets/monster-pack/PNG/Slime/slimeBlock.png" width="80">
+        <div class="bar"><div id="monsterHP" class="fill"></div></div>
+      </div>
+    </div>
+
+    <button onclick="attack()">Attack</button>
+    <div id="battleLog"></div>
+
     <h3>Inventory</h3>
     <div id="inventory" class="inventory"></div>
-
-    <h3>Battle</h3>
-    <button onclick="fight()">Fight</button>
-    <div id="battle"></div>
   </div>
 
 </div>
 
 <script>
-let role="child";
-
 let player={
-  level:1,
-  xp:0,
-  baseAttack:5,
+  hp:100,
+  maxHp:100,
+  atk:5,
   helmet:null,
   chest:null,
   weapon:null,
@@ -136,48 +158,37 @@ let player={
   inventory:[]
 };
 
-let quests=[];
+let monster={
+  hp:50,
+  maxHp:50
+};
 
-function setRole(r){
-  role=r;
-  render();
-}
+let quests=[];
 
 function addQuest(){
   let text=document.getElementById("questInput").value;
-  if(!text) return;
-
-  quests.push({
-    text,
-    status: role==="parent"?"assigned":"pending"
-  });
+  quests.push({text});
   render();
 }
 
-function submitQuest(i){
-  quests[i].status="pending";
-  render();
-}
+function attack(){
+  let damage=totalAttack();
+  monster.hp-=damage;
 
-function recallQuest(i){
-  quests.splice(i,1);
-  render();
-}
+  if(monster.hp<=0){
+    log("Monster defeated!");
+    monster.hp=monster.maxHp;
+    reward();
+  } else {
+    player.hp-=Math.random()*10;
+    log("You hit for "+damage);
+  }
 
-function approveQuest(i){
-  quests[i].status="done";
-  reward();
   render();
 }
 
 function reward(){
-  player.xp+=20;
-  if(player.xp>=player.level*100){
-    player.xp=0;
-    player.level++;
-  }
-
-  if(Math.random()<0.3){
+  if(Math.random()<0.5){
     player.inventory.push(rollLoot());
   }
 }
@@ -185,10 +196,10 @@ function reward(){
 function rollLoot(){
   let r=Math.random();
 
-  if(r<0.4) return {name:"Helmet",type:"helmet",rarity:"common",atk:1};
-  if(r<0.7) return {name:"Armor",type:"chest",rarity:"rare",atk:2};
-  if(r<0.9) return {name:"Boots",type:"shoes",rarity:"unique",atk:1};
-  return {name:"Sword",type:"weapon",rarity:"legendary",atk:4};
+  if(r<0.25) return {type:"helmet",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/hat.png"};
+  if(r<0.5) return {type:"chest",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/shirt.png"};
+  if(r<0.75) return {type:"shoes",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/shoes.png"};
+  return {type:"weapon",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/sword.png"};
 }
 
 function equip(item){
@@ -197,45 +208,33 @@ function equip(item){
 }
 
 function totalAttack(){
-  return player.baseAttack +
-    (player.weapon?.atk||0) +
-    (player.chest?.atk||0) +
-    (player.helmet?.atk||0) +
-    (player.shoes?.atk||0);
+  return player.atk + (player.weapon?3:0);
 }
 
-function fight(){
-  let enemy=10+Math.random()*20;
-  document.getElementById("battle").innerText =
-    totalAttack()>enemy ? "Victory!" : "Defeat...";
+function log(text){
+  document.getElementById("battleLog").innerHTML+=text+"<br>";
 }
 
 function render(){
-  document.getElementById("mode").innerText=role;
 
-  document.getElementById("stats").innerHTML=
-    "Level:"+player.level+
-    "<br>XP:"+player.xp+
-    "<br>ATK:"+totalAttack();
+  document.getElementById("playerHP").style.width=
+    (player.hp/player.maxHp*100)+"%";
 
-  let qHTML="";
-  quests.forEach((q,i)=>{
-    qHTML+=`
-      <div>
-        ${q.text} (${q.status})
-        ${role==="child" && q.status==="assigned"?`<button onclick="submitQuest(${i})">Submit</button>`:""}
-        ${role==="child" && q.status==="pending"?`<button onclick="recallQuest(${i})">Recall</button>`:""}
-        ${role==="parent" && q.status==="pending"?`<button onclick="approveQuest(${i})">Approve</button>`:""}
-      </div>`;
-  });
-  document.getElementById("quests").innerHTML=qHTML;
+  document.getElementById("monsterHP").style.width=
+    (monster.hp/monster.maxHp*100)+"%";
+
+  document.getElementById("helmet").src=player.helmet?player.helmet.img:"";
+  document.getElementById("chest").src=player.chest?player.chest.img:"";
+  document.getElementById("weapon").src=player.weapon?player.weapon.img:"";
+  document.getElementById("shoes").src=player.shoes?player.shoes.img:"";
 
   let inv="";
   player.inventory.forEach(i=>{
-    inv+=`<div class="item ${i.rarity}" onclick='equip(${JSON.stringify(i)})'>
-      ${i.name}
+    inv+=`<div class="item" onclick='equip(${JSON.stringify(i)})'>
+      <img src="${i.img}" width="30">
     </div>`;
   });
+
   document.getElementById("inventory").innerHTML=inv;
 }
 
