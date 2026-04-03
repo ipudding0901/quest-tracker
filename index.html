@@ -2,202 +2,203 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quest RPG: Pro Edition</title>
+  <title>Quest RPG: Battle Stadium</title>
   <style>
     :root {
-      --bg: #121218; --card: #1c1c24; --text: #a0a0b0;
+      --bg: #0f172a; --card: #1e293b; --text: #e2e8f0;
       --accent: #6366f1; --gold: #f59e0b; --danger: #ef4444; --success: #10b981;
-      --slot-bg: rgba(255,255,255,0.03); --slot-border: rgba(255,255,255,0.1);
     }
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; }
-    .app { max-width: 1000px; margin: 20px auto; padding: 20px; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; overflow-x: hidden; }
+    .app { max-width: 1100px; margin: 20px auto; padding: 20px; }
 
-    /* TOP HEADER */
-    .nav-tabs { display: flex; gap: 30px; border-bottom: 1px solid #2d2d3a; padding-bottom: 10px; margin-bottom: 20px; }
-    .tab { cursor: pointer; color: var(--text); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-    .tab.active { color: var(--gold); }
-    .badge { background: #2d2d3a; color: var(--text); padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    /* UI TABS */
+    .nav-tabs { display: flex; gap: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px; align-items: center; }
+    .tab { color: var(--text); font-weight: bold; text-transform: uppercase; font-size: 14px; }
+    .gold-count { margin-left: auto; color: var(--gold); font-weight: bold; font-size: 18px; }
 
-    /* CHARACTER GRID SYSTEM */
-    .char-layout { display: grid; grid-template-columns: 240px 1fr 240px; gap: 20px; align-items: start; }
+    /* CHARACTER GRID */
+    .char-layout { display: grid; grid-template-columns: 200px 1fr 200px; gap: 20px; }
+    .slot-group { display: flex; flex-direction: column; gap: 10px; }
+    .equip-slot { background: rgba(255,255,255,0.05); border: 1px solid #334155; border-radius: 8px; padding: 10px; min-height: 80px; text-align: center; }
+    .equip-slot.active { border-color: var(--accent); box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+    .slot-label { font-size: 9px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
+
+    /* MANNEQUIN */
+    .mannequin-container { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 12px; height: 350px; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid #334155; }
+    .m-body { position: relative; width: 100px; height: 200px; }
+    .m-head { width: 45px; height: 45px; background: #eab308; border-radius: 50%; margin: 0 auto; position: relative; }
+    .m-torso { width: 70px; height: 80px; background: #334155; border-radius: 8px; margin: 5px auto; }
+    .m-legs { display: flex; justify-content: space-around; width: 60px; margin: 0 auto; }
+    .m-leg { width: 25px; height: 60px; background: #1e293b; border-radius: 4px; }
     
-    .slot-group { display: flex; flex-direction: column; gap: 15px; }
-    .equip-slot { 
-        background: var(--slot-bg); border: 1px solid var(--slot-border); border-radius: 8px; 
-        padding: 15px; min-height: 80px; position: relative; transition: 0.3s;
+    /* OVERLAYS */
+    .ov { position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; }
+    #ov-helmet { top: -5px; font-size: 55px; z-index: 10; }
+    #ov-armor { top: 50px; font-size: 80px; z-index: 9; }
+    #ov-weapon { top: 70px; left: -10px; font-size: 50px; z-index: 11; transform: rotate(-15deg); }
+    #ov-shield { top: 70px; left: 110px; font-size: 50px; z-index: 11; }
+    #ov-shoes { bottom: -20px; font-size: 70px; display: flex; width: 90px; justify-content: space-around; }
+
+    /* 2.5D BATTLE ARENA */
+    .arena-container { 
+        position: relative; width: 100%; height: 300px; background: #020617; 
+        border-radius: 15px; overflow: hidden; perspective: 1000px; 
+        margin-top: 20px; border: 2px solid #334155;
     }
-    .equip-slot.active { border-color: var(--accent); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
-    .slot-label { font-size: 10px; color: var(--text); text-transform: uppercase; margin-bottom: 10px; display: block; }
-    .item-icon { font-size: 30px; text-align: center; display: block; }
-    .item-name { font-size: 12px; text-align: center; color: var(--text); margin-top: 5px; }
-
-    /* THE VECTOR MANNEQUIN */
-    .mannequin-container { 
-        background: radial-gradient(circle, #2d2d3a, #1c1c24); 
-        border-radius: 12px; height: 380px; position: relative; 
-        display: flex; justify-content: center; align-items: center;
+    .arena-floor { 
+        position: absolute; bottom: 0; width: 100%; height: 150px; 
+        background: repeating-linear-gradient(0deg, #1e293b, #1e293b 1px, transparent 1px, transparent 20px),
+                    repeating-linear-gradient(90deg, #1e293b, #1e293b 1px, transparent 1px, transparent 20px);
+        transform: rotateX(60deg); transform-origin: bottom; opacity: 0.3;
     }
-    .hero-shape { position: relative; width: 120px; height: 250px; }
-    .m-head { width: 50px; height: 50px; background: #d2b48c; border-radius: 50%; margin: 0 auto; position: relative; z-index: 2; }
-    .m-neck { width: 15px; height: 15px; background: #c2a47c; margin: -5px auto 0; z-index: 1; }
-    .m-torso { width: 80px; height: 100px; background: #334155; border-radius: 10px; margin: 0 auto; z-index: 2; }
-    .m-legs { width: 70px; height: 60px; display: flex; justify-content: space-between; margin: -5px auto; }
-    .m-leg { width: 30px; height: 80px; background: #1e293b; border-radius: 5px; }
+    
+    /* Pokemon Positions */
+    .hero-pos { position: absolute; bottom: 40px; left: 60px; z-index: 10; transition: 0.3s; }
+    .monster-pos { position: absolute; top: 60px; right: 80px; z-index: 5; transition: 0.3s; }
+    
+    /* Animations */
+    .hero-atk-anim { animation: pokemonLunge 0.5s ease; }
+    @keyframes pokemonLunge { 0% { transform: translate(0, 0); } 50% { transform: translate(150px, -80px) scale(1.2); } 100% { transform: translate(0, 0); } }
+    .shake { animation: shakeAnim 0.3s; }
+    @keyframes shakeAnim { 0%, 100% { left: 60px; } 25% { left: 50px; } 75% { left: 70px; } }
 
-    /* Overlay Equipment on Mannequin */
-    .overlay { position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; text-align: center; }
-    #ov-helmet { top: -10px; font-size: 60px; z-index: 10; }
-    #ov-armor { top: 60px; font-size: 90px; z-index: 9; }
-    #ov-weapon { top: 80px; left: -20px; font-size: 55px; z-index: 11; transform: rotate(-15deg); }
-    #ov-shield { top: 80px; left: 110px; font-size: 55px; z-index: 11; }
-    #ov-shoes { bottom: -60px; font-size: 80px; z-index: 12; width: 100px; display: flex; justify-content: space-around; }
-
-    /* MODALS & UI */
+    /* UI ELEMENTS */
+    .quest-box { background: var(--card); padding: 20px; border-radius: 12px; margin-top: 20px; }
+    .q-item { background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent); }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; }
-    .modal-box { background: var(--card); padding: 30px; border-radius: 20px; width: 500px; border: 1px solid var(--accent); }
+    .modal-content { background: var(--card); padding: 30px; border-radius: 15px; width: 600px; border: 1px solid var(--accent); }
     
-    .quest-card { background: var(--card); border-radius: 12px; padding: 20px; margin-top: 20px; }
-    .quest-item { background: #121218; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    
-    button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; transition: 0.2s; }
-    .btn-p { background: var(--accent); color: white; }
-    .btn-s { background: var(--gold); color: black; }
-    
-    .inventory { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px; }
-    .inv-slot { background: var(--slot-bg); aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--slot-border); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-    .inv-slot:hover { border-color: var(--gold); }
+    button { cursor: pointer; border: none; border-radius: 6px; padding: 10px 15px; font-weight: bold; }
+    .btn-atk { background: var(--danger); color: white; width: 100%; font-size: 1.2em; padding: 15px; }
+    .inventory { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; }
+    .inv-item { background: #1e293b; padding: 15px; border-radius: 8px; font-size: 24px; cursor: pointer; border: 1px solid transparent; }
+    .inv-item:hover { border-color: var(--gold); }
   </style>
 </head>
 <body>
 
 <div class="app">
     <div class="nav-tabs">
-        <div class="tab">Character</div>
-        <div class="tab active">Items <span class="badge" id="b-items">0</span></div>
-        <div class="tab">Pet Gear <span class="badge">0</span></div>
-        <div class="tab">Pets <span class="badge">1</span></div>
-        <div style="flex-grow: 1; text-align: right;">
-            <span style="color:var(--gold)">💰 <span id="gold">100</span></span>
-            <button class="btn-s" style="margin-left:20px" onclick="openModal('shopModal')">SHOP</button>
-            <button class="btn-p" onclick="openModal('battleModal')">BATTLE</button>
-        </div>
+        <span class="tab">Character Sheet</span>
+        <select id="roleSel" onchange="state.role=this.value; render();" style="background:#1e293b; color:white; border:none; padding:5px;">
+            <option value="child">Child View</option>
+            <option value="parent">Parent View</option>
+        </select>
+        <span class="gold-count">💰 <span id="gold">0</span></span>
+        <button onclick="openModal('shopModal')" style="background:var(--gold); color:black;">SHOP</button>
+        <button onclick="openModal('battleModal')" style="background:var(--accent); color:white;">BATTLE</button>
     </div>
 
     <div class="char-layout">
         <div class="slot-group">
-            <div class="equip-slot" id="slot-helmet">
-                <span class="slot-label">Head</span>
-                <div class="item-icon" id="icon-helmet"></div>
-                <div class="item-name" id="name-helmet">---</div>
-            </div>
-            <div class="equip-slot" id="slot-weapon">
-                <span class="slot-label">Weapon</span>
-                <div class="item-icon" id="icon-weapon"></div>
-                <div class="item-name" id="name-weapon">---</div>
-            </div>
+            <div class="equip-slot" id="s-helmet"><span class="slot-label">Head</span><div id="i-helmet"></div></div>
+            <div class="equip-slot" id="s-weapon"><span class="slot-label">Weapon</span><div id="i-weapon"></div></div>
         </div>
 
         <div class="mannequin-container">
-            <div class="hero-shape">
+            <div class="m-body">
                 <div class="m-head"></div>
-                <div class="m-neck"></div>
                 <div class="m-torso"></div>
-                <div class="m-legs">
-                    <div class="m-leg"></div>
-                    <div class="m-leg"></div>
-                </div>
-                <div class="overlay" id="ov-helmet"></div>
-                <div class="overlay" id="ov-armor"></div>
-                <div class="overlay" id="ov-weapon"></div>
-                <div class="overlay" id="ov-shield"></div>
-                <div class="overlay" id="ov-shoes"></div>
+                <div class="m-legs"><div class="m-leg"></div><div class="m-leg"></div></div>
+                <div class="ov" id="ov-helmet"></div>
+                <div class="ov" id="ov-armor"></div>
+                <div class="ov" id="ov-weapon"></div>
+                <div class="ov" id="ov-shield"></div>
+                <div class="ov" id="ov-shoes"></div>
             </div>
-            <div style="position:absolute; bottom:20px; width:100%; text-align:center;">
-                <h2 style="margin:0">Hero Lvl <span id="lvl">1</span></h2>
-                <div style="width:150px; height:6px; background:#000; border-radius:3px; margin:5px auto; overflow:hidden;">
+            <div style="position:absolute; bottom:15px; text-align:center;">
+                <strong>Lvl <span id="lvl">1</span></strong>
+                <div style="width:120px; height:6px; background:#000; border-radius:3px; margin:5px auto; overflow:hidden;">
                     <div id="xp-bar" style="width:0%; height:100%; background:var(--accent);"></div>
                 </div>
             </div>
         </div>
 
         <div class="slot-group">
-            <div class="equip-slot" id="slot-shield">
-                <span class="slot-label">Off-hand</span>
-                <div class="item-icon" id="icon-shield"></div>
-                <div class="item-name" id="name-shield">---</div>
-            </div>
-            <div class="equip-slot" id="slot-armor">
-                <span class="slot-label">Body</span>
-                <div class="item-icon" id="icon-armor"></div>
-                <div class="item-name" id="name-armor">---</div>
-            </div>
-            <div class="equip-slot" id="slot-shoes">
-                <span class="slot-label">Boots</span>
-                <div class="item-icon" id="icon-shoes"></div>
-                <div class="item-name" id="name-shoes">---</div>
-            </div>
+            <div class="equip-slot" id="s-shield"><span class="slot-label">Off-hand</span><div id="i-shield"></div></div>
+            <div class="equip-slot" id="s-armor"><span class="slot-label">Body</span><div id="i-armor"></div></div>
+            <div class="equip-slot" id="s-shoes"><span class="slot-label">Boots</span><div id="i-shoes"></div></div>
         </div>
-    </div>
-
-    <div class="quest-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2>📜 Quest Board</h2>
-            <select id="roleSelect" onchange="state.role=this.value; render();" style="background:#2d2d3a; color:white; border:none; padding:5px;">
-                <option value="child">Child Mode</option>
-                <option value="parent">Parent Mode</option>
-            </select>
-        </div>
-        <div id="parentInput" style="display:none; gap:10px; margin-bottom:20px;">
-            <input id="qIn" style="flex:1; background:#121218; border:1px solid #334155; color:white; padding:10px; border-radius:5px;" placeholder="Assign a new quest...">
-            <button class="btn-p" onclick="addQ()">Post</button>
-        </div>
-        <div id="questList"></div>
     </div>
 
     <h3>🎒 Inventory</h3>
     <div class="inventory" id="inv"></div>
-</div>
 
-<div id="shopModal" class="modal" onclick="if(event.target==this)this.style.display='none'">
-    <div class="modal-box">
-        <h2>🏛️ The Village Shop</h2>
-        <div id="shopItems">
-            <div class="quest-item"><span>❤️ Potion (Heal)</span> <button class="btn-s" onclick="buy('pot')">50G</button></div>
-            <div class="quest-item"><span>⚔️ Sharp Stone (+Atk)</span> <button class="btn-s" onclick="buy('atk')">150G</button></div>
+    <div class="quest-box">
+        <h2>📜 Quests</h2>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <input id="qIn" style="flex:1; background:#0f172a; border:1px solid #334155; color:white; padding:12px; border-radius:8px;" placeholder="What do you need to do today?">
+            <button onclick="addQ()" style="background:var(--accent); color:white;">Add Task</button>
         </div>
+        <div id="qList"></div>
     </div>
 </div>
 
-<div id="battleModal" class="modal" onclick="if(event.target==this)this.style.display='none'">
-    <div class="modal-box" style="text-align:center;">
-        <h2>🏟️ Arena</h2>
-        <div id="mImg" style="font-size:80px; margin:20px;">👾</div>
-        <div style="width:100%; height:10px; background:#000; margin-bottom:10px;"><div id="mHp" style="width:100%; height:100%; background:var(--danger);"></div></div>
-        <button class="btn-p" style="width:100%;" onclick="battle()">STRIKE!</button>
-        <p id="bLog" style="font-size:12px; margin-top:10px; color:var(--text);"></p>
+<div id="battleModal" class="modal">
+    <div class="modal-content" style="width:700px; background:#020617;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0;">Arena Encounter</h2>
+            <button onclick="closeModal('battleModal')" style="background:none; color:var(--text); font-size:24px;">&times;</button>
+        </div>
+
+        <div class="arena-container">
+            <div class="arena-floor"></div>
+            
+            <div class="monster-pos" id="mPos">
+                <div id="mSprite" style="font-size:90px;">👾</div>
+                <div style="width:100px; height:8px; background:#000; border-radius:4px; margin-top:5px; overflow:hidden;">
+                    <div id="mHp-bar" style="width:100%; height:100%; background:var(--danger);"></div>
+                </div>
+            </div>
+
+            <div class="hero-pos" id="hPos">
+                <div style="transform: scaleX(-1); font-size:70px;">🧑‍🚀</div>
+                <div style="width:100px; height:8px; background:#000; border-radius:4px; margin-top:5px; overflow:hidden;">
+                    <div id="hHp-bar" style="width:100%; height:100%; background:var(--success);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="battleLog" style="background:#0f172a; height:60px; padding:10px; margin:15px 0; font-size:14px; color:#94a3b8; overflow-y:auto; border-radius:8px;">
+            A wild monster appeared! Prepare for battle.
+        </div>
+        <button id="atkBtn" class="btn-atk" onclick="battleTurn()">FIGHT!</button>
+    </div>
+</div>
+
+<div id="shopModal" class="modal">
+    <div class="modal-content">
+        <h2>Village Shop</h2>
+        <div class="q-item"><span>🧪 Health Potion (Full Heal)</span> <button onclick="buy('hp')" style="background:var(--gold);">50G</button></div>
+        <div class="q-item"><span>⚔️ Sharp Stone (+5 ATK)</span> <button onclick="buy('atk')" style="background:var(--gold);">150G</button></div>
+        <button onclick="closeModal('shopModal')" style="width:100%; margin-top:10px; background:#334155; color:white;">Exit</button>
     </div>
 </div>
 
 <script>
 let state = {
-    role: 'child', gold: 100, lvl: 1, xp: 0, hp: 100, mHp: 50, mMax: 50, atk: 10,
+    role: 'child', gold: 100, lvl: 1, xp: 0, 
+    hp: 100, maxHp: 100, atk: 12,
+    mHp: 60, mMax: 60, mAtk: 8,
     quests: [], inv: [],
     equip: { helmet: null, weapon: null, shield: null, armor: null, shoes: null }
 };
 
-const ITEMS = [
-    { name: "Rusty Dagger", icon: "🔪", slot: "weapon", atk: 10, hp: 0, price: 40 },
-    { name: "Iron Helm", icon: "🪖", slot: "helmet", atk: 0, hp: 20, price: 50 },
-    { name: "Plate Armor", icon: "🧥", slot: "armor", atk: 5, hp: 50, price: 100 },
-    { name: "Wood Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 30, price: 40 },
-    { name: "Steel Boots", icon: "👢", slot: "shoes", atk: 2, hp: 15, price: 30 }
+const DROPS = [
+    { name: "Sword", icon: "🗡️", slot: "weapon", atk: 15, hp: 0 },
+    { name: "Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 40 },
+    { name: "Helm", icon: "🪖", slot: "helmet", atk: 2, hp: 20 },
+    { name: "Cape", icon: "🧥", slot: "armor", atk: 5, hp: 50 },
+    { name: "Boots", icon: "👢", slot: "shoes", atk: 5, hp: 10 }
 ];
 
 function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
 function addQ() {
-    const v = document.getElementById('qIn').value;
-    if(!v) return;
-    state.quests.push({txt: v, status: 'open'});
+    const val = document.getElementById('qIn').value;
+    if(!val) return;
+    state.quests.push({ txt: val, status: 'open' });
     document.getElementById('qIn').value = '';
     render();
 }
@@ -205,26 +206,61 @@ function addQ() {
 function updateQ(i, status) {
     if(status === 'done') {
         state.quests.splice(i, 1);
-        state.gold += 50; state.xp += 35;
-        if(Math.random() < 0.3) state.inv.push(ITEMS[Math.floor(Math.random()*ITEMS.length)]);
+        state.gold += 50; state.xp += 40;
+        if(Math.random() < 0.4) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
     } else state.quests[i].status = status;
     checkLvl(); render();
 }
 
-function battle() {
-    state.mHp -= (state.atk + calcBonus('atk'));
-    document.getElementById('bLog').innerText = "You hit for " + state.atk + " damage!";
-    if(state.mHp <= 0) {
-        state.mMax = Math.floor(state.mMax * 1.3); state.mHp = state.mMax;
-        state.gold += 20; state.xp += 20;
-        document.getElementById('battleModal').style.display = 'none';
-    }
-    checkLvl(); render();
+function battleTurn() {
+    const btn = document.getElementById('atkBtn');
+    const log = document.getElementById('battleLog');
+    const hero = document.getElementById('hPos');
+    const monster = document.getElementById('mPos');
+    btn.disabled = true;
+
+    // 1. Player Attacks (Lunge)
+    hero.classList.add('hero-atk-anim');
+    setTimeout(() => {
+        let dmg = state.atk + calcBonus('atk');
+        state.mHp -= dmg;
+        log.innerHTML = `<span style="color:var(--success)">- You hit the monster for ${dmg} DMG!</span><br>` + log.innerHTML;
+        
+        if(state.mHp <= 0) {
+            log.innerHTML = `⭐ <b>Victory! You earned 30 Gold and 20 XP.</b><br>` + log.innerHTML;
+            state.gold += 30; state.xp += 20;
+            state.mMax = Math.floor(state.mMax * 1.3);
+            state.mHp = state.mMax;
+            state.mAtk += 2;
+            setTimeout(() => { 
+                closeModal('battleModal'); 
+                hero.classList.remove('hero-atk-anim');
+                btn.disabled = false;
+                checkLvl(); render();
+            }, 1000);
+        } else {
+            // 2. Monster Counter Attacks
+            setTimeout(() => {
+                hero.classList.remove('hero-atk-anim');
+                hero.classList.add('shake');
+                state.hp -= state.mAtk;
+                log.innerHTML = `<span style="color:var(--danger)">- Monster counter-attacks for ${state.mAtk} DMG!</span><br>` + log.innerHTML;
+                
+                if(state.hp <= 0) {
+                    alert("You fainted! Respawning at half HP...");
+                    state.hp = Math.floor(state.maxHp / 2);
+                    closeModal('battleModal');
+                }
+                setTimeout(() => { hero.classList.remove('shake'); btn.disabled = false; render(); }, 300);
+            }, 500);
+        }
+        render();
+    }, 250);
 }
 
-function buy(t) {
-    if(t === 'pot' && state.gold >= 50) { state.gold -= 50; state.hp = 100 + calcBonus('hp'); }
-    else if(t === 'atk' && state.gold >= 150) { state.gold -= 150; state.atk += 5; }
+function buy(type) {
+    if(type === 'hp' && state.gold >= 50) { state.gold -= 50; state.hp = state.maxHp + calcBonus('hp'); }
+    else if(type === 'atk' && state.gold >= 150) { state.gold -= 150; state.atk += 5; }
     render();
 }
 
@@ -238,37 +274,41 @@ function equip(i) {
 }
 
 function calcBonus(s) { return Object.values(state.equip).reduce((a, b) => a + (b ? b[s] : 0), 0); }
-function checkLvl() { if(state.xp >= 100) { state.lvl++; state.xp -= 100; } }
+function checkLvl() { if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 20; state.hp = state.maxHp + calcBonus('hp'); } }
 
 function render() {
     document.getElementById('gold').innerText = state.gold;
     document.getElementById('lvl').innerText = state.lvl;
     document.getElementById('xp-bar').style.width = state.xp + "%";
-    document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
-    document.getElementById('b-items').innerText = state.inv.length;
-    document.getElementById('parentInput').style.display = state.role === 'parent' ? 'flex' : 'none';
+    
+    let curMax = state.maxHp + calcBonus('hp');
+    document.getElementById('hHp-bar').style.width = (state.hp/curMax*100) + "%";
+    document.getElementById('mHp-bar').style.width = (state.mHp/state.mMax*100) + "%";
 
-    // Render Slots & Overlays
+    // Equipment Visuals
     for(let s in state.equip) {
-        const item = state.equip[s];
-        document.getElementById('icon-'+s).innerText = item ? item.icon : '';
-        document.getElementById('name-'+s).innerText = item ? item.name : '---';
-        document.getElementById('ov-'+s).innerText = item ? item.icon : '';
-        document.getElementById('slot-'+s).className = item ? 'equip-slot active' : 'equip-slot';
+        const it = state.equip[s];
+        document.getElementById('i-'+s).innerText = it ? it.icon : '';
+        document.getElementById('ov-'+s).innerText = it ? it.icon : '';
+        document.getElementById('s-'+s).className = it ? 'equip-slot active' : 'equip-slot';
     }
 
     // Quests
     let qH = '';
     state.quests.forEach((q, i) => {
-        let b = state.role === 'child' && q.status === 'open' ? `<button class="btn-p" onclick="updateQ(${i},'pending')">Submit</button>` : '';
-        if(state.role === 'parent' && q.status === 'pending') b = `<button class="btn-s" onclick="updateQ(${i},'done')">Approve</button>`;
-        qH += `<div class="quest-item"><span>${q.txt} (${q.status})</span> ${b}</div>`;
+        let b = '';
+        if(state.role === 'child' && q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" style="background:var(--accent); color:white;">Submit</button>`;
+        if(state.role === 'parent') {
+            if(q.status === 'pending') b = `<button onclick="updateQ(${i},'done')" style="background:var(--success); color:white;">Approve</button>`;
+            b += ` <button onclick="state.quests.splice(${i},1); render();" style="background:var(--danger); color:white;">&times;</button>`;
+        }
+        qH += `<div class="q-item"><span>${q.txt} <small>(${q.status})</small></span> <div>${b}</div></div>`;
     });
-    document.getElementById('questList').innerHTML = qH;
+    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; opacity:0.5;">No quests posted yet.</p>';
 
     // Inventory
     let iH = '';
-    state.inv.forEach((it, i) => iH += `<div class="inv-slot" onclick="equip(${i})">${it.icon}</div>`);
+    state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})">${it.icon}</div>`);
     document.getElementById('inv').innerHTML = iH;
 }
 render();
