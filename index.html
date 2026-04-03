@@ -1,0 +1,235 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RPG Quest System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, #0f172a, #020617);
+      color: #e2e8f0;
+    }
+
+    h1 { text-align: center; }
+
+    .topbar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    button {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: white;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    button:hover { background: #334155; }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #020617;
+      border: 1px solid #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .xpbar {
+      background: #1e293b;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .xpfill {
+      background: gold;
+      height: 100%;
+    }
+
+    .quest {
+      border-bottom: 1px solid #1e293b;
+      padding: 5px;
+    }
+
+    .common { color: #9ca3af; }
+    .rare { color: #3b82f6; }
+    .unique { color: #a855f7; }
+    .legendary { color: gold; }
+
+  </style>
+</head>
+
+<body>
+
+<h1>⚔️ RPG Quest System</h1>
+
+<div class="topbar">
+  <button onclick="setRole('child')">Child</button>
+  <button onclick="setRole('parent')">Parent</button>
+</div>
+
+<h2 style="text-align:center" id="mode"></h2>
+
+<div class="container">
+
+  <!-- CHARACTER -->
+  <div class="card">
+    <h3>Character</h3>
+    <div id="char"></div>
+    <div class="xpbar">
+      <div id="xpfill" class="xpfill"></div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="card">
+    <h3>Inventory</h3>
+    <div id="inventory"></div>
+  </div>
+
+  <!-- QUESTS -->
+  <div class="card">
+    <h3>Quests</h3>
+    <input id="questInput" placeholder="New quest">
+    <button onclick="addQuest()">Add</button>
+    <div id="quests"></div>
+  </div>
+
+  <!-- BATTLE -->
+  <div class="card">
+    <h3>Battle</h3>
+    <button onclick="fight()">Fight Monster</button>
+    <p id="battle"></p>
+  </div>
+
+</div>
+
+<script>
+let role = "child";
+
+let player = {
+  xp: 0,
+  level: 1,
+  attack: 5,
+  pet: "🐺",
+  inventory: []
+};
+
+let quests = [];
+
+function setRole(r) {
+  role = r;
+  document.getElementById("mode").innerText = r.toUpperCase() + " DASHBOARD";
+  render();
+}
+
+function addQuest() {
+  const text = document.getElementById("questInput").value;
+  if (!text) return;
+
+  quests.push({
+    text,
+    status: role === "parent" ? "assigned" : "pending"
+  });
+
+  render();
+}
+
+function submitQuest(i) {
+  quests[i].status = "pending";
+  render();
+}
+
+function recallQuest(i) {
+  quests.splice(i,1);
+  render();
+}
+
+function approveQuest(i) {
+  quests[i].status = "done";
+  giveRewards();
+  render();
+}
+
+function giveRewards() {
+  player.xp += 20;
+
+  if (player.xp >= player.level * 100) {
+    player.xp = 0;
+    player.level++;
+  }
+
+  if (Math.random() < 0.3) {
+    let loot = rollLoot();
+    player.inventory.push(loot);
+  }
+}
+
+function rollLoot() {
+  let r = Math.random();
+  if (r < 0.6) return {name:"Common Sword",rarity:"common"};
+  if (r < 0.85) return {name:"Rare Armor",rarity:"rare"};
+  if (r < 0.97) return {name:"Unique Pet Egg",rarity:"unique"};
+  return {name:"Legendary Blade",rarity:"legendary"};
+}
+
+function fight() {
+  let monster = Math.random()*30 + 10;
+  let power = player.attack + player.level*2;
+
+  if (power > monster) {
+    player.xp += 10;
+    document.getElementById("battle").innerText = "Victory!";
+  } else {
+    document.getElementById("battle").innerText = "Defeat...";
+  }
+
+  render();
+}
+
+function render() {
+  document.getElementById("char").innerHTML =
+    "Level: " + player.level +
+    "<br>XP: " + player.xp +
+    "<br>ATK: " + player.attack +
+    "<br>Pet: " + player.pet;
+
+  let percent = (player.xp / (player.level*100)) * 100;
+  document.getElementById("xpfill").style.width = percent + "%";
+
+  let qHTML = "";
+  quests.forEach((q,i) => {
+    qHTML += `<div class="quest">
+      ${q.text} (${q.status})
+      ${role==="child" && q.status==="assigned" ? `<button onclick="submitQuest(${i})">Submit</button>`:""}
+      ${role==="child" && q.status==="pending" ? `<button onclick="recallQuest(${i})">Recall</button>`:""}
+      ${role==="parent" && q.status==="pending" ? `<button onclick="approveQuest(${i})">Approve</button>`:""}
+    </div>`;
+  });
+  document.getElementById("quests").innerHTML = qHTML;
+
+  let invHTML = "";
+  player.inventory.forEach(i => {
+    invHTML += `<div class="${i.rarity}">${i.name}</div>`;
+  });
+  document.getElementById("inventory").innerHTML = invHTML;
+}
+
+render();
+</script>
+
+</body>
+</html>
+```
