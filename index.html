@@ -1,147 +1,297 @@
-<style>
-    /* ... (Keep your previous root colors) ... */
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quest RPG: Shop & Body Update</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --text: #e2e8f0;
+      --accent: #3b82f6; --success: #22c55e; --danger: #ef4444; --gold: #fbbf24;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    .app { max-width: 1200px; margin: auto; padding: 20px; }
+    
+    .grid { display: grid; grid-template-columns: 350px 1fr 350px; gap: 20px; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
+    
+    /* MODULAR BODY SYSTEM */
     .avatar-viewport { 
-        position: relative; 
-        width: 240px; 
-        height: 240px; 
-        margin: 0 auto 20px; 
-        background: radial-gradient(circle, #334155, #0f172a); 
-        border-radius: 50%; 
-        border: 4px solid #475569;
-        overflow: hidden;
+        position: relative; width: 220px; height: 280px; margin: 0 auto 20px; 
+        background: #1e293b; border-radius: 20px; border: 3px solid #334155; overflow: hidden;
     }
-
-    /* THE FIX: Absolute positioning with middle-anchoring */
     .layer { 
-        position: absolute; 
-        top: 50%; 
-        left: 50%; 
-        transform: translate(-50%, -50%); /* Centers every emoji on the same spot */
-        display: block;
-        pointer-events: none; 
-        transition: all 0.2s ease-out;
-        line-height: 1;
+        position: absolute; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; justify-content: center; pointer-events: none;
     }
+    /* The Body Base */
+    .base-head { top: 20px; font-size: 50px; z-index: 1; }
+    .base-torso { top: 70px; font-size: 80px; z-index: 1; }
+    .base-legs { top: 150px; font-size: 60px; z-index: 1; }
 
-    /* Offset each slot relative to the center of the body */
-    #layer-body    { z-index: 1; font-size: 110px; }
-    
-    #layer-shoes   { z-index: 2; font-size: 50px; margin-top: 75px; } /* Bottom */
-    
-    #layer-armor   { z-index: 3; font-size: 85px; margin-top: 15px; } /* Torso */
-    
-    #layer-helmet  { z-index: 4; font-size: 75px; margin-top: -65px; } /* Head */
-    
-    #layer-weapon  { 
-        z-index: 5; font-size: 65px; 
-        margin-left: -75px; margin-top: 10px; 
-        transform: translate(-50%, -50%) rotate(-15deg); 
-    }
-    
-    #layer-shield  { 
-        z-index: 5; font-size: 65px; 
-        margin-left: 75px; margin-top: 10px; 
-    }
-    
-    #layer-pet     { 
-        z-index: 6; font-size: 45px; 
-        margin-left: 60px; margin-top: 70px; 
-    }
+    /* The Equipment Overlays */
+    #layer-helmet { top: 10px; font-size: 70px; z-index: 10; }
+    #layer-armor   { top: 75px; font-size: 90px; z-index: 9; }
+    #layer-shoes   { top: 195px; font-size: 50px; z-index: 8; }
+    #layer-weapon  { top: 90px; left: 30px; font-size: 60px; z-index: 11; transform: rotate(-15deg); }
+    #layer-shield  { top: 90px; left: 190px; font-size: 60px; z-index: 11; }
+    #layer-pet     { top: 210px; left: 180px; font-size: 40px; z-index: 12; }
 
-    /* ANIMATIONS */
-    .hero-attack { animation: lunge 0.3s ease-in-out; }
-    @keyframes lunge {
-        0% { transform: translate(-50%, -50%) scale(1); }
-        50% { transform: translate(-70%, -50%) scale(1.1); } /* Lunges toward monster */
-        100% { transform: translate(-50%, -50%) scale(1); }
-    }
+    /* Shop Styling */
+    .shop-item { background: #0f172a; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #334155; }
+    .currency { color: var(--gold); font-weight: bold; font-size: 1.2em; text-align: center; margin-bottom: 10px; }
 
-    .monster-damaged { animation: flashRed 0.4s; }
-    @keyframes flashRed {
-        0% { filter: none; }
-        50% { filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); transform: scale(0.9); }
-        100% { filter: none; }
-    }
+    /* Combat Animations */
+    .player-attack { animation: lunge 0.3s ease; }
+    @keyframes lunge { 0% { transform: translateX(0); } 50% { transform: translateX(30px); } 100% { transform: translateX(0); } }
+    .dmg-flash { animation: flash 0.3s; }
+    @keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(2) sepia(1) hue-rotate(-50deg); } 100% { filter: brightness(1); } }
 
-    .player-damaged { animation: shakeRed 0.4s; }
-    @keyframes shakeRed {
-        0% { background-color: transparent; }
-        25% { background-color: rgba(255,0,0,0.3); transform: translateX(-10px); }
-        75% { transform: translateX(10px); }
-        100% { background-color: transparent; }
-    }
-</style>
+    .bar { height: 10px; background: #0f172a; border-radius: 5px; overflow: hidden; margin: 5px 0 15px 0; }
+    .fill { height: 100%; transition: width 0.3s; }
+    .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .item-slot { background: #0f172a; aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid transparent; position: relative; }
+    .item-slot:hover { border-color: var(--accent); }
+    .item-slot::after { content: attr(data-price); position: absolute; bottom: -5px; font-size: 10px; color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+    <div style="text-align:center; margin-bottom: 20px;">
+        <button onclick="setRole('child')" style="background:var(--accent); color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Child Mode</button>
+        <button onclick="setRole('parent')" style="background:#64748b; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; margin-left:10px;">Parent Mode</button>
+        <p>Current Role: <strong id="roleText" style="text-transform: uppercase;">Child</strong></p>
+    </div>
+
+    <div class="grid">
+        <div class="card" id="player-card">
+            <div class="currency">💰 <span id="gold">0</span></div>
+            <div class="avatar-viewport" id="avatar-view">
+                <div class="layer base-head">🧑</div>
+                <div class="layer base-torso">👕</div>
+                <div class="layer base-legs">👖</div>
+                <div class="layer" id="layer-helmet"></div>
+                <div class="layer" id="layer-armor"></div>
+                <div class="layer" id="layer-shoes"></div>
+                <div class="layer" id="layer-weapon"></div>
+                <div class="layer" id="layer-shield"></div>
+                <div class="layer" id="layer-pet"></div>
+            </div>
+            
+            <div style="display:flex; justify-content: space-between; font-weight:bold;">
+                <span>LVL <span id="lvl">1</span></span>
+                <span>XP <span id="xpText">0</span>/100</span>
+            </div>
+            <div class="bar"><div id="xpF" class="fill" style="background:#a855f7; width:0%"></div></div>
+
+            <div style="display:flex; justify-content: space-between; font-size:0.9em;">
+                <span id="stat-atk">⚔️ ATK: 10</span>
+                <span id="stat-hp">❤️ HP: 100/100</span>
+            </div>
+            <div class="bar"><div id="hpF" class="fill" style="background:var(--success); width:100%"></div></div>
+        </div>
+
+        <div>
+            <div class="card" style="margin-bottom:20px;">
+                <h2>🛒 Item Shop</h2>
+                <div id="shopList">
+                    <div class="shop-item">
+                        <span>❤️ Health Pot (Restores 50)</span>
+                        <button onclick="buy('potion')" class="btn-main" style="background:var(--gold); color:#000;">50G</button>
+                    </div>
+                    <div class="shop-item">
+                        <span>⚔️ Sharp Stone (+5 Base ATK)</span>
+                        <button onclick="buy('atk')" class="btn-main" style="background:var(--gold); color:#000;">150G</button>
+                    </div>
+                    <div class="shop-item">
+                        <span>🍀 Lucky Coin (+Drop Rate)</span>
+                        <button onclick="buy('luck')" class="btn-main" style="background:var(--gold); color:#000;">200G</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📜 Quests</h2>
+                <div style="display:flex; gap:5px; margin-bottom:15px;">
+                    <input id="qIn" style="flex:1; padding:10px; border-radius:5px; border:none; background:#0f172a; color:white;" placeholder="New task...">
+                    <button onclick="addQ()" style="background:var(--accent); color:white; border:none; padding:10px; border-radius:5px;">Add</button>
+                </div>
+                <div id="qList"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div id="monster-zone" style="text-align:center; padding: 15px; background:#0f172a; border-radius:12px; margin-bottom:15px;">
+                <div id="mImg" style="font-size:70px;">👾</div>
+                <div class="bar"><div id="mHpF" class="fill" style="background:var(--danger); width:100%"></div></div>
+                <button id="atkBtn" onclick="playerAttack()" style="background:var(--danger); color:white; width:100%; padding:15px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">ATTACK!</button>
+            </div>
+
+            <h3>🎒 Inventory <small>(Click to Equip/Sell)</small></h3>
+            <div id="inv" class="inventory"></div>
+        </div>
+    </div>
+</div>
 
 <script>
-// ... (Your existing state management) ...
+let state = {
+    role: 'child',
+    lvl: 1, xp: 0, gold: 100,
+    hp: 100, baseMaxHp: 100, baseAtk: 10, luck: 0.2,
+    mHp: 50, mMax: 50, mAtk: 5,
+    quests: [],
+    inv: [],
+    equip: { helmet: null, armor: null, weapon: null, shield: null, shoes: null, pet: null }
+};
 
-function playerAttack() {
-    const btn = document.getElementById('atkBtn');
-    const hero = document.getElementById('avatar-view');
-    const monsterImg = document.getElementById('mImg');
-    
-    btn.disabled = true;
+const ITEMS = [
+    { name: "Sword", icon: "🗡️", slot: "weapon", atk: 15, hp: 0, price: 50 },
+    { name: "Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 40, price: 40 },
+    { name: "Helm", icon: "🪖", slot: "helmet", atk: 2, hp: 20, price: 30 },
+    { name: "Armor", icon: "🧥", slot: "armor", atk: 5, hp: 50, price: 60 },
+    { name: "Boots", icon: "👢", slot: "shoes", atk: 5, hp: 10, price: 25 },
+    { name: "Dog", icon: "🐕", slot: "pet", atk: 10, hp: 10, price: 100 }
+];
 
-    // 1. Hero Lunges
-    hero.classList.add('hero-attack');
-    
-    setTimeout(() => {
-        // 2. Monster takes damage & Flashes
-        monsterImg.classList.add('monster-damaged');
-        
-        let totalAtk = state.baseAtk + calculateBonus('atk');
-        state.mHp -= totalAtk;
+function setRole(r) { state.role = r; document.getElementById('roleText').innerText = r; render(); }
 
-        if (state.mHp <= 0) {
-            monsterDefeated();
-        } else {
-            // 3. Monster hits back after a brief delay
-            setTimeout(monsterAttack, 400);
-        }
-        
-        render();
-    }, 150);
-
-    // Cleanup animations
-    setTimeout(() => {
-        hero.classList.remove('hero-attack');
-        monsterImg.classList.remove('monster-damaged');
-        btn.disabled = false;
-    }, 600);
-}
-
-function monsterAttack() {
-    const card = document.getElementById('player-card');
-    card.classList.add('player-damaged');
-    
-    // Logic for taking damage
-    state.hp -= state.mAtk;
-    
-    if (state.hp <= 0) {
-        state.hp = 0;
-        alert("Oh no! You fainted. Rest up and try again!");
-        state.hp = state.baseMaxHp + calculateBonus('hp'); // Respawn
-        state.gold = Math.floor(state.gold * 0.9); // 10% Gold penalty
+// --- SHOP LOGIC ---
+function buy(type) {
+    if(type === 'potion' && state.gold >= 50) {
+        state.gold -= 50;
+        state.hp = Math.min(state.hp + 50, state.baseMaxHp + calculateBonus('hp'));
+    } else if(type === 'atk' && state.gold >= 150) {
+        state.gold -= 150;
+        state.baseAtk += 5;
+    } else if(type === 'luck' && state.gold >= 200) {
+        state.gold -= 200;
+        state.luck += 0.1;
+    } else {
+        alert("Not enough gold!");
     }
-    
     render();
-    setTimeout(() => card.classList.remove('player-damaged'), 400);
 }
 
-function monsterDefeated() {
-    // Better loot logic: Monster drops gold/gems, Quests drop gear
-    const goldEarned = 10 + Math.floor(Math.random() * 15);
-    state.gold += goldEarned;
-    state.xp += 20;
-    
-    // Scale monster for next fight
-    state.mMax = Math.floor(state.mMax * 1.2);
-    state.mHp = state.mMax;
-    state.mAtk += 2;
-    
+function sell(i) {
+    const item = state.inv[i];
+    state.gold += Math.floor(item.price / 2);
+    state.inv.splice(i, 1);
+    render();
+}
+
+// --- QUESTS ---
+function addQ() {
+    const val = document.getElementById('qIn').value;
+    if(!val) return;
+    state.quests.push({ txt: val, status: 'open' });
+    document.getElementById('qIn').value = '';
+    render();
+}
+
+function updateQ(i, status) {
+    if(status === 'done') {
+        state.quests.splice(i, 1);
+        state.xp += 40;
+        state.gold += 30;
+        // LUCK based drop
+        if(Math.random() < state.luck) {
+            state.inv.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+        }
+    } else {
+        state.quests[i].status = status;
+    }
     checkLevelUp();
     render();
 }
-// ... (rest of your render and logic) ...
+
+// --- COMBAT ---
+function playerAttack() {
+    const hero = document.getElementById('avatar-view');
+    const monster = document.getElementById('mImg');
+    
+    hero.classList.add('player-attack');
+    monster.classList.add('dmg-flash');
+
+    state.mHp -= (state.baseAtk + calculateBonus('atk'));
+    
+    if(state.mHp <= 0) {
+        state.gold += 15;
+        state.mMax = Math.floor(state.mMax * 1.2);
+        state.mHp = state.mMax;
+        state.mAtk += 2;
+    } else {
+        // Monster counter
+        setTimeout(() => {
+            state.hp -= state.mAtk;
+            if(state.hp <= 0) {
+                alert("Resting... (HP Restored)");
+                state.hp = state.baseMaxHp + calculateBonus('hp');
+                state.gold = Math.max(0, state.gold - 20);
+            }
+            render();
+        }, 300);
+    }
+
+    setTimeout(() => {
+        hero.classList.remove('player-attack');
+        monster.classList.remove('dmg-flash');
+        render();
+    }, 400);
+}
+
+function equip(i) {
+    const item = state.inv[i];
+    const old = state.equip[item.slot];
+    state.equip[item.slot] = item;
+    state.inv.splice(i, 1);
+    if(old) state.inv.push(old);
+    render();
+}
+
+function calculateBonus(type) {
+    return Object.values(state.equip).reduce((sum, item) => sum + (item ? item[type] : 0), 0);
+}
+
+function checkLevelUp() {
+    if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.baseMaxHp += 20; state.baseAtk += 2; state.hp = state.baseMaxHp + calculateBonus('hp'); }
+}
+
+function render() {
+    document.getElementById('gold').innerText = state.gold;
+    document.getElementById('lvl').innerText = state.lvl;
+    document.getElementById('xpText').innerText = state.xp;
+    document.getElementById('xpF').style.width = state.xp + '%';
+    
+    const max = state.baseMaxHp + calculateBonus('hp');
+    document.getElementById('stat-hp').innerText = `❤️ HP: ${state.hp}/${max}`;
+    document.getElementById('hpF').style.width = (state.hp / max * 100) + '%';
+    document.getElementById('stat-atk').innerText = `⚔️ ATK: ${state.baseAtk + calculateBonus('atk')}`;
+    document.getElementById('mHpF').style.width = (state.mHp / state.mMax * 100) + '%';
+
+    // Update Avatar Layers
+    for(let slot in state.equip) {
+        document.getElementById(`layer-${slot}`).innerText = state.equip[slot] ? state.equip[slot].icon : '';
+    }
+
+    // Render Quests
+    let qH = '';
+    state.quests.forEach((q, i) => {
+        let btn = state.role === 'child' && q.status === 'open' ? 
+            `<button onclick="updateQ(${i},'pending')" style="background:var(--accent); color:white; border:none; padding:5px; border-radius:4px;">Submit</button>` :
+            (state.role === 'parent' && q.status === 'pending' ? `<button onclick="updateQ(${i},'done')" style="background:var(--success); color:white; border:none; padding:5px; border-radius:4px;">Approve</button>` : '');
+        qH += `<div class="quest-item"><span>${q.txt}</span> ${btn}</div>`;
+    });
+    document.getElementById('qList').innerHTML = qH || '<p>No active quests.</p>';
+
+    // Render Inventory
+    let iH = '';
+    state.inv.forEach((item, i) => {
+        iH += `<div class="item-slot" onclick="equip(${i})" oncontextmenu="sell(${i}); return false;" title="Right click to sell for ${Math.floor(item.price/2)}G">${item.icon}</div>`;
+    });
+    document.getElementById('inv').innerHTML = iH;
+}
+
+render();
 </script>
+</body>
+</html>
