@@ -1,50 +1,60 @@
-```html id="8x3p1h"
+```html id="rpg-ui-upgrade"
 <!DOCTYPE html>
 <html>
 <head>
-  <title>RPG Quest Game</title>
+  <title>Quest RPG</title>
 
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
-      background: #020617;
-      color: white;
+      font-family: system-ui;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
     }
 
     h1 {
       text-align: center;
-      color: gold;
+      margin-bottom: 20px;
     }
 
-    .layout {
+    .grid {
       display: grid;
-      grid-template-columns: 250px 1fr 300px;
-      gap: 10px;
-      padding: 10px;
+      grid-template-columns: 260px 1fr 300px;
+      gap: 15px;
     }
 
-    .panel {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 10px;
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
 
+    .title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* CHARACTER */
     .avatar {
       position: relative;
-      width: 150px;
-      height: 150px;
+      width: 140px;
+      height: 140px;
       margin: auto;
     }
 
     .layer {
       position: absolute;
+      width: 100%;
       image-rendering: pixelated;
     }
 
-    /* equipment positioning */
-    #base { width: 100%; }
     #helmet { top: 0; left: 25px; width: 60%; }
     #chest { top: 40px; left: 25px; width: 60%; }
     #weapon { top: 50px; left: 90px; width: 40%; }
@@ -52,40 +62,74 @@
 
     .pet {
       position: absolute;
-      right: -50px;
+      right: -40px;
       bottom: 0;
-      width: 60px;
+      width: 50px;
     }
 
+    /* BARS */
+    .bar {
+      height: 10px;
+      background: #334155;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 5px 0;
+    }
+
+    .fill {
+      height: 100%;
+      background: #22c55e;
+    }
+
+    /* BUTTON */
+    button {
+      background: #3b82f6;
+      border: none;
+      padding: 8px 12px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    input {
+      padding: 6px;
+      width: 70%;
+      margin-right: 5px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    /* INVENTORY */
     .inventory {
       display: grid;
       grid-template-columns: repeat(4,1fr);
-      gap: 5px;
+      gap: 6px;
     }
 
     .item {
-      border: 1px solid #334155;
+      background: #0f172a;
       padding: 5px;
-      cursor: pointer;
-      font-size: 12px;
       text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
+    /* BATTLE */
     .battle {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .bar {
-      height: 10px;
-      background: #1e293b;
-      margin: 5px 0;
-    }
-
-    .fill {
-      height: 100%;
-      background: red;
+    .log {
+      font-size: 12px;
+      margin-top: 10px;
+      max-height: 120px;
+      overflow-y: auto;
     }
 
   </style>
@@ -93,57 +137,66 @@
 
 <body>
 
-<h1>⚔️ RPG QUEST GAME</h1>
+<div class="app">
+  <h1>⚔️ Quest RPG</h1>
 
-<div class="layout">
+  <div class="grid">
 
-  <!-- CHARACTER -->
-  <div class="panel">
-    <h3>Character</h3>
+    <!-- CHARACTER -->
+    <div class="card">
+      <div class="title">Character</div>
 
-    <div class="avatar">
-      <img id="base" class="layer" src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png">
-      <img id="helmet" class="layer">
-      <img id="chest" class="layer">
-      <img id="weapon" class="layer">
-      <img id="shoes" class="layer">
-      <img id="pet" class="pet" src="https://kenney.nl/assets/animal-pack/PNG/Round/bee.png">
-    </div>
-
-    <div id="stats"></div>
-  </div>
-
-  <!-- QUESTS -->
-  <div class="panel">
-    <h3>Quests</h3>
-    <input id="questInput">
-    <button onclick="addQuest()">Add</button>
-    <div id="quests"></div>
-  </div>
-
-  <!-- BATTLE -->
-  <div class="panel">
-    <h3>Battle</h3>
-
-    <div class="battle">
-      <div>
-        <img src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png" width="80">
-        <div class="bar"><div id="playerHP" class="fill"></div></div>
+      <div class="avatar">
+        <img id="base" class="layer" src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png">
+        <img id="helmet" class="layer">
+        <img id="chest" class="layer">
+        <img id="weapon" class="layer">
+        <img id="shoes" class="layer">
+        <img class="pet" src="https://kenney.nl/assets/animal-pack/PNG/Round/bee.png">
       </div>
 
-      <div>
-        <img id="monster" src="https://kenney.nl/assets/monster-pack/PNG/Slime/slimeBlock.png" width="80">
-        <div class="bar"><div id="monsterHP" class="fill"></div></div>
-      </div>
+      <div id="stats"></div>
+
+      HP
+      <div class="bar"><div id="hpBar" class="fill"></div></div>
+
     </div>
 
-    <button onclick="attack()">Attack</button>
-    <div id="battleLog"></div>
+    <!-- QUESTS -->
+    <div class="card">
+      <div class="title">Quests</div>
 
-    <h3>Inventory</h3>
-    <div id="inventory" class="inventory"></div>
+      <input id="questInput">
+      <button onclick="addQuest()">Add</button>
+
+      <div id="quests"></div>
+    </div>
+
+    <!-- BATTLE -->
+    <div class="card">
+      <div class="title">Battle</div>
+
+      <div class="battle">
+        <div>
+          <img src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png" width="70">
+          <div class="bar"><div id="pHP" class="fill"></div></div>
+        </div>
+
+        <div>
+          <img src="https://kenney.nl/assets/monster-pack/PNG/Slime/slimeBlock.png" width="70">
+          <div class="bar"><div id="mHP" class="fill"></div></div>
+        </div>
+      </div>
+
+      <button onclick="attack()">Attack</button>
+
+      <div id="log" class="log"></div>
+
+      <div class="title">Inventory</div>
+      <div id="inventory" class="inventory"></div>
+    </div>
+
   </div>
-
 </div>
 
 <script>
@@ -158,75 +211,60 @@ let player={
   inventory:[]
 };
 
-let monster={
-  hp:50,
-  maxHp:50
-};
-
+let monster={hp:50,maxHp:50};
 let quests=[];
 
 function addQuest(){
-  let text=document.getElementById("questInput").value;
-  quests.push({text});
+  let t=document.getElementById("questInput").value;
+  quests.push({text:t});
   render();
 }
 
 function attack(){
-  let damage=totalAttack();
-  monster.hp-=damage;
+  monster.hp-=player.atk;
 
   if(monster.hp<=0){
     log("Monster defeated!");
-    monster.hp=monster.maxHp;
-    reward();
+    monster.hp=50;
+    player.inventory.push(rollLoot());
   } else {
-    player.hp-=Math.random()*10;
-    log("You hit for "+damage);
+    player.hp-=5;
+    log("You attacked!");
   }
 
   render();
-}
-
-function reward(){
-  if(Math.random()<0.5){
-    player.inventory.push(rollLoot());
-  }
 }
 
 function rollLoot(){
-  let r=Math.random();
-
-  if(r<0.25) return {type:"helmet",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/hat.png"};
-  if(r<0.5) return {type:"chest",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/shirt.png"};
-  if(r<0.75) return {type:"shoes",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/shoes.png"};
-  return {type:"weapon",img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/sword.png"};
+  let types=["helmet","chest","weapon","shoes"];
+  return {type:types[Math.floor(Math.random()*4)],
+    img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/sword.png"};
 }
 
-function equip(item){
-  player[item.type]=item;
+function equip(i){
+  player[i.type]=i;
   render();
 }
 
-function totalAttack(){
-  return player.atk + (player.weapon?3:0);
-}
-
-function log(text){
-  document.getElementById("battleLog").innerHTML+=text+"<br>";
+function log(t){
+  document.getElementById("log").innerHTML+=t+"<br>";
 }
 
 function render(){
+  document.getElementById("stats").innerHTML="ATK:"+player.atk;
 
-  document.getElementById("playerHP").style.width=
-    (player.hp/player.maxHp*100)+"%";
-
-  document.getElementById("monsterHP").style.width=
-    (monster.hp/monster.maxHp*100)+"%";
+  document.getElementById("hpBar").style.width=(player.hp/player.maxHp*100)+"%";
+  document.getElementById("pHP").style.width=(player.hp/player.maxHp*100)+"%";
+  document.getElementById("mHP").style.width=(monster.hp/monster.maxHp*100)+"%";
 
   document.getElementById("helmet").src=player.helmet?player.helmet.img:"";
   document.getElementById("chest").src=player.chest?player.chest.img:"";
   document.getElementById("weapon").src=player.weapon?player.weapon.img:"";
   document.getElementById("shoes").src=player.shoes?player.shoes.img:"";
+
+  let q="";
+  quests.forEach(x=>q+=x.text+"<br>");
+  document.getElementById("quests").innerHTML=q;
 
   let inv="";
   player.inventory.forEach(i=>{
@@ -234,7 +272,6 @@ function render(){
       <img src="${i.img}" width="30">
     </div>`;
   });
-
   document.getElementById("inventory").innerHTML=inv;
 }
 
