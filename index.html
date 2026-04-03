@@ -1,4 +1,4 @@
-```html id="rpg-ui-upgrade"
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,7 +20,6 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
     }
 
     .grid {
@@ -33,7 +32,12 @@
       background: #1e293b;
       border-radius: 12px;
       padding: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
     }
 
     .title {
@@ -41,7 +45,6 @@
       margin-bottom: 10px;
     }
 
-    /* CHARACTER */
     .avatar {
       position: relative;
       width: 140px;
@@ -67,7 +70,6 @@
       width: 50px;
     }
 
-    /* BARS */
     .bar {
       height: 10px;
       background: #334155;
@@ -78,32 +80,32 @@
 
     .fill {
       height: 100%;
-      background: #22c55e;
+      background: linear-gradient(to right, #22c55e, #4ade80);
+      transition: width 0.5s;
     }
 
-    /* BUTTON */
     button {
       background: #3b82f6;
       border: none;
-      padding: 8px 12px;
+      padding: 8px;
       color: white;
       border-radius: 6px;
       cursor: pointer;
+      transition: 0.2s;
     }
 
     button:hover {
       background: #2563eb;
+      transform: scale(1.05);
     }
 
     input {
       padding: 6px;
-      width: 70%;
-      margin-right: 5px;
       border-radius: 6px;
       border: none;
+      margin-right: 5px;
     }
 
-    /* INVENTORY */
     .inventory {
       display: grid;
       grid-template-columns: repeat(4,1fr);
@@ -116,9 +118,14 @@
       text-align: center;
       border-radius: 6px;
       cursor: pointer;
+      transition: 0.2s;
     }
 
-    /* BATTLE */
+    .item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px gold;
+    }
+
     .battle {
       display: flex;
       justify-content: space-between;
@@ -127,9 +134,20 @@
 
     .log {
       font-size: 12px;
-      margin-top: 10px;
       max-height: 120px;
       overflow-y: auto;
+    }
+
+    .mode-toggle {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .quest {
+      background: #0f172a;
+      padding: 6px;
+      margin: 5px 0;
+      border-radius: 6px;
     }
 
   </style>
@@ -138,7 +156,14 @@
 <body>
 
 <div class="app">
+
   <h1>⚔️ Quest RPG</h1>
+
+  <div class="mode-toggle">
+    <button onclick="setRole('child')">Child</button>
+    <button onclick="setRole('parent')">Parent</button>
+    <div id="mode"></div>
+  </div>
 
   <div class="grid">
 
@@ -157,8 +182,8 @@
 
       <div id="stats"></div>
 
-      HP
-      <div class="bar"><div id="hpBar" class="fill"></div></div>
+      XP
+      <div class="bar"><div id="xpBar" class="fill"></div></div>
 
     </div>
 
@@ -200,7 +225,12 @@
 </div>
 
 <script>
+let role="child";
+
 let player={
+  level:1,
+  xp:0,
+  xpNeeded:100,
   hp:100,
   maxHp:100,
   atk:5,
@@ -214,10 +244,46 @@ let player={
 let monster={hp:50,maxHp:50};
 let quests=[];
 
+function setRole(r){
+  role=r;
+  document.getElementById("mode").innerText="Mode: "+r;
+  render();
+}
+
 function addQuest(){
   let t=document.getElementById("questInput").value;
-  quests.push({text:t});
+  quests.push({
+    text:t,
+    status: role==="parent"?"assigned":"pending"
+  });
   render();
+}
+
+function submitQuest(i){
+  quests[i].status="pending";
+  render();
+}
+
+function recallQuest(i){
+  quests.splice(i,1);
+  render();
+}
+
+function approveQuest(i){
+  quests[i].status="done";
+  gainXP(30);
+  render();
+}
+
+function gainXP(amount){
+  player.xp+=amount;
+
+  if(player.xp>=player.xpNeeded){
+    player.xp-=player.xpNeeded;
+    player.level++;
+    player.xpNeeded*=1.2;
+    log("✨ LEVEL UP!");
+  }
 }
 
 function attack(){
@@ -226,6 +292,7 @@ function attack(){
   if(monster.hp<=0){
     log("Monster defeated!");
     monster.hp=50;
+    gainXP(20);
     player.inventory.push(rollLoot());
   } else {
     player.hp-=5;
@@ -237,8 +304,10 @@ function attack(){
 
 function rollLoot(){
   let types=["helmet","chest","weapon","shoes"];
-  return {type:types[Math.floor(Math.random()*4)],
-    img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/sword.png"};
+  return {
+    type:types[Math.floor(Math.random()*4)],
+    img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/sword.png"
+  };
 }
 
 function equip(i){
@@ -251,11 +320,18 @@ function log(t){
 }
 
 function render(){
-  document.getElementById("stats").innerHTML="ATK:"+player.atk;
 
-  document.getElementById("hpBar").style.width=(player.hp/player.maxHp*100)+"%";
-  document.getElementById("pHP").style.width=(player.hp/player.maxHp*100)+"%";
-  document.getElementById("mHP").style.width=(monster.hp/monster.maxHp*100)+"%";
+  document.getElementById("stats").innerHTML=
+    "Level: "+player.level+"<br>ATK:"+player.atk;
+
+  document.getElementById("xpBar").style.width=
+    (player.xp/player.xpNeeded*100)+"%";
+
+  document.getElementById("pHP").style.width=
+    (player.hp/player.maxHp*100)+"%";
+
+  document.getElementById("mHP").style.width=
+    (monster.hp/monster.maxHp*100)+"%";
 
   document.getElementById("helmet").src=player.helmet?player.helmet.img:"";
   document.getElementById("chest").src=player.chest?player.chest.img:"";
@@ -263,7 +339,14 @@ function render(){
   document.getElementById("shoes").src=player.shoes?player.shoes.img:"";
 
   let q="";
-  quests.forEach(x=>q+=x.text+"<br>");
+  quests.forEach((x,i)=>{
+    q+=`<div class="quest">
+      ${x.text} (${x.status})
+      ${role==="child" && x.status==="assigned"?`<button onclick="submitQuest(${i})">Submit</button>`:""}
+      ${role==="child" && x.status==="pending"?`<button onclick="recallQuest(${i})">Recall</button>`:""}
+      ${role==="parent" && x.status==="pending"?`<button onclick="approveQuest(${i})">Approve</button>`:""}
+    </div>`;
+  });
   document.getElementById("quests").innerHTML=q;
 
   let inv="";
