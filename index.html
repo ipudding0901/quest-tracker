@@ -2,229 +2,248 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>RPG Quest System</title>
+  <title>RPG Quest Game</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(180deg, #0f172a, #020617);
-      color: #e2e8f0;
+      font-family: sans-serif;
+      background: #020617;
+      color: white;
     }
 
-    h1 { text-align: center; }
+    h1 {
+      text-align: center;
+      color: gold;
+    }
 
-    .topbar {
-      display: flex;
-      justify-content: center;
+    .layout {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
       gap: 10px;
       padding: 10px;
     }
 
-    button {
-      background: #1e293b;
+    .panel {
+      background: #0f172a;
       border: 1px solid #334155;
-      color: white;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-
-    button:hover { background: #334155; }
-
-    .container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      padding: 20px;
-    }
-
-    .card {
-      background: #020617;
-      border: 1px solid #1e293b;
-      padding: 15px;
       border-radius: 10px;
+      padding: 10px;
     }
 
-    .xpbar {
-      background: #1e293b;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 5px;
+    .title {
+      border-bottom: 1px solid #334155;
+      margin-bottom: 5px;
     }
 
-    .xpfill {
-      background: gold;
-      height: 100%;
+    .avatar {
+      font-size: 60px;
+      text-align: center;
     }
 
-    .quest {
-      border-bottom: 1px solid #1e293b;
+    .equipment {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .inventory {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 5px;
+    }
+
+    .item {
+      border: 1px solid #334155;
       padding: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      text-align: center;
     }
 
-    .common { color: #9ca3af; }
-    .rare { color: #3b82f6; }
-    .unique { color: #a855f7; }
+    .common { color: gray; }
+    .rare { color: blue; }
+    .unique { color: purple; }
     .legendary { color: gold; }
+
+    button { margin: 3px; }
 
   </style>
 </head>
 
 <body>
 
-<h1>⚔️ RPG Quest System</h1>
+<h1>⚔️ RPG QUEST GAME</h1>
 
-<div class="topbar">
-  <button onclick="setRole('child')">Child</button>
-  <button onclick="setRole('parent')">Parent</button>
-</div>
-
-<h2 style="text-align:center" id="mode"></h2>
-
-<div class="container">
+<div class="layout">
 
   <!-- CHARACTER -->
-  <div class="card">
-    <h3>Character</h3>
-    <div id="char"></div>
-    <div class="xpbar">
-      <div id="xpfill" class="xpfill"></div>
-    </div>
-  </div>
+  <div class="panel">
+    <div class="title">Character</div>
 
-  <!-- INVENTORY -->
-  <div class="card">
-    <h3>Inventory</h3>
-    <div id="inventory"></div>
+    <div id="avatar" class="avatar">🧑</div>
+
+    <div id="stats"></div>
+
+    <div class="equipment">
+      Weapon: <span id="weapon">None</span><br>
+      Armor: <span id="armor">None</span>
+    </div>
+
+    <button onclick="setRole('child')">Child</button>
+    <button onclick="setRole('parent')">Parent</button>
+    <p id="mode"></p>
   </div>
 
   <!-- QUESTS -->
-  <div class="card">
-    <h3>Quests</h3>
-    <input id="questInput" placeholder="New quest">
+  <div class="panel">
+    <div class="title">Quests</div>
+    <input id="questInput">
     <button onclick="addQuest()">Add</button>
     <div id="quests"></div>
   </div>
 
-  <!-- BATTLE -->
-  <div class="card">
-    <h3>Battle</h3>
-    <button onclick="fight()">Fight Monster</button>
-    <p id="battle"></p>
+  <!-- RIGHT -->
+  <div class="panel">
+    <div class="title">Inventory (click to equip)</div>
+    <div id="inventory" class="inventory"></div>
+
+    <div class="title">Battle</div>
+    <button onclick="fight()">Fight</button>
+    <div id="battle"></div>
   </div>
 
 </div>
 
 <script>
-let role = "child";
+let role="child";
 
-let player = {
-  xp: 0,
-  level: 1,
-  attack: 5,
-  pet: "🐺",
-  inventory: []
+let player={
+  level:1,
+  xp:0,
+  baseAttack:5,
+  weapon:null,
+  armor:null,
+  inventory:[]
 };
 
-let quests = [];
+let quests=[];
 
-function setRole(r) {
-  role = r;
-  document.getElementById("mode").innerText = r.toUpperCase() + " DASHBOARD";
+function setRole(r){
+  role=r;
   render();
 }
 
-function addQuest() {
-  const text = document.getElementById("questInput").value;
-  if (!text) return;
+function addQuest(){
+  let text=document.getElementById("questInput").value;
+  if(!text) return;
 
   quests.push({
     text,
-    status: role === "parent" ? "assigned" : "pending"
+    status: role==="parent"?"assigned":"pending"
   });
-
   render();
 }
 
-function submitQuest(i) {
-  quests[i].status = "pending";
+function submitQuest(i){
+  quests[i].status="pending";
   render();
 }
 
-function recallQuest(i) {
+function recallQuest(i){
   quests.splice(i,1);
   render();
 }
 
-function approveQuest(i) {
-  quests[i].status = "done";
-  giveRewards();
+function approveQuest(i){
+  quests[i].status="done";
+  reward();
   render();
 }
 
-function giveRewards() {
-  player.xp += 20;
-
-  if (player.xp >= player.level * 100) {
-    player.xp = 0;
+function reward(){
+  player.xp+=20;
+  if(player.xp>=player.level*100){
+    player.xp=0;
     player.level++;
   }
 
-  if (Math.random() < 0.3) {
-    let loot = rollLoot();
-    player.inventory.push(loot);
+  if(Math.random()<0.3){
+    let item=rollLoot();
+    player.inventory.push(item);
   }
 }
 
-function rollLoot() {
-  let r = Math.random();
-  if (r < 0.6) return {name:"Common Sword",rarity:"common"};
-  if (r < 0.85) return {name:"Rare Armor",rarity:"rare"};
-  if (r < 0.97) return {name:"Unique Pet Egg",rarity:"unique"};
-  return {name:"Legendary Blade",rarity:"legendary"};
+function rollLoot(){
+  let r=Math.random();
+  if(r<0.6) return {name:"Sword",type:"weapon",rarity:"common",atk:2,icon:"🗡️"};
+  if(r<0.85) return {name:"Armor",type:"armor",rarity:"rare",atk:1,icon:"🛡️"};
+  if(r<0.97) return {name:"Magic Robe",type:"armor",rarity:"unique",atk:3,icon:"🧥"};
+  return {name:"Excalibur",type:"weapon",rarity:"legendary",atk:5,icon:"⚔️"};
 }
 
-function fight() {
-  let monster = Math.random()*30 + 10;
-  let power = player.attack + player.level*2;
-
-  if (power > monster) {
-    player.xp += 10;
-    document.getElementById("battle").innerText = "Victory!";
-  } else {
-    document.getElementById("battle").innerText = "Defeat...";
-  }
-
+function equip(item){
+  if(item.type==="weapon") player.weapon=item;
+  if(item.type==="armor") player.armor=item;
   render();
 }
 
-function render() {
-  document.getElementById("char").innerHTML =
-    "Level: " + player.level +
-    "<br>XP: " + player.xp +
-    "<br>ATK: " + player.attack +
-    "<br>Pet: " + player.pet;
+function totalAttack(){
+  return player.baseAttack +
+    (player.weapon?player.weapon.atk:0) +
+    (player.armor?player.armor.atk:0);
+}
 
-  let percent = (player.xp / (player.level*100)) * 100;
-  document.getElementById("xpfill").style.width = percent + "%";
+function fight(){
+  let enemy=10+Math.random()*20;
+  let power=totalAttack();
 
-  let qHTML = "";
-  quests.forEach((q,i) => {
-    qHTML += `<div class="quest">
-      ${q.text} (${q.status})
-      ${role==="child" && q.status==="assigned" ? `<button onclick="submitQuest(${i})">Submit</button>`:""}
-      ${role==="child" && q.status==="pending" ? `<button onclick="recallQuest(${i})">Recall</button>`:""}
-      ${role==="parent" && q.status==="pending" ? `<button onclick="approveQuest(${i})">Approve</button>`:""}
+  if(power>enemy){
+    player.xp+=10;
+    document.getElementById("battle").innerText="Victory!";
+  }else{
+    document.getElementById("battle").innerText="Defeat...";
+  }
+  render();
+}
+
+function render(){
+  document.getElementById("mode").innerText=role;
+
+  document.getElementById("stats").innerHTML=
+    "Level:"+player.level+
+    "<br>XP:"+player.xp+
+    "<br>ATK:"+totalAttack();
+
+  document.getElementById("weapon").innerText=
+    player.weapon?player.weapon.name:"None";
+
+  document.getElementById("armor").innerText=
+    player.armor?player.armor.name:"None";
+
+  // avatar visual change
+  let avatar="🧑";
+  if(player.weapon) avatar="🧝";
+  if(player.armor) avatar="🧙";
+  document.getElementById("avatar").innerText=avatar;
+
+  let qHTML="";
+  quests.forEach((q,i)=>{
+    qHTML+=`
+      <div>
+        ${q.text} (${q.status})
+        ${role==="child" && q.status==="assigned"?`<button onclick="submitQuest(${i})">Submit</button>`:""}
+        ${role==="child" && q.status==="pending"?`<button onclick="recallQuest(${i})">Recall</button>`:""}
+        ${role==="parent" && q.status==="pending"?`<button onclick="approveQuest(${i})">Approve</button>`:""}
+      </div>`;
+  });
+  document.getElementById("quests").innerHTML=qHTML;
+
+  let inv="";
+  player.inventory.forEach(i=>{
+    inv+=`<div class="item ${i.rarity}" onclick='equip(${JSON.stringify(i)})'>
+      ${i.icon}<br>${i.name}
     </div>`;
   });
-  document.getElementById("quests").innerHTML = qHTML;
-
-  let invHTML = "";
-  player.inventory.forEach(i => {
-    invHTML += `<div class="${i.rarity}">${i.name}</div>`;
-  });
-  document.getElementById("inventory").innerHTML = invHTML;
+  document.getElementById("inventory").innerHTML=inv;
 }
 
 render();
