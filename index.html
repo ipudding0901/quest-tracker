@@ -2,134 +2,172 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quest RPG: Shop & Body Update</title>
+  <title>Quest RPG: Ultimate Edition</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #e2e8f0;
       --accent: #3b82f6; --success: #22c55e; --danger: #ef4444; --gold: #fbbf24;
     }
-    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-    .app { max-width: 1200px; margin: auto; padding: 20px; }
+    body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); }
     
-    .grid { display: grid; grid-template-columns: 350px 1fr 350px; gap: 20px; }
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
+    /* Layout */
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; }
+    .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
     
-    /* MODULAR BODY SYSTEM */
-    .avatar-viewport { 
-        position: relative; width: 220px; height: 280px; margin: 0 auto 20px; 
-        background: #1e293b; border-radius: 20px; border: 3px solid #334155; overflow: hidden;
+    /* Paper Doll Character */
+    .character-card { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; }
+    .paper-doll { 
+        position: relative; width: 200px; height: 300px; margin: 0 auto; 
+        background: rgba(0,0,0,0.2); border-radius: 15px; border: 2px solid #334155; 
     }
-    .layer { 
-        position: absolute; left: 50%; transform: translateX(-50%);
-        display: flex; align-items: center; justify-content: center; pointer-events: none;
+    .body-part { position: absolute; left: 50%; transform: translateX(-50%); pointer-events: none; }
+    /* Base Body */
+    .head-base { top: 20px; font-size: 50px; z-index: 1; opacity: 0.5; }
+    .torso-base { top: 75px; font-size: 85px; z-index: 1; opacity: 0.5; }
+    .legs-base { top: 165px; font-size: 65px; z-index: 1; opacity: 0.5; }
+    /* Equipped Gear */
+    #layer-helmet { top: 10px; font-size: 70px; z-index: 5; }
+    #layer-armor { top: 80px; font-size: 95px; z-index: 4; }
+    #layer-shoes { top: 215px; font-size: 50px; z-index: 3; }
+    #layer-weapon { top: 100px; left: 25px; font-size: 60px; z-index: 6; transform: rotate(-15deg); }
+    #layer-shield { top: 100px; left: 175px; font-size: 60px; z-index: 6; }
+    #layer-pet { top: 230px; left: 170px; font-size: 45px; z-index: 7; }
+
+    /* Modals (Shop & Battle) */
+    .modal-overlay { 
+        display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+        background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; 
     }
-    /* The Body Base */
-    .base-head { top: 20px; font-size: 50px; z-index: 1; }
-    .base-torso { top: 70px; font-size: 80px; z-index: 1; }
-    .base-legs { top: 150px; font-size: 60px; z-index: 1; }
+    .modal-content { background: var(--card); padding: 30px; border-radius: 20px; width: 500px; max-width: 90%; border: 2px solid var(--accent); position: relative; }
+    .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--danger); }
 
-    /* The Equipment Overlays */
-    #layer-helmet { top: 10px; font-size: 70px; z-index: 10; }
-    #layer-armor   { top: 75px; font-size: 90px; z-index: 9; }
-    #layer-shoes   { top: 195px; font-size: 50px; z-index: 8; }
-    #layer-weapon  { top: 90px; left: 30px; font-size: 60px; z-index: 11; transform: rotate(-15deg); }
-    #layer-shield  { top: 90px; left: 190px; font-size: 60px; z-index: 11; }
-    #layer-pet     { top: 210px; left: 180px; font-size: 40px; z-index: 12; }
-
-    /* Shop Styling */
-    .shop-item { background: #0f172a; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #334155; }
-    .currency { color: var(--gold); font-weight: bold; font-size: 1.2em; text-align: center; margin-bottom: 10px; }
-
-    /* Combat Animations */
-    .player-attack { animation: lunge 0.3s ease; }
-    @keyframes lunge { 0% { transform: translateX(0); } 50% { transform: translateX(30px); } 100% { transform: translateX(0); } }
-    .dmg-flash { animation: flash 0.3s; }
-    @keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(2) sepia(1) hue-rotate(-50deg); } 100% { filter: brightness(1); } }
-
-    .bar { height: 10px; background: #0f172a; border-radius: 5px; overflow: hidden; margin: 5px 0 15px 0; }
+    /* Buttons & Icons */
+    .icon-btn { font-size: 40px; background: none; border: none; cursor: pointer; transition: 0.2s; filter: drop-shadow(0 0 5px rgba(255,255,255,0.1)); }
+    .icon-btn:hover { transform: scale(1.1); filter: drop-shadow(0 0 10px var(--accent)); }
+    .btn-action { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    
+    /* Stats & Bars */
+    .bar { height: 10px; background: #0f172a; border-radius: 5px; overflow: hidden; margin: 8px 0; }
     .fill { height: 100%; transition: width 0.3s; }
-    .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .item-slot { background: #0f172a; aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid transparent; position: relative; }
+    .hp-fill { background: var(--success); }
+    .xp-fill { background: #a855f7; }
+    
+    /* Quests */
+    .quest-card { background: var(--card); padding: 20px; border-radius: 12px; }
+    .quest-item { background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
+    
+    /* Inventory */
+    .inventory { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
+    .item-slot { background: #0f172a; aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 2px solid transparent; }
     .item-slot:hover { border-color: var(--accent); }
-    .item-slot::after { content: attr(data-price); position: absolute; bottom: -5px; font-size: 10px; color: var(--gold); }
+
+    /* Battle Logic Styling */
+    .battle-log { background: #0f172a; height: 100px; overflow-y: auto; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.9em; margin-top: 15px; }
+    .dmg-flash { animation: flash 0.3s; }
+    @keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(3) sepia(1) hue-rotate(-50deg); } 100% { filter: brightness(1); } }
   </style>
 </head>
 <body>
 
-<div class="app">
-    <div style="text-align:center; margin-bottom: 20px;">
-        <button onclick="setRole('child')" style="background:var(--accent); color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Child Mode</button>
-        <button onclick="setRole('parent')" style="background:#64748b; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; margin-left:10px;">Parent Mode</button>
-        <p>Current Role: <strong id="roleText" style="text-transform: uppercase;">Child</strong></p>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>🛡️ Quest RPG</h1>
+            <span>Role: <strong id="roleLabel" style="color:var(--accent)">Child</strong></span>
+        </div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div>💰 <span id="goldVal">0</span></div>
+            <button class="icon-btn" onclick="openModal('shopModal')">🛒</button>
+            <button class="icon-btn" onclick="openModal('battleModal')">⚔️</button>
+            <button class="btn-action" style="background:#64748b" onclick="toggleRole()">Swap Role</button>
+        </div>
     </div>
 
-    <div class="grid">
-        <div class="card" id="player-card">
-            <div class="currency">💰 <span id="gold">0</span></div>
-            <div class="avatar-viewport" id="avatar-view">
-                <div class="layer base-head">🧑</div>
-                <div class="layer base-torso">👕</div>
-                <div class="layer base-legs">👖</div>
-                <div class="layer" id="layer-helmet"></div>
-                <div class="layer" id="layer-armor"></div>
-                <div class="layer" id="layer-shoes"></div>
-                <div class="layer" id="layer-weapon"></div>
-                <div class="layer" id="layer-shield"></div>
-                <div class="layer" id="layer-pet"></div>
+    <div class="main-grid">
+        <div class="character-card">
+            <div class="paper-doll" id="avatar">
+                <div class="body-part head-base">🧑</div>
+                <div class="body-part torso-base">👕</div>
+                <div class="body-part legs-base">👖</div>
+                <div class="body-part" id="layer-helmet"></div>
+                <div class="body-part" id="layer-armor"></div>
+                <div class="body-part" id="layer-shoes"></div>
+                <div class="body-part" id="layer-weapon"></div>
+                <div class="body-part" id="layer-shield"></div>
+                <div class="body-part" id="layer-pet"></div>
             </div>
             
-            <div style="display:flex; justify-content: space-between; font-weight:bold;">
-                <span>LVL <span id="lvl">1</span></span>
-                <span>XP <span id="xpText">0</span>/100</span>
-            </div>
-            <div class="bar"><div id="xpF" class="fill" style="background:#a855f7; width:0%"></div></div>
-
-            <div style="display:flex; justify-content: space-between; font-size:0.9em;">
-                <span id="stat-atk">⚔️ ATK: 10</span>
-                <span id="stat-hp">❤️ HP: 100/100</span>
-            </div>
-            <div class="bar"><div id="hpF" class="fill" style="background:var(--success); width:100%"></div></div>
-        </div>
-
-        <div>
-            <div class="card" style="margin-bottom:20px;">
-                <h2>🛒 Item Shop</h2>
-                <div id="shopList">
-                    <div class="shop-item">
-                        <span>❤️ Health Pot (Restores 50)</span>
-                        <button onclick="buy('potion')" class="btn-main" style="background:var(--gold); color:#000;">50G</button>
-                    </div>
-                    <div class="shop-item">
-                        <span>⚔️ Sharp Stone (+5 Base ATK)</span>
-                        <button onclick="buy('atk')" class="btn-main" style="background:var(--gold); color:#000;">150G</button>
-                    </div>
-                    <div class="shop-item">
-                        <span>🍀 Lucky Coin (+Drop Rate)</span>
-                        <button onclick="buy('luck')" class="btn-main" style="background:var(--gold); color:#000;">200G</button>
-                    </div>
+            <div style="margin-top:20px; text-align:left;">
+                <div style="display:flex; justify-content:space-between">
+                    <strong>Level <span id="lvlDisplay">1</span></strong>
+                    <small>XP: <span id="xpText">0</span>/100</small>
                 </div>
-            </div>
-
-            <div class="card">
-                <h2>📜 Quests</h2>
-                <div style="display:flex; gap:5px; margin-bottom:15px;">
-                    <input id="qIn" style="flex:1; padding:10px; border-radius:5px; border:none; background:#0f172a; color:white;" placeholder="New task...">
-                    <button onclick="addQ()" style="background:var(--accent); color:white; border:none; padding:10px; border-radius:5px;">Add</button>
+                <div class="bar"><div id="xpBar" class="fill xp-fill" style="width:0%"></div></div>
+                
+                <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                    <strong>HP</strong>
+                    <small id="hpText">100/100</small>
                 </div>
-                <div id="qList"></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div id="monster-zone" style="text-align:center; padding: 15px; background:#0f172a; border-radius:12px; margin-bottom:15px;">
-                <div id="mImg" style="font-size:70px;">👾</div>
-                <div class="bar"><div id="mHpF" class="fill" style="background:var(--danger); width:100%"></div></div>
-                <button id="atkBtn" onclick="playerAttack()" style="background:var(--danger); color:white; width:100%; padding:15px; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">ATTACK!</button>
+                <div class="bar"><div id="hpBar" class="fill hp-fill" style="width:100%"></div></div>
+                <div style="font-size:0.9em; margin-top:5px;">⚔️ Attack: <span id="atkText">10</span></div>
             </div>
 
-            <h3>🎒 Inventory <small>(Click to Equip/Sell)</small></h3>
-            <div id="inv" class="inventory"></div>
+            <div class="inventory" id="inventoryGrid"></div>
         </div>
+
+        <div class="quest-card">
+            <h2>📜 Task Board</h2>
+            <div id="parentControls" style="display:none; margin-bottom:20px;">
+                <input id="qInput" style="padding:12px; border-radius:8px; border:none; width:70%; background:#0f172a; color:white;" placeholder="Add a task for your hero...">
+                <button class="btn-action" onclick="addTask()">Post Quest</button>
+            </div>
+            <div id="questList"></div>
+        </div>
+    </div>
+</div>
+
+<div id="shopModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('shopModal')">&times;</span>
+        <h2 style="text-align:center; color:var(--gold)">🏛️ The Royal Shop</h2>
+        <p style="text-align:center;">Gold: 💰<span id="shopGold">0</span></p>
+        <hr style="border-color:#334155">
+        <div id="shopItems">
+            <div style="display:flex; justify-content:space-between; padding:10px;">
+                <span>🧪 Health Potion (Full Heal)</span>
+                <button class="btn-action" style="background:var(--gold); color:#000" onclick="buyItem('potion')">50G</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px;">
+                <span>✨ Strength Rune (+5 ATK)</span>
+                <button class="btn-action" style="background:var(--gold); color:#000" onclick="buyItem('atk')">150G</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:10px;">
+                <span>🍀 Luck Charm (Rare Drops Up)</span>
+                <button class="btn-action" style="background:var(--gold); color:#000" onclick="buyItem('luck')">300G</button>
+            </div>
+        </div>
+        <p style="font-size:0.8em; color:#94a3b8; text-align:center; margin-top:15px;">Tip: Right-click inventory items to sell them for gold!</p>
+    </div>
+</div>
+
+<div id="battleModal" class="modal-overlay">
+    <div class="modal-content" style="width:600px;">
+        <span class="close-btn" onclick="closeModal('battleModal')">&times;</span>
+        <h2 style="text-align:center;">🏟️ Battle Arena</h2>
+        <div style="display:flex; justify-content:space-around; align-items:center; margin-top:20px;">
+            <div id="playerSide" style="text-align:center;">
+                <div style="font-size:50px;">🧑</div>
+                <small>Hero</small>
+            </div>
+            <div style="font-size:30px; color:var(--danger)">VS</div>
+            <div id="monsterSide" style="text-align:center;">
+                <div id="mSprite" style="font-size:70px;">👾</div>
+                <div class="bar" style="width:100px;"><div id="mHpBar" class="fill" style="background:var(--danger); width:100%"></div></div>
+            </div>
+        </div>
+        <button id="atkBtn" class="btn-action" style="width:100%; margin-top:20px; font-size:1.2em;" onclick="battleTurn()">ATTACK MONSTER</button>
+        <div class="battle-log" id="battleLog">The wild monster growls... your move.</div>
     </div>
 </div>
 
@@ -137,106 +175,98 @@
 let state = {
     role: 'child',
     lvl: 1, xp: 0, gold: 100,
-    hp: 100, baseMaxHp: 100, baseAtk: 10, luck: 0.2,
-    mHp: 50, mMax: 50, mAtk: 5,
-    quests: [],
+    hp: 100, baseMaxHp: 100, baseAtk: 10, luck: 0.15,
+    mHp: 50, mMax: 50, mAtk: 6,
+    quests: [{txt: "Welcome Quest: Finish your homework!", status: "open"}],
     inv: [],
-    equip: { helmet: null, armor: null, weapon: null, shield: null, shoes: null, pet: null }
+    equip: { helmet:null, armor:null, weapon:null, shield:null, shoes:null, pet:null }
 };
 
-const ITEMS = [
-    { name: "Sword", icon: "🗡️", slot: "weapon", atk: 15, hp: 0, price: 50 },
-    { name: "Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 40, price: 40 },
-    { name: "Helm", icon: "🪖", slot: "helmet", atk: 2, hp: 20, price: 30 },
-    { name: "Armor", icon: "🧥", slot: "armor", atk: 5, hp: 50, price: 60 },
-    { name: "Boots", icon: "👢", slot: "shoes", atk: 5, hp: 10, price: 25 },
-    { name: "Dog", icon: "🐕", slot: "pet", atk: 10, hp: 10, price: 100 }
+const GEAR_DATA = [
+    { name: "Sword", icon: "🗡️", slot: "weapon", atk: 12, hp: 0, price: 60 },
+    { name: "Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 40, price: 50 },
+    { name: "Iron Helm", icon: "🪖", slot: "helmet", atk: 2, hp: 20, price: 40 },
+    { name: "Steel Plate", icon: "🧥", slot: "armor", atk: 5, hp: 60, price: 80 },
+    { name: "Leather Boots", icon: "👢", slot: "shoes", atk: 4, hp: 10, price: 30 },
+    { name: "Magic Fox", icon: "🦊", slot: "pet", atk: 10, hp: 15, price: 200 }
 ];
 
-function setRole(r) { state.role = r; document.getElementById('roleText').innerText = r; render(); }
-
-// --- SHOP LOGIC ---
-function buy(type) {
-    if(type === 'potion' && state.gold >= 50) {
-        state.gold -= 50;
-        state.hp = Math.min(state.hp + 50, state.baseMaxHp + calculateBonus('hp'));
-    } else if(type === 'atk' && state.gold >= 150) {
-        state.gold -= 150;
-        state.baseAtk += 5;
-    } else if(type === 'luck' && state.gold >= 200) {
-        state.gold -= 200;
-        state.luck += 0.1;
-    } else {
-        alert("Not enough gold!");
-    }
+function toggleRole() {
+    state.role = (state.role === 'child' ? 'parent' : 'child');
     render();
 }
 
-function sell(i) {
-    const item = state.inv[i];
-    state.gold += Math.floor(item.price / 2);
-    state.inv.splice(i, 1);
-    render();
-}
+function openModal(id) { document.getElementById(id).style.display = 'flex'; render(); }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-// --- QUESTS ---
-function addQ() {
-    const val = document.getElementById('qIn').value;
+function addTask() {
+    const val = document.getElementById('qInput').value;
     if(!val) return;
-    state.quests.push({ txt: val, status: 'open' });
-    document.getElementById('qIn').value = '';
+    state.quests.push({txt: val, status: 'open'});
+    document.getElementById('qInput').value = '';
     render();
 }
 
-function updateQ(i, status) {
-    if(status === 'done') {
+function updateQuest(i, newStatus) {
+    if(newStatus === 'done') {
         state.quests.splice(i, 1);
+        state.gold += 50;
         state.xp += 40;
-        state.gold += 30;
-        // LUCK based drop
-        if(Math.random() < state.luck) {
-            state.inv.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+        // RPG Drop Logic
+        if(Math.random() < (0.2 + state.luck)) {
+            state.inv.push(GEAR_DATA[Math.floor(Math.random() * GEAR_DATA.length)]);
         }
+        checkLvl();
     } else {
-        state.quests[i].status = status;
+        state.quests[i].status = newStatus;
     }
-    checkLevelUp();
     render();
 }
 
-// --- COMBAT ---
-function playerAttack() {
-    const hero = document.getElementById('avatar-view');
-    const monster = document.getElementById('mImg');
-    
-    hero.classList.add('player-attack');
-    monster.classList.add('dmg-flash');
+function buyItem(type) {
+    if(type === 'potion' && state.gold >= 50) { state.gold -= 50; state.hp = state.baseMaxHp + calcBonus('hp'); }
+    else if(type === 'atk' && state.gold >= 150) { state.gold -= 150; state.baseAtk += 5; }
+    else if(type === 'luck' && state.gold >= 300) { state.gold -= 300; state.luck += 0.05; }
+    else { alert("Not enough gold!"); }
+    render();
+}
 
-    state.mHp -= (state.baseAtk + calculateBonus('atk'));
-    
+function battleTurn() {
+    const btn = document.getElementById('atkBtn');
+    const log = document.getElementById('battleLog');
+    btn.disabled = true;
+
+    // Player Hits
+    let dmg = state.baseAtk + calcBonus('atk');
+    state.mHp -= dmg;
+    document.getElementById('mSprite').classList.add('dmg-flash');
+    log.innerHTML = `<span style="color:var(--success)">- You hit monster for ${dmg} DMG!</span><br>` + log.innerHTML;
+
     if(state.mHp <= 0) {
-        state.gold += 15;
-        state.mMax = Math.floor(state.mMax * 1.2);
+        state.gold += 20; state.xp += 25;
+        log.innerHTML = `⭐ <b>Monster Defeated! You earned 20 Gold.</b><br>` + log.innerHTML;
+        state.mMax = Math.floor(state.mMax * 1.25);
         state.mHp = state.mMax;
         state.mAtk += 2;
+        checkLvl();
+        setTimeout(() => { btn.disabled = false; render(); }, 1000);
     } else {
-        // Monster counter
+        // Monster Counters
         setTimeout(() => {
-            state.hp -= state.mAtk;
+            document.getElementById('mSprite').classList.remove('dmg-flash');
+            let mDmg = state.mAtk;
+            state.hp -= mDmg;
+            log.innerHTML = `<span style="color:var(--danger)">- Monster bites you for ${mDmg} DMG!</span><br>` + log.innerHTML;
             if(state.hp <= 0) {
-                alert("Resting... (HP Restored)");
-                state.hp = state.baseMaxHp + calculateBonus('hp');
-                state.gold = Math.max(0, state.gold - 20);
+                alert("You collapsed! Resting to recover...");
+                state.hp = Math.floor(state.baseMaxHp / 2);
+                closeModal('battleModal');
             }
+            btn.disabled = false;
             render();
-        }, 300);
+        }, 600);
     }
-
-    setTimeout(() => {
-        hero.classList.remove('player-attack');
-        monster.classList.remove('dmg-flash');
-        render();
-    }, 400);
+    render();
 }
 
 function equip(i) {
@@ -248,47 +278,62 @@ function equip(i) {
     render();
 }
 
-function calculateBonus(type) {
-    return Object.values(state.equip).reduce((sum, item) => sum + (item ? item[type] : 0), 0);
+function sell(i) {
+    state.gold += Math.floor(state.inv[i].price / 2);
+    state.inv.splice(i, 1);
+    render();
 }
 
-function checkLevelUp() {
-    if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.baseMaxHp += 20; state.baseAtk += 2; state.hp = state.baseMaxHp + calculateBonus('hp'); }
+function calcBonus(stat) {
+    return Object.values(state.equip).reduce((sum, item) => sum + (item ? item[stat] : 0), 0);
+}
+
+function checkLvl() {
+    if(state.xp >= 100) { 
+        state.lvl++; state.xp -= 100; state.baseMaxHp += 20; state.baseAtk += 3; 
+        state.hp = state.baseMaxHp + calcBonus('hp'); 
+    }
 }
 
 function render() {
-    document.getElementById('gold').innerText = state.gold;
-    document.getElementById('lvl').innerText = state.lvl;
+    document.getElementById('roleLabel').innerText = state.role;
+    document.getElementById('parentControls').style.display = (state.role === 'parent' ? 'block' : 'none');
+    document.getElementById('goldVal').innerText = state.gold;
+    document.getElementById('shopGold').innerText = state.gold;
+    document.getElementById('lvlDisplay').innerText = state.lvl;
     document.getElementById('xpText').innerText = state.xp;
-    document.getElementById('xpF').style.width = state.xp + '%';
+    document.getElementById('xpBar').style.width = state.xp + '%';
     
-    const max = state.baseMaxHp + calculateBonus('hp');
-    document.getElementById('stat-hp').innerText = `❤️ HP: ${state.hp}/${max}`;
-    document.getElementById('hpF').style.width = (state.hp / max * 100) + '%';
-    document.getElementById('stat-atk').innerText = `⚔️ ATK: ${state.baseAtk + calculateBonus('atk')}`;
-    document.getElementById('mHpF').style.width = (state.mHp / state.mMax * 100) + '%';
+    let max = state.baseMaxHp + calcBonus('hp');
+    document.getElementById('hpText').innerText = `${state.hp}/${max}`;
+    document.getElementById('hpBar').style.width = (state.hp / max * 100) + '%';
+    document.getElementById('atkText').innerText = (state.baseAtk + calcBonus('atk'));
+    document.getElementById('mHpBar').style.width = (state.mHp / state.mMax * 100) + '%';
 
-    // Update Avatar Layers
+    // Doll Layers
     for(let slot in state.equip) {
         document.getElementById(`layer-${slot}`).innerText = state.equip[slot] ? state.equip[slot].icon : '';
     }
 
-    // Render Quests
+    // Quests
     let qH = '';
     state.quests.forEach((q, i) => {
-        let btn = state.role === 'child' && q.status === 'open' ? 
-            `<button onclick="updateQ(${i},'pending')" style="background:var(--accent); color:white; border:none; padding:5px; border-radius:4px;">Submit</button>` :
-            (state.role === 'parent' && q.status === 'pending' ? `<button onclick="updateQ(${i},'done')" style="background:var(--success); color:white; border:none; padding:5px; border-radius:4px;">Approve</button>` : '');
-        qH += `<div class="quest-item"><span>${q.txt}</span> ${btn}</div>`;
+        let btn = '';
+        if(state.role === 'child' && q.status === 'open') btn = `<button class="btn-action" onclick="updateQuest(${i},'pending')">Submit</button>`;
+        if(state.role === 'parent') {
+            if(q.status === 'pending') btn = `<button class="btn-action" style="background:var(--success)" onclick="updateQuest(${i},'done')">Approve</button>`;
+            btn += ` <button class="btn-action" style="background:var(--danger); padding:10px" onclick="state.quests.splice(${i},1); render();">X</button>`;
+        }
+        qH += `<div class="quest-item"><span>${q.txt} <small style="color:var(--gold)">(${q.status})</small></span> <div>${btn}</div></div>`;
     });
-    document.getElementById('qList').innerHTML = qH || '<p>No active quests.</p>';
+    document.getElementById('questList').innerHTML = qH || '<p style="text-align:center; opacity:0.5;">No active quests.</p>';
 
-    // Render Inventory
+    // Inventory
     let iH = '';
     state.inv.forEach((item, i) => {
-        iH += `<div class="item-slot" onclick="equip(${i})" oncontextmenu="sell(${i}); return false;" title="Right click to sell for ${Math.floor(item.price/2)}G">${item.icon}</div>`;
+        iH += `<div class="item-slot" onclick="equip(${i})" oncontextmenu="sell(${i}); return false;" title="${item.name}: +${item.atk} ATK, +${item.hp} HP">${item.icon}</div>`;
     });
-    document.getElementById('inv').innerHTML = iH;
+    document.getElementById('inventoryGrid').innerHTML = iH;
 }
 
 render();
