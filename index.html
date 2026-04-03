@@ -1,309 +1,147 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Quest RPG: Combat Update</title>
-  <style>
-    :root {
-      --bg: #0f172a; --card: #1e293b; --text: #e2e8f0;
-      --accent: #3b82f6; --success: #22c55e; --danger: #ef4444; --gold: #fbbf24;
-    }
-    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-    .app { max-width: 1100px; margin: auto; padding: 20px; }
-    
-    /* Layout */
-    .grid { display: grid; grid-template-columns: 340px 1fr 340px; gap: 20px; }
-    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
-    
-    /* Avatar Viewport */
+<style>
+    /* ... (Keep your previous root colors) ... */
+
     .avatar-viewport { 
-        position: relative; width: 220px; height: 220px; margin: 0 auto 20px; 
-        background: radial-gradient(circle, #334155, #1e293b); 
-        border-radius: 50%; border: 4px solid #475569; overflow: hidden;
+        position: relative; 
+        width: 240px; 
+        height: 240px; 
+        margin: 0 auto 20px; 
+        background: radial-gradient(circle, #334155, #0f172a); 
+        border-radius: 50%; 
+        border: 4px solid #475569;
+        overflow: hidden;
     }
+
+    /* THE FIX: Absolute positioning with middle-anchoring */
     .layer { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-        display: flex; align-items: center; justify-content: center; 
-        pointer-events: none; transition: transform 0.2s;
+        position: absolute; 
+        top: 50%; 
+        left: 50%; 
+        transform: translate(-50%, -50%); /* Centers every emoji on the same spot */
+        display: block;
+        pointer-events: none; 
+        transition: all 0.2s ease-out;
+        line-height: 1;
     }
-    #layer-body    { z-index: 1; font-size: 100px; }
-    #layer-shoes   { z-index: 2; font-size: 40px; transform: translateY(60px); }
-    #layer-armor   { z-index: 3; font-size: 70px; transform: translateY(10px); }
-    #layer-helmet  { z-index: 4; font-size: 60px; transform: translateY(-45px); }
-    #layer-weapon  { z-index: 5; font-size: 55px; transform: translate(-65px, 10px) rotate(-15deg); }
-    #layer-shield  { z-index: 5; font-size: 55px; transform: translate(65px, 10px); }
-    #layer-pet     { z-index: 6; font-size: 40px; transform: translate(50px, 65px); }
 
-    /* Currency Display */
-    .wallet { display: flex; gap: 15px; justify-content: center; margin-bottom: 10px; font-weight: bold; }
-
-    /* Animations */
-    .attack-left { animation: lungeLeft 0.3s ease; }
-    @keyframes lungeLeft { 0% { transform: translateX(0); } 50% { transform: translateX(-40px); } 100% { transform: translateX(0); } }
+    /* Offset each slot relative to the center of the body */
+    #layer-body    { z-index: 1; font-size: 110px; }
     
-    .monster-hit { animation: flashRed 0.3s; }
-    @keyframes flashRed { 0% { filter: brightness(1); } 50% { filter: sepia(1) saturate(10) hue-rotate(-50deg); transform: scale(1.1); } 100% { filter: brightness(1); } }
+    #layer-shoes   { z-index: 2; font-size: 50px; margin-top: 75px; } /* Bottom */
     
-    .player-hurt { animation: shake 0.3s; background: rgba(239, 68, 68, 0.2) !important; }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-
-    /* UI Elements */
-    .bar { height: 12px; background: #0f172a; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #334155; }
-    .fill { height: 100%; transition: width 0.3s ease; }
-    .fill-xp { background: #a855f7; } 
-    .fill-hp { background: #22c55e; } 
-    .fill-mhp { background: #ef4444; }
+    #layer-armor   { z-index: 3; font-size: 85px; margin-top: 15px; } /* Torso */
     
-    .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .item-slot { 
-        background: #0f172a; aspect-ratio: 1; border-radius: 8px; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 24px; cursor: pointer; border: 2px solid #334155;
+    #layer-helmet  { z-index: 4; font-size: 75px; margin-top: -65px; } /* Head */
+    
+    #layer-weapon  { 
+        z-index: 5; font-size: 65px; 
+        margin-left: -75px; margin-top: 10px; 
+        transform: translate(-50%, -50%) rotate(-15deg); 
     }
-    .item-slot:hover { border-color: var(--accent); }
-
-    .quest-item { background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    button { cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; transition: 0.2s; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-
-<div class="app">
-    <h1>⚔️ Quest RPG</h1>
     
-    <div style="text-align:center; margin-bottom: 20px;">
-        <button onclick="setRole('child')" style="background: var(--accent)">Child Mode</button>
-        <button onclick="setRole('parent')" style="background: #64748b; margin-left:10px;">Parent Mode</button>
-        <p>Current Role: <strong id="roleText">Child</strong></p>
-    </div>
+    #layer-shield  { 
+        z-index: 5; font-size: 65px; 
+        margin-left: 75px; margin-top: 10px; 
+    }
+    
+    #layer-pet     { 
+        z-index: 6; font-size: 45px; 
+        margin-left: 60px; margin-top: 70px; 
+    }
 
-    <div class="grid">
-        <div class="card" id="player-card">
-            <div class="wallet">
-                <span>💰 <span id="gold">0</span></span>
-                <span>💎 <span id="gems">0</span></span>
-            </div>
-            <div class="avatar-viewport" id="avatar-view">
-                <div class="layer" id="layer-body">👤</div>
-                <div class="layer" id="layer-shoes"></div>
-                <div class="layer" id="layer-armor"></div>
-                <div class="layer" id="layer-helmet"></div>
-                <div class="layer" id="layer-weapon"></div>
-                <div class="layer" id="layer-shield"></div>
-                <div class="layer" id="layer-pet"></div>
-            </div>
-            
-            <div style="display:flex; justify-content: space-between;">
-                <strong>Lvl <span id="lvl">1</span></strong>
-                <span style="font-size:0.8em; color:#94a3b8;">XP to Level: <span id="xpText">0</span>/100</span>
-            </div>
-            <div class="bar"><div id="xpF" class="fill fill-xp" style="width:0%"></div></div>
+    /* ANIMATIONS */
+    .hero-attack { animation: lunge 0.3s ease-in-out; }
+    @keyframes lunge {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-70%, -50%) scale(1.1); } /* Lunges toward monster */
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
 
-            <div style="display:flex; justify-content: space-between; margin-top:10px;">
-                <span id="stat-atk">⚔️ ATK: 10</span>
-                <span id="stat-hp">❤️ HP: 100/100</span>
-            </div>
-            <div class="bar"><div id="hpF" class="fill fill-hp" style="width:100%"></div></div>
-        </div>
+    .monster-damaged { animation: flashRed 0.4s; }
+    @keyframes flashRed {
+        0% { filter: none; }
+        50% { filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); transform: scale(0.9); }
+        100% { filter: none; }
+    }
 
-        <div class="card">
-            <h2>📜 Active Quests</h2>
-            <div style="display:flex; gap:5px; margin-bottom:15px;">
-                <input id="qIn" style="flex:1; padding:10px; border-radius:6px; border:none; background:#0f172a; color:white;" placeholder="Enter task...">
-                <button style="background:var(--accent); color:white;" onclick="addQ()">Add</button>
-            </div>
-            <div id="qList"></div>
-        </div>
-
-        <div class="card">
-            <div id="monster-zone" style="text-align:center; padding: 20px; background:#0f172a; border-radius:12px; margin-bottom:15px;">
-                <div id="mImg" style="font-size:80px; transition: 0.2s;">👾</div>
-                <div style="font-size:0.8em; margin-bottom:5px;">Monster Health</div>
-                <div class="bar"><div id="mHpF" class="fill fill-mhp" style="width:100%"></div></div>
-                <button id="atkBtn" style="background:var(--danger); color:white; width:100%; font-size:1.2em;" onclick="playerAttack()">ATTACK!</button>
-            </div>
-
-            <h3>🎒 Inventory</h3>
-            <div id="inv" class="inventory"></div>
-        </div>
-    </div>
-</div>
+    .player-damaged { animation: shakeRed 0.4s; }
+    @keyframes shakeRed {
+        0% { background-color: transparent; }
+        25% { background-color: rgba(255,0,0,0.3); transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+        100% { background-color: transparent; }
+    }
+</style>
 
 <script>
-let state = {
-    role: 'child',
-    lvl: 1, xp: 0, gold: 0, gems: 0,
-    hp: 100, baseMaxHp: 100, baseAtk: 10,
-    mHp: 50, mMax: 50, mAtk: 8,
-    quests: [],
-    inv: [],
-    equip: { helmet: null, armor: null, weapon: null, shield: null, shoes: null, pet: null }
-};
+// ... (Your existing state management) ...
 
-const GEAR_DB = [
-    { name: "Shield", icon: "🛡️", slot: "shield", atk: 0, hp: 30 },
-    { name: "Sword", icon: "🗡️", slot: "weapon", atk: 12, hp: 0 },
-    { name: "Great Axe", icon: "🪓", slot: "weapon", atk: 20, hp: -5 },
-    { name: "Helm", icon: "🪖", slot: "helmet", atk: 0, hp: 20 },
-    { name: "Armor", icon: "🥋", slot: "armor", atk: 5, hp: 40 },
-    { name: "Boots", icon: "👞", slot: "shoes", atk: 5, hp: 10 },
-    { name: "Owl", icon: "🦉", slot: "pet", atk: 8, hp: 5 }
-];
-
-function setRole(r) { state.role = r; document.getElementById('roleText').innerText = r; render(); }
-
-function addQ() {
-    const val = document.getElementById('qIn').value;
-    if(!val) return;
-    state.quests.push({ txt: val, status: 'open' });
-    document.getElementById('qIn').value = '';
-    render();
-}
-
-function updateQ(i, status) {
-    if(status === 'done') {
-        state.quests.splice(i, 1);
-        handleQuestReward();
-    } else {
-        state.quests[i].status = status;
-    }
-    render();
-}
-
-function handleQuestReward() {
-    state.xp += 50;
-    const rng = Math.random();
-    if (rng < 0.25) { // 25% chance for Gear
-        state.inv.push(GEAR_DB[Math.floor(Math.random() * GEAR_DB.length)]);
-    } else if (rng < 0.70) {
-        state.gems += Math.floor(Math.random() * 3) + 1;
-    }
-    state.gold += 50;
-    checkLevelUp();
-}
-
-// --- COMBAT LOGIC ---
 function playerAttack() {
     const btn = document.getElementById('atkBtn');
+    const hero = document.getElementById('avatar-view');
+    const monsterImg = document.getElementById('mImg');
+    
     btn.disabled = true;
 
-    // Hero Animation
-    document.getElementById('avatar-view').classList.add('attack-left');
+    // 1. Hero Lunges
+    hero.classList.add('hero-attack');
     
     setTimeout(() => {
-        // Monster Takes Damage
-        document.getElementById('mImg').classList.add('monster-hit');
+        // 2. Monster takes damage & Flashes
+        monsterImg.classList.add('monster-damaged');
+        
         let totalAtk = state.baseAtk + calculateBonus('atk');
         state.mHp -= totalAtk;
 
-        if(state.mHp <= 0) {
+        if (state.mHp <= 0) {
             monsterDefeated();
         } else {
-            // Monster Counter-Attacks after 0.5s
-            setTimeout(monsterAttack, 500);
+            // 3. Monster hits back after a brief delay
+            setTimeout(monsterAttack, 400);
         }
         
-        document.getElementById('avatar-view').classList.remove('attack-left');
         render();
-    }, 200);
+    }, 150);
 
+    // Cleanup animations
     setTimeout(() => {
-        document.getElementById('mImg').classList.remove('monster-hit');
+        hero.classList.remove('hero-attack');
+        monsterImg.classList.remove('monster-damaged');
         btn.disabled = false;
-    }, 800);
+    }, 600);
 }
 
 function monsterAttack() {
-    document.getElementById('player-card').classList.add('player-hurt');
+    const card = document.getElementById('player-card');
+    card.classList.add('player-damaged');
     
-    // Player takes damage
+    // Logic for taking damage
     state.hp -= state.mAtk;
     
-    if(state.hp <= 0) {
-        alert("You fainted! Lost 20 Gold but respawned.");
-        state.hp = state.baseMaxHp + calculateBonus('hp');
-        state.gold = Math.max(0, state.gold - 20);
+    if (state.hp <= 0) {
+        state.hp = 0;
+        alert("Oh no! You fainted. Rest up and try again!");
+        state.hp = state.baseMaxHp + calculateBonus('hp'); // Respawn
+        state.gold = Math.floor(state.gold * 0.9); // 10% Gold penalty
     }
     
     render();
-    setTimeout(() => {
-        document.getElementById('player-card').classList.remove('player-hurt');
-    }, 400);
+    setTimeout(() => card.classList.remove('player-damaged'), 400);
 }
 
 function monsterDefeated() {
-    state.gold += 15;
+    // Better loot logic: Monster drops gold/gems, Quests drop gear
+    const goldEarned = 10 + Math.floor(Math.random() * 15);
+    state.gold += goldEarned;
     state.xp += 20;
-    // Reset Monster
-    state.mMax = Math.floor(state.mMax * 1.15);
+    
+    // Scale monster for next fight
+    state.mMax = Math.floor(state.mMax * 1.2);
     state.mHp = state.mMax;
     state.mAtk += 2;
+    
     checkLevelUp();
-}
-
-function checkLevelUp() {
-    if(state.xp >= 100) {
-        state.lvl++;
-        state.xp -= 100;
-        state.baseMaxHp += 20;
-        state.baseAtk += 5;
-        state.hp = state.baseMaxHp + calculateBonus('hp');
-    }
-}
-
-function calculateBonus(type) {
-    return Object.values(state.equip).reduce((sum, item) => sum + (item ? item[type] : 0), 0);
-}
-
-function equip(i) {
-    const item = state.inv[i];
-    const old = state.equip[item.slot];
-    state.equip[item.slot] = item;
-    state.inv.splice(i, 1);
-    if(old) state.inv.push(old);
     render();
 }
-
-function render() {
-    // Currency & Stats
-    document.getElementById('gold').innerText = state.gold;
-    document.getElementById('gems').innerText = state.gems;
-    document.getElementById('lvl').innerText = state.lvl;
-    document.getElementById('xpText').innerText = state.xp;
-    document.getElementById('xpF').style.width = state.xp + '%';
-    
-    const totalMaxHp = state.baseMaxHp + calculateBonus('hp');
-    document.getElementById('stat-hp').innerText = `❤️ HP: ${state.hp}/${totalMaxHp}`;
-    document.getElementById('hpF').style.width = (state.hp / totalMaxHp * 100) + '%';
-    document.getElementById('stat-atk').innerText = `⚔️ ATK: ${state.baseAtk + calculateBonus('atk')}`;
-    
-    document.getElementById('mHpF').style.width = (state.mHp / state.mMax * 100) + '%';
-
-    // Layers
-    for(let slot in state.equip) {
-        document.getElementById(`layer-${slot}`).innerText = state.equip[slot] ? state.equip[slot].icon : '';
-    }
-
-    // Quests
-    let qH = '';
-    state.quests.forEach((q, i) => {
-        let btn = '';
-        if(state.role === 'child' && q.status === 'open') btn = `<button style="background:var(--accent); color:white;" onclick="updateQ(${i},'pending')">Submit</button>`;
-        if(state.role === 'parent' && q.status === 'pending') btn = `<button style="background:var(--success); color:white;" onclick="updateQ(${i},'done')">Approve</button>`;
-        qH += `<div class="quest-item"><span>${q.txt} <small>(${q.status})</small></span> ${btn}</div>`;
-    });
-    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; color:#94a3b8;">No quests available.</p>';
-
-    // Inventory
-    let iH = '';
-    state.inv.forEach((item, i) => {
-        iH += `<div class="item-slot" onclick="equip(${i})" title="${item.name}">${item.icon}</div>`;
-    });
-    document.getElementById('inv').innerHTML = iH;
-}
-
-render();
+// ... (rest of your render and logic) ...
 </script>
-</body>
-</html>
