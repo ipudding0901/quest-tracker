@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -31,13 +31,6 @@
       padding: 10px;
     }
 
-    .title {
-      border-bottom: 1px solid #334155;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    /* CHARACTER */
     .avatar {
       position: relative;
       width: 150px;
@@ -56,11 +49,9 @@
       position: absolute;
       right: -40px;
       bottom: 0;
-      width: 60px;
-      image-rendering: pixelated;
+      font-size: 40px;
     }
 
-    /* INVENTORY */
     .inventory {
       display: grid;
       grid-template-columns: repeat(4,1fr);
@@ -71,8 +62,8 @@
       border: 1px solid #334155;
       padding: 5px;
       cursor: pointer;
-      font-size: 12px;
       text-align: center;
+      font-size: 12px;
     }
 
     .common { color: gray; }
@@ -80,24 +71,7 @@
     .unique { color: purple; }
     .legendary { color: gold; }
 
-    button {
-      margin: 3px;
-      padding: 5px;
-      cursor: pointer;
-    }
-
-    .quest {
-      border-bottom: 1px solid #334155;
-      padding: 5px;
-    }
-
-    .battle-log {
-      font-size: 12px;
-      height: 120px;
-      overflow-y: auto;
-      background: #020617;
-      padding: 5px;
-    }
+    button { margin: 3px; }
 
   </style>
 </head>
@@ -110,25 +84,18 @@
 
   <!-- CHARACTER -->
   <div class="panel">
-    <div class="title">Character</div>
+    <h3>Character</h3>
 
     <div class="avatar">
-      <img id="base" class="layer" src="https://i.imgur.com/6X12F5O.png">
+      <img id="base" class="layer" src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png">
       <img id="helmet" class="layer">
       <img id="chest" class="layer">
       <img id="weapon" class="layer">
       <img id="shoes" class="layer">
-      <img id="pet" class="pet">
+      <div id="pet" class="pet">🐾</div>
     </div>
 
     <div id="stats"></div>
-
-    <p>
-      Helmet: <span id="helmetName">None</span><br>
-      Chest: <span id="chestName">None</span><br>
-      Weapon: <span id="weaponName">None</span><br>
-      Shoes: <span id="shoesName">None</span>
-    </p>
 
     <button onclick="setRole('child')">Child</button>
     <button onclick="setRole('parent')">Parent</button>
@@ -137,20 +104,20 @@
 
   <!-- QUESTS -->
   <div class="panel">
-    <div class="title">Quests</div>
-    <input id="questInput" placeholder="New quest">
+    <h3>Quests</h3>
+    <input id="questInput">
     <button onclick="addQuest()">Add</button>
     <div id="quests"></div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- INVENTORY -->
   <div class="panel">
-    <div class="title">Inventory (click to equip)</div>
+    <h3>Inventory</h3>
     <div id="inventory" class="inventory"></div>
 
-    <div class="title">Battle</div>
+    <h3>Battle</h3>
     <button onclick="fight()">Fight</button>
-    <div id="battleLog" class="battle-log"></div>
+    <div id="battle"></div>
   </div>
 
 </div>
@@ -166,10 +133,6 @@ let player={
   chest:null,
   weapon:null,
   shoes:null,
-  pet:{
-    name:"Slime",
-    img:"https://i.imgur.com/jM3yX7G.png"
-  },
   inventory:[]
 };
 
@@ -209,27 +172,23 @@ function approveQuest(i){
 
 function reward(){
   player.xp+=20;
-
   if(player.xp>=player.level*100){
     player.xp=0;
     player.level++;
-    log("LEVEL UP!");
   }
 
   if(Math.random()<0.3){
-    let item=rollLoot();
-    player.inventory.push(item);
-    log("Loot: "+item.name);
+    player.inventory.push(rollLoot());
   }
 }
 
 function rollLoot(){
   let r=Math.random();
 
-  if(r<0.4) return {name:"Iron Helmet",type:"helmet",rarity:"common",atk:1,img:"https://i.imgur.com/Z6X6YQb.png"};
-  if(r<0.7) return {name:"Steel Armor",type:"chest",rarity:"rare",atk:2,img:"https://i.imgur.com/8Qf6K2G.png"};
-  if(r<0.9) return {name:"Boots",type:"shoes",rarity:"unique",atk:1,img:"https://i.imgur.com/3Wb7GQp.png"};
-  return {name:"Legend Sword",type:"weapon",rarity:"legendary",atk:4,img:"https://i.imgur.com/0Z8FQ9S.png"};
+  if(r<0.4) return {name:"Helmet",type:"helmet",rarity:"common",atk:1};
+  if(r<0.7) return {name:"Armor",type:"chest",rarity:"rare",atk:2};
+  if(r<0.9) return {name:"Boots",type:"shoes",rarity:"unique",atk:1};
+  return {name:"Sword",type:"weapon",rarity:"legendary",atk:4};
 }
 
 function equip(item){
@@ -239,56 +198,30 @@ function equip(item){
 
 function totalAttack(){
   return player.baseAttack +
-    (player.weapon?player.weapon.atk:0) +
-    (player.chest?player.chest.atk:0) +
-    (player.helmet?player.helmet.atk:0) +
-    (player.shoes?player.shoes.atk:0);
+    (player.weapon?.atk||0) +
+    (player.chest?.atk||0) +
+    (player.helmet?.atk||0) +
+    (player.shoes?.atk||0);
 }
 
 function fight(){
   let enemy=10+Math.random()*20;
-
-  if(totalAttack()>enemy){
-    player.xp+=10;
-    log("Victory!");
-  } else {
-    log("Defeat...");
-  }
-
-  render();
-}
-
-function log(text){
-  document.getElementById("battleLog").innerHTML += text+"<br>";
+  document.getElementById("battle").innerText =
+    totalAttack()>enemy ? "Victory!" : "Defeat...";
 }
 
 function render(){
-
-  document.getElementById("mode").innerText=role.toUpperCase();
+  document.getElementById("mode").innerText=role;
 
   document.getElementById("stats").innerHTML=
-    "Level: "+player.level+
-    "<br>XP: "+player.xp+
-    "<br>ATK: "+totalAttack();
+    "Level:"+player.level+
+    "<br>XP:"+player.xp+
+    "<br>ATK:"+totalAttack();
 
-  // equipment names
-  document.getElementById("helmetName").innerText=player.helmet?player.helmet.name:"None";
-  document.getElementById("chestName").innerText=player.chest?player.chest.name:"None";
-  document.getElementById("weaponName").innerText=player.weapon?player.weapon.name:"None";
-  document.getElementById("shoesName").innerText=player.shoes?player.shoes.name:"None";
-
-  // visuals
-  document.getElementById("helmet").src=player.helmet?player.helmet.img:"";
-  document.getElementById("chest").src=player.chest?player.chest.img:"";
-  document.getElementById("weapon").src=player.weapon?player.weapon.img:"";
-  document.getElementById("shoes").src=player.shoes?player.shoes.img:"";
-  document.getElementById("pet").src=player.pet.img;
-
-  // quests
   let qHTML="";
   quests.forEach((q,i)=>{
     qHTML+=`
-      <div class="quest">
+      <div>
         ${q.text} (${q.status})
         ${role==="child" && q.status==="assigned"?`<button onclick="submitQuest(${i})">Submit</button>`:""}
         ${role==="child" && q.status==="pending"?`<button onclick="recallQuest(${i})">Recall</button>`:""}
@@ -297,14 +230,11 @@ function render(){
   });
   document.getElementById("quests").innerHTML=qHTML;
 
-  // inventory
   let inv="";
   player.inventory.forEach(i=>{
-    inv+=`
-      <div class="item ${i.rarity}" onclick='equip(${JSON.stringify(i)})'>
-        <img src="${i.img}" width="30"><br>
-        ${i.name}
-      </div>`;
+    inv+=`<div class="item ${i.rarity}" onclick='equip(${JSON.stringify(i)})'>
+      ${i.name}
+    </div>`;
   });
   document.getElementById("inventory").innerHTML=inv;
 }
