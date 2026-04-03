@@ -41,7 +41,7 @@
 
 <div class="card">
 <div class="avatar" id="avatar">
-<img id="base" class="layer" src="https://raw.githubusercontent.com/kenneyNL/character-pack-revised/master/PNG/Characters/characterAdventurer_idle.png">
+<img id="base" class="layer" src="https://kenney.nl/media/pages/assets/character-pack-revised/characterAdventurer_idle.png">
 <img id="helmet" class="layer">
 <img id="chest" class="layer">
 <img id="weapon" class="layer">
@@ -62,7 +62,14 @@ XP<div class="bar"><div id="xpBar" class="fill"></div></div>
 <div>Battle</div>
 <div class="battle">
 <div>
+<img id="playerImg" src="https://kenney.nl/media/pages/assets/character-pack-revised/characterAdventurer_idle.png" width="70">
 <div class="bar"><div id="pHP" class="fill"></div></div>
+</div>
+<div>
+<img id="monsterImg" width="70">
+<div class="bar"><div id="mHP" class="fill"></div></div>
+</div>
+</div></div>
 </div>
 <div>
 <div class="bar"><div id="mHP" class="fill"></div></div>
@@ -83,9 +90,9 @@ let role="child";
 let player={level:1,xp:0,xpNeeded:100,hp:100,maxHp:100,atk:5,helmet:null,chest:null,weapon:null,shoes:null,inventory:[]};
 
 let monsters=[
-{name:"Slime",hp:40,maxHp:40,atk:5},
-{name:"Goblin",hp:60,maxHp:60,atk:7},
-{name:"Dragon",hp:120,maxHp:120,atk:12,boss:true}
+{name:"Slime",hp:40,maxHp:40,atk:5,img:"https://kenney.nl/media/pages/assets/monster-pack/slime.png"},
+{name:"Goblin",hp:60,maxHp:60,atk:7,img:"https://kenney.nl/media/pages/assets/monster-pack/goblin.png"},
+{name:"Dragon",hp:120,maxHp:120,atk:12,boss:true,img:"https://kenney.nl/media/pages/assets/monster-pack/dragon.png"}
 ];
 
 let monster={...monsters[0]};
@@ -168,6 +175,8 @@ render();
 }
 
 function render(){
+
+document.getElementById("monsterImg").src = monster.img || "";
 document.getElementById("stats").innerHTML=`Level:${player.level}<br>ATK:${player.atk}<br>HP:${player.hp}/${player.maxHp}`;
 
 document.getElementById("xpBar").style.width=(player.xp/player.xpNeeded*100)+"%";
