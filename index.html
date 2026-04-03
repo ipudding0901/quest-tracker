@@ -41,12 +41,12 @@
 
 <div class="card">
 <div class="avatar" id="avatar">
-<img id="base" class="layer" src="https://kenney.nl/assets/character-pack-revised/PNG/Characters/characterAdventurer_idle.png">
+<img id="base" class="layer" src="https://raw.githubusercontent.com/kenneyNL/character-pack-revised/master/PNG/Characters/characterAdventurer_idle.png">
 <img id="helmet" class="layer">
 <img id="chest" class="layer">
 <img id="weapon" class="layer">
 <img id="shoes" class="layer">
-<img class="pet" src="https://kenney.nl/assets/animal-pack/PNG/Round/bee.png">
+<img class="pet" src="https://raw.githubusercontent.com/kenneyNL/animal-pack/master/PNG/Round/bee.png">
 </div>
 <div id="stats"></div>
 XP<div class="bar"><div id="xpBar" class="fill"></div></div>
@@ -157,7 +157,7 @@ let rarities=["common","rare","epic"];
 let r=rarities[Math.floor(Math.random()*3)];
 let types=["helmet","chest","weapon","shoes"];
 let type=types[Math.floor(Math.random()*4)];
-return {type,rarity:r,atk:r==="epic"?5:r==="rare"?3:1,img:"https://kenney.nl/assets/character-pack-revised/PNG/Accessories/hat.png"};
+return {type,rarity:r,atk:r==="epic"?5:r==="rare"?3:1,img:"https://raw.githubusercontent.com/kenneyNL/character-pack-revised/master/PNG/Accessories/hat.png"};
 }
 
 function equip(index){
