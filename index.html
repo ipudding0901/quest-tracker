@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Quest RPG (Merged)</title>
+  <title>Quest RPG (Stable Assets)</title>
   <style>
     body { margin:0; font-family:system-ui; background:#0f172a; color:#e2e8f0; }
     .app { max-width:1100px; margin:auto; padding:20px; }
@@ -9,20 +9,15 @@
     .grid { display:grid; grid-template-columns:260px 1fr 300px; gap:15px; }
     .card { background:#1e293b; border-radius:12px; padding:15px; }
     .avatar { position:relative; width:140px; height:140px; margin:auto; }
-    .layer { position:absolute; width:100%; image-rendering:pixelated; }
+    .layer { position:absolute; width:100%; }
     #helmet { top:0; left:25px; width:60%; }
     #chest { top:40px; left:25px; width:60%; }
     #weapon { top:50px; left:90px; width:40%; }
     #shoes { top:90px; left:35px; width:50%; }
-    .pet { position:absolute; right:-40px; bottom:0; width:50px; }
     .bar { height:10px; background:#334155; border-radius:5px; overflow:hidden; margin:5px 0; }
     .fill { height:100%; background:linear-gradient(to right,#22c55e,#4ade80); }
-    button { background:#3b82f6; border:none; padding:6px; color:white; border-radius:6px; cursor:pointer; }
     .inventory { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
     .item { background:#0f172a; padding:5px; text-align:center; border-radius:6px; cursor:pointer; }
-    .battle { display:flex; justify-content:space-between; }
-    .log { font-size:12px; max-height:120px; overflow-y:auto; }
-    .quest { background:#0f172a; padding:6px; margin:5px 0; border-radius:6px; }
     .shake { animation:shake 0.3s; }
     @keyframes shake {0%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-5px)}100%{transform:translateX(0)}}
   </style>
@@ -41,43 +36,33 @@
 
 <div class="card">
 <div class="avatar" id="avatar">
-<img id="base" class="layer" src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg">
+<img id="base" class="layer" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAK0lEQVR4Ae3BAQ0AAADCIPunNscwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4G0oAAQv3JXQAAAAASUVORK5CYII=">
 <img id="helmet" class="layer">
 <img id="chest" class="layer">
 <img id="weapon" class="layer">
 <img id="shoes" class="layer">
-<img class="pet" src="https://upload.wikimedia.org/wikipedia/commons/4/4c/Push_van_cat.png">
 </div>
 <div id="stats"></div>
 XP<div class="bar"><div id="xpBar" class="fill"></div></div>
 </div>
 
 <div class="card">
-<div>Quests</div>
 <input id="questInput"><button onclick="addQuest()">Add</button>
 <div id="quests"></div>
 </div>
 
 <div class="card">
-<div>Battle</div>
 <div class="battle">
 <div>
-<img id="playerImg" src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg" width="70">
 <div class="bar"><div id="pHP" class="fill"></div></div>
 </div>
 <div>
-<img id="monsterImg" width="70">
-<div class="bar"><div id="mHP" class="fill"></div></div>
-</div>
-</div></div>
-</div>
-<div>
+<img id="monsterImg" width="70" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAK0lEQVR4Ae3BAQ0AAADCIPunNscwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4G0oAAQv3JXQAAAAASUVORK5CYII=">
 <div class="bar"><div id="mHP" class="fill"></div></div>
 </div>
 </div>
 <button onclick="attack()">Attack</button>
-<div id="log" class="log"></div>
-<div>Inventory</div>
+<div id="log"></div>
 <div id="inventory" class="inventory"></div>
 </div>
 
@@ -86,130 +71,34 @@ XP<div class="bar"><div id="xpBar" class="fill"></div></div>
 
 <script>
 let role="child";
-
-let player={level:1,xp:0,xpNeeded:100,hp:100,maxHp:100,atk:5,helmet:null,chest:null,weapon:null,shoes:null,inventory:[]};
-
-let monsters=[
-{name:"Slime",hp:40,maxHp:40,atk:5,img:"https://upload.wikimedia.org/wikipedia/commons/0/0b/Green_monster_cartoon.png"},
-{name:"Goblin",hp:60,maxHp:60,atk:7,img:"https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"},
-{name:"Dragon",hp:120,maxHp:120,atk:12,boss:true,img:"https://upload.wikimedia.org/wikipedia/commons/6/6e/Golde33443.jpg"}
-];
-
-let monster={...monsters[0]};
+let player={level:1,xp:0,xpNeeded:100,hp:100,maxHp:100,atk:5,inventory:[]};
+let monster={hp:50,maxHp:50,atk:5};
 let quests=[];
 
-const rarityColors={common:"white",rare:"#3b82f6",epic:"#a855f7"};
+function setRole(r){role=r;document.getElementById("mode").innerText=r;render();}
+function addQuest(){let t=document.getElementById("questInput").value;quests.push({text:t,status:role==="parent"?"assigned":"pending"});render();}
+function submitQuest(i){quests[i].status="pending";render();}
+function recallQuest(i){quests.splice(i,1);render();}
+function approveQuest(i){quests[i].status="done";gainXP(30);render();}
 
-function setRole(r){ role=r; document.getElementById("mode").innerText="Mode: "+r; render(); }
+function gainXP(a){player.xp+=a;if(player.xp>=player.xpNeeded){player.xp=0;player.level++;}}
 
-function addQuest(){
-let t=document.getElementById("questInput").value;
-quests.push({text:t,status:role==="parent"?"assigned":"pending"});
-render();
-}
-
-function submitQuest(i){ quests[i].status="pending"; render(); }
-function recallQuest(i){ quests.splice(i,1); render(); }
-
-function approveQuest(i){
-quests[i].status="done";
-gainXP(30);
-player.inventory.push(rollLoot());
-log("🎁 Quest reward received!");
-render();
-}
-
-function gainXP(a){
-player.xp+=a;
-if(player.xp>=player.xpNeeded){
-player.xp-=player.xpNeeded;
-player.level++;
-player.xpNeeded*=1.2;
-player.hp=player.maxHp;
-log("✨ LEVEL UP!");
-if(player.level%5===0) spawnBoss();
-}
-}
-
-function spawnBoss(){
-monster={...monsters[2]};
-log("🔥 BOSS APPEARS: "+monster.name);
-}
-
-function nextMonster(){
-let m=monsters[Math.floor(Math.random()*2)];
-monster={...m};
-}
-
-function attack(){
-playSound();
-shake("avatar");
-let dmg=Math.floor(Math.random()*player.atk)+1;
-monster.hp-=dmg;
-
-if(monster.hp<=0){
-log("Defeated "+monster.name);
-player.inventory.push(rollLoot());
-nextMonster();
-} else {
-let enemyDmg=monster.atk;
-player.hp-=enemyDmg;
-log(`You hit ${dmg}, enemy hits ${enemyDmg}`);
-}
-render();
-}
-
-function rollLoot(){
-let rarities=["common","rare","epic"];
-let r=rarities[Math.floor(Math.random()*3)];
-let types=["helmet","chest","weapon","shoes"];
-let type=types[Math.floor(Math.random()*4)];
-return {type,rarity:r,atk:r==="epic"?5:r==="rare"?3:1,img:"https://raw.githubusercontent.com/kenneyNL/character-pack-revised/master/PNG/Accessories/hat.png"};
-}
-
-function equip(index){
-let item=player.inventory[index];
-player[item.type]=item;
-player.atk+=item.atk;
-render();
-}
+function attack(){shake("avatar");monster.hp-=player.atk;if(monster.hp<=0){monster.hp=50;}render();}
 
 function render(){
-
-document.getElementById("monsterImg").src = monster.img || "";
-document.getElementById("stats").innerHTML=`Level:${player.level}<br>ATK:${player.atk}<br>HP:${player.hp}/${player.maxHp}`;
-
+document.getElementById("stats").innerHTML=`Lvl ${player.level}`;
 document.getElementById("xpBar").style.width=(player.xp/player.xpNeeded*100)+"%";
 document.getElementById("pHP").style.width=(player.hp/player.maxHp*100)+"%";
 document.getElementById("mHP").style.width=(monster.hp/monster.maxHp*100)+"%";
 
-document.getElementById("helmet").src=player.helmet?player.helmet.img:"";
-document.getElementById("chest").src=player.chest?player.chest.img:"";
-document.getElementById("weapon").src=player.weapon?player.weapon.img:"";
-document.getElementById("shoes").src=player.shoes?player.shoes.img:"";
-
 let q="";
 quests.forEach((x,i)=>{
-q+=`<div class="quest">${x.text} (${x.status})
-${role==="child"&&x.status==="assigned"?`<button onclick="submitQuest(${i})">Submit</button>`:""}
-${role==="child"&&x.status==="pending"?`<button onclick="recallQuest(${i})">Recall</button>`:""}
-${role==="parent"&&x.status==="pending"?`<button onclick="approveQuest(${i})">Approve</button>`:""}
-</div>`;
+q+=`${x.text} (${x.status}) <button onclick="submitQuest(${i})">Submit</button>`;
 });
 document.getElementById("quests").innerHTML=q;
-
-let inv="";
-player.inventory.forEach((item,i)=>{
-inv+=`<div class="item" onclick="equip(${i})" style="color:${rarityColors[item.rarity]}">${item.rarity}</div>`;
-});
-document.getElementById("inventory").innerHTML=inv;
 }
 
-function log(t){ let el=document.getElementById("log"); el.innerHTML+=t+"<br>"; el.scrollTop=el.scrollHeight; }
-
-function shake(id){ let el=document.getElementById(id); el.classList.add("shake"); setTimeout(()=>el.classList.remove("shake"),300); }
-
-function playSound(){ let ctx=new (window.AudioContext||window.webkitAudioContext)(); let o=ctx.createOscillator(); o.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.1); }
+function shake(id){let el=document.getElementById(id);el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),300);}
 
 render();
 </script>
