@@ -1,106 +1,245 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Quest RPG (Stable Assets)</title>
   <style>
-    body { margin:0; font-family:system-ui; background:#0f172a; color:#e2e8f0; }
-    .app { max-width:1100px; margin:auto; padding:20px; }
-    h1 { text-align:center; }
-    .grid { display:grid; grid-template-columns:260px 1fr 300px; gap:15px; }
-    .card { background:#1e293b; border-radius:12px; padding:15px; }
-    .avatar { position:relative; width:140px; height:140px; margin:auto; }
-    .layer { position:absolute; width:100%; }
-    #helmet { top:0; left:25px; width:60%; }
-    #chest { top:40px; left:25px; width:60%; }
-    #weapon { top:50px; left:90px; width:40%; }
-    #shoes { top:90px; left:35px; width:50%; }
-    .bar { height:10px; background:#334155; border-radius:5px; overflow:hidden; margin:5px 0; }
-    .fill { height:100%; background:linear-gradient(to right,#22c55e,#4ade80); }
-    .inventory { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-    .item { background:#0f172a; padding:5px; text-align:center; border-radius:6px; cursor:pointer; }
-    .shake { animation:shake 0.3s; }
-    @keyframes shake {0%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-5px)}100%{transform:translateX(0)}}
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --accent: #3b82f6;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .app { max-width: 1100px; margin: auto; padding: 20px; }
+    h1 { text-align: center; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
+    /* Layout */
+    .role-selector { text-align: center; margin-bottom: 20px; background: var(--card); padding: 10px; border-radius: 8px; }
+    .grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 20px; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    
+    /* Buttons & Inputs */
+    button { background: var(--accent); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    button:hover { filter: brightness(1.2); }
+    button.btn-danger { background: var(--danger); }
+    button.btn-success { background: var(--success); }
+    input { padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; width: calc(100% - 80px); }
+    
+    /* Avatar & Entities */
+    .avatar-container { position: relative; width: 120px; height: 120px; margin: 0 auto 15px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; }
+    .monster-container { font-size: 70px; text-align: center; margin-bottom: 10px; }
+    
+    /* Bars */
+    .stats-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+    .bar { height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+    .fill { height: 100%; transition: width 0.3s ease; }
+    .fill-xp { background: linear-gradient(to right, #a855f7, #d946ef); }
+    .fill-hp { background: linear-gradient(to right, #22c55e, #4ade80); }
+    .fill-mhp { background: linear-gradient(to right, #ef4444, #f87171); }
+    
+    /* Quests */
+    .quest-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+    .quest-item { background: #0f172a; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .quest-status { font-size: 0.8em; padding: 3px 6px; border-radius: 4px; background: #334155; text-transform: uppercase; }
+    
+    /* Inventory & Battle */
+    .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 15px; }
+    .item { background: #334155; padding: 10px; text-align: center; border-radius: 6px; font-size: 24px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+    
+    /* Animations */
+    .shake { animation: shake 0.3s; }
+    @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-5px)} 100%{transform:translateX(0)} }
+    .damage-text { color: #f87171; font-weight: bold; position: absolute; animation: floatUp 1s forwards; pointer-events: none; }
+    @keyframes floatUp { 0%{opacity:1; transform:translateY(0)} 100%{opacity:0; transform:translateY(-30px)} }
   </style>
 </head>
 <body>
 <div class="app">
-<h1>⚔️ Quest RPG</h1>
+  <h1>⚔️ Quest RPG</h1>
 
-<div style="text-align:center">
-<button onclick="setRole('child')">Child</button>
-<button onclick="setRole('parent')">Parent</button>
-<div id="mode"></div>
-</div>
+  <div class="role-selector">
+    <span>Current Role: <strong id="mode" style="text-transform: capitalize;">Child</strong> </span> | 
+    <button onclick="setRole('child')">Play as Child</button>
+    <button onclick="setRole('parent')">Play as Parent</button>
+  </div>
 
-<div class="grid">
+  <div class="grid">
+    <div class="card">
+      <div class="avatar-container" id="avatar">🧙‍♂️</div>
+      
+      <div class="stats-header">
+        <span>Hero</span>
+        <span id="level-display">Lvl 1</span>
+      </div>
+      
+      <div style="font-size: 0.85em; margin-bottom: 3px;">Experience</div>
+      <div class="bar"><div id="xpBar" class="fill fill-xp"></div></div>
+      
+      <div style="font-size: 0.85em; margin-bottom: 3px;">Health Points</div>
+      <div class="bar"><div id="pHP" class="fill fill-hp"></div></div>
+    </div>
 
-<div class="card">
-<div class="avatar" id="avatar">
-<img id="base" class="layer" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAK0lEQVR4Ae3BAQ0AAADCIPunNscwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4G0oAAQv3JXQAAAAASUVORK5CYII=">
-<img id="helmet" class="layer">
-<img id="chest" class="layer">
-<img id="weapon" class="layer">
-<img id="shoes" class="layer">
-</div>
-<div id="stats"></div>
-XP<div class="bar"><div id="xpBar" class="fill"></div></div>
-</div>
+    <div class="card">
+      <h2 style="margin-top:0;">📜 Quest Board</h2>
+      <div class="quest-input-group">
+        <input id="questInput" placeholder="Enter a new task...">
+        <button onclick="addQuest()">Add</button>
+      </div>
+      <div id="quests"></div>
+    </div>
 
-<div class="card">
-<input id="questInput"><button onclick="addQuest()">Add</button>
-<div id="quests"></div>
-</div>
-
-<div class="card">
-<div class="battle">
-<div>
-<div class="bar"><div id="pHP" class="fill"></div></div>
-</div>
-<div>
-<img id="monsterImg" width="70" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAK0lEQVR4Ae3BAQ0AAADCIPunNscwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4G0oAAQv3JXQAAAAASUVORK5CYII=">
-<div class="bar"><div id="mHP" class="fill"></div></div>
-</div>
-</div>
-<button onclick="attack()">Attack</button>
-<div id="log"></div>
-<div id="inventory" class="inventory"></div>
-</div>
-
-</div>
+    <div class="card">
+      <h2 style="margin-top:0; text-align:center;">🗡️ Combat Area</h2>
+      <div class="battle" id="battle-area" style="position:relative;">
+        <div class="monster-container" id="monster">🐉</div>
+        <div style="font-size: 0.85em; margin-bottom: 3px; text-align:center;">Monster HP</div>
+        <div class="bar"><div id="mHP" class="fill fill-mhp"></div></div>
+      </div>
+      
+      <button style="width:100%; padding: 12px; font-size:1.1em;" onclick="attack()">Attack Monster</button>
+      
+      <h3 style="margin-bottom: 5px;">🎒 Inventory</h3>
+      <div id="inventory" class="inventory"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-let role="child";
-let player={level:1,xp:0,xpNeeded:100,hp:100,maxHp:100,atk:5,inventory:[]};
-let monster={hp:50,maxHp:50,atk:5};
-let quests=[];
+  // Game State
+  let role = "child";
+  let player = { level: 1, xp: 0, xpNeeded: 100, hp: 100, maxHp: 100, atk: 15, inventory: [] };
+  let monster = { hp: 50, maxHp: 50, atk: 5 };
+  let quests = [
+    { text: "Clean your room", status: "assigned" }
+  ];
 
-function setRole(r){role=r;document.getElementById("mode").innerText=r;render();}
-function addQuest(){let t=document.getElementById("questInput").value;quests.push({text:t,status:role==="parent"?"assigned":"pending"});render();}
-function submitQuest(i){quests[i].status="pending";render();}
-function recallQuest(i){quests.splice(i,1);render();}
-function approveQuest(i){quests[i].status="done";gainXP(30);render();}
+  // Possible loot drops
+  const lootTable = ["💎", "💰", "🛡️", "📜", "🍎", "🗝️"];
 
-function gainXP(a){player.xp+=a;if(player.xp>=player.xpNeeded){player.xp=0;player.level++;}}
+  // Core Functions
+  function setRole(r) {
+    role = r;
+    document.getElementById("mode").innerText = r;
+    render();
+  }
 
-function attack(){shake("avatar");monster.hp-=player.atk;if(monster.hp<=0){monster.hp=50;}render();}
+  function addQuest() {
+    let input = document.getElementById("questInput");
+    let t = input.value.trim();
+    if (!t) return;
+    
+    // Parents assign directly, children create "proposed" tasks
+    quests.push({ text: t, status: role === "parent" ? "assigned" : "assigned" });
+    input.value = "";
+    render();
+  }
 
-function render(){
-document.getElementById("stats").innerHTML=`Lvl ${player.level}`;
-document.getElementById("xpBar").style.width=(player.xp/player.xpNeeded*100)+"%";
-document.getElementById("pHP").style.width=(player.hp/player.maxHp*100)+"%";
-document.getElementById("mHP").style.width=(monster.hp/monster.maxHp*100)+"%";
+  // Quest Interactions
+  function submitQuest(i) { quests[i].status = "pending"; render(); }
+  function recallQuest(i) { quests.splice(i, 1); render(); }
+  function approveQuest(i) { 
+    quests[i].status = "done"; 
+    gainXP(35); 
+    // Remove the done quest after a brief moment
+    setTimeout(() => { quests.splice(i, 1); render(); }, 1500);
+    render(); 
+  }
 
-let q="";
-quests.forEach((x,i)=>{
-q+=`${x.text} (${x.status}) <button onclick="submitQuest(${i})">Submit</button>`;
-});
-document.getElementById("quests").innerHTML=q;
-}
+  function gainXP(amount) {
+    player.xp += amount;
+    if (player.xp >= player.xpNeeded) {
+      player.xp = player.xp - player.xpNeeded;
+      player.level++;
+      player.xpNeeded = Math.floor(player.xpNeeded * 1.5);
+      player.maxHp += 20;
+      player.hp = player.maxHp;
+      player.atk += 5;
+    }
+  }
 
-function shake(id){let el=document.getElementById(id);el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),300);}
+  function attack() {
+    // Shake animations
+    shake("avatar");
+    shake("monster");
+    
+    // Damage logic
+    monster.hp -= player.atk;
+    
+    // Check if monster defeated
+    if (monster.hp <= 0) {
+      monster.hp = 50 + (player.level * 10); // Monster gets stronger
+      monster.maxHp = monster.hp;
+      gainXP(15);
+      
+      // 50% chance to drop an item
+      if(Math.random() > 0.5) {
+        let droppedItem = lootTable[Math.floor(Math.random() * lootTable.length)];
+        player.inventory.push(droppedItem);
+      }
+    }
+    render();
+  }
 
-render();
+  function shake(id) {
+    let el = document.getElementById(id);
+    el.classList.remove("shake");
+    void el.offsetWidth; // trigger reflow to restart animation
+    el.classList.add("shake");
+  }
+
+  // UI Renderer
+  function render() {
+    // Update Bars & Stats
+    document.getElementById("level-display").innerText = `Lvl ${player.level}`;
+    document.getElementById("xpBar").style.width = (player.xp / player.xpNeeded * 100) + "%";
+    document.getElementById("pHP").style.width = (player.hp / player.maxHp * 100) + "%";
+    document.getElementById("mHP").style.width = (monster.hp / monster.maxHp * 100) + "%";
+
+    // Render Quests based on Role
+    let qHTML = "";
+    quests.forEach((x, i) => {
+      let buttons = "";
+      
+      if (role === 'child' && x.status === 'assigned') {
+        buttons = `<button onclick="submitQuest(${i})">Submit</button>`;
+      } else if (role === 'parent' && x.status === 'pending') {
+        buttons = `<button class="btn-success" onclick="approveQuest(${i})">Approve (Give XP)</button>`;
+      }
+
+      if (role === 'parent') {
+        buttons += ` <button class="btn-danger" onclick="recallQuest(${i})">X</button>`;
+      }
+
+      let statusColor = x.status === 'done' ? '#4ade80' : (x.status === 'pending' ? '#fbbf24' : '#94a3b8');
+
+      qHTML += `
+        <div class="quest-item">
+          <div>
+            <div>${x.text}</div>
+            <span class="quest-status" style="color: ${statusColor}">${x.status}</span>
+          </div>
+          <div>${buttons}</div>
+        </div>`;
+    });
+    
+    if(quests.length === 0) {
+       qHTML = `<p style="color: #94a3b8; text-align:center;">No active quests!</p>`;
+    }
+    document.getElementById("quests").innerHTML = qHTML;
+
+    // Render Inventory
+    let invHTML = "";
+    player.inventory.forEach(item => {
+      invHTML += `<div class="item">${item}</div>`;
+    });
+    document.getElementById("inventory").innerHTML = invHTML;
+  }
+
+  // Initial render
+  render();
 </script>
 </body>
 </html>
