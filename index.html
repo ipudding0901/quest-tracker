@@ -198,10 +198,15 @@ const PET_SHAPES = {
 
 const DROPS = [
     { name: "Iron Helm", icon: "🪖", slot: "helmet", cssId: "vis-helmet" },
+    { name: "Steel Helm", icon: "🪖", slot: "helmet", cssId: "vis-helmet" },
     { name: "Iron Sword", icon: "⚔️", slot: "weapon", cssId: "vis-weapon" },
+    { name: "Steel Sword", icon: "⚔️", slot: "weapon", cssId: "vis-weapon" },
     { name: "Iron Plate", icon: "🛡️", slot: "armor", cssId: "vis-armor" },
+    { name: "Steel Plate", icon: "🛡️", slot: "armor", cssId: "vis-armor" },
     { name: "Wood Shield", icon: "🛡️", slot: "shield", cssId: "vis-shield" },
+    { name: "Iron Shield", icon: "🛡️", slot: "shield", cssId: "vis-shield" },
     { name: "Iron Boots", icon: "👢", slot: "shoes", cssId: "vis-shoes" },
+    { name: "Steel Boots", icon: "👢", slot: "shoes", cssId: "vis-shoes" },
     { name: "Magic Collar", icon: "🎀", slot: "collar", cssId: "vis-collar" },
     { name: "Cat Friend", icon: "🐱", slot: "pet", type: "cat", color: "#fdba74" },
     { name: "Dragon Hatchling", icon: "🐲", slot: "pet", type: "dragon", color: "#4ade80" },
@@ -215,7 +220,6 @@ let state = {
     equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", type:"dog", color:"#94a3b8", icon:"🐕", slot:"pet"} }
 };
 
-// --- STORAGE SYSTEM ---
 function saveGame() { localStorage.setItem('questKidSave', JSON.stringify(state)); }
 function loadGame() {
     const saved = localStorage.getItem('questKidSave');
@@ -243,7 +247,6 @@ function updateQ(i, s) {
         state.history.unshift(completedTask);
         state.gold += 50; state.xp += 40; state.tokens += 1;
         
-        // --- 40% LOOT DROP ON TASK COMPLETION ---
         if(Math.random() < 0.4) {
             const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
             state.inv.push(loot);
@@ -262,31 +265,42 @@ function checkLevelUp() {
     }
 }
 
-// --- STRICT TURN-BASED BATTLE ---
+// --- REPAIRED BATTLE SYSTEM ---
 function startBattle() {
     if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
-    state.tokens -= 3; state.mHp = state.mMax; state.turn = 'hero';
+    state.tokens -= 3; 
+    
+    // Reset Battle Variables
+    state.mMax = 50 + (state.lvl * 15);
+    state.mHp = state.mMax;
+    state.turn = 'hero';
+    
+    document.getElementById('battleStatus').innerText = "Your Turn!";
+    document.getElementById('atkBtn').disabled = false;
     document.getElementById('mEmojiDisplay').innerText = state.lvl > 5 ? '🐉' : '👾';
-    openM('battleM'); render();
+    
+    openM('battleM'); 
+    render();
 }
 
 function heroAttack() {
     if(state.turn !== 'hero') return;
-    state.turn = 'waiting'; // Prevent spamming during animation
+    state.turn = 'waiting'; 
     document.getElementById('atkBtn').disabled = true;
 
     const team = document.getElementById('hTeam');
     team.classList.add('lunge');
     
     setTimeout(() => {
-        let crit = Math.random() > 0.8 ? 2 : 1;
-        let power = (15 + state.lvl * 2) * crit;
+        let crit = Math.random() > 0.85 ? 2 : 1;
+        let power = (15 + state.lvl * 3) * crit;
         state.mHp -= power;
         team.classList.remove('lunge');
         render();
 
-        if(state.mHp <= 0) { setTimeout(() => endBattle(true), 500); } 
-        else {
+        if(state.mHp <= 0) { 
+            setTimeout(() => endBattle(true), 500); 
+        } else {
             state.turn = 'monster';
             document.getElementById('battleStatus').innerText = "Monster is attacking...";
             setTimeout(monsterAttack, 1200);
@@ -295,18 +309,23 @@ function heroAttack() {
 }
 
 function monsterAttack() {
+    if(document.getElementById('battleM').style.display === 'none') return; // Stop if player fled
+
     const m = document.getElementById('mTeam');
     m.classList.add('m-lunge');
     
     setTimeout(() => {
-        let dmg = 10 + state.lvl * 2;
-        if(state.equip.armor) dmg -= 5;
-        state.hp -= Math.max(2, dmg);
+        let dmg = 8 + (state.lvl * 2);
+        if(state.equip.armor) dmg -= 4;
+        if(state.equip.shield) dmg -= 3;
+        
+        state.hp -= Math.max(3, dmg);
         m.classList.remove('m-lunge');
         render();
 
-        if(state.hp <= 0) { setTimeout(() => endBattle(false), 500); } 
-        else {
+        if(state.hp <= 0) { 
+            setTimeout(() => endBattle(false), 500); 
+        } else {
             state.turn = 'hero';
             document.getElementById('battleStatus').innerText = "Your Turn!";
             document.getElementById('atkBtn').disabled = false;
@@ -316,7 +335,8 @@ function monsterAttack() {
 
 function endBattle(win) {
     if(win) { 
-        alert("Victory!"); state.gold += 30; state.mMax += 15; 
+        alert("Victory!"); 
+        state.gold += 30; 
         if(Math.random() < 0.4) {
             const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
             state.inv.push(loot);
@@ -324,10 +344,16 @@ function endBattle(win) {
         }
     } else { 
         alert("Defeated! Rest up."); 
-        state.hp = Math.floor(state.maxHp * 0.2); 
+        state.hp = Math.floor(state.maxHp * 0.3); 
     }
+    
+    // Clear animations/states for next time
+    document.getElementById('hTeam').classList.remove('lunge');
+    document.getElementById('mTeam').classList.remove('m-lunge');
+    
     closeM('battleM');
-    saveGame(); render();
+    saveGame(); 
+    render();
 }
 
 function equip(i) {
@@ -349,11 +375,10 @@ function render() {
     document.getElementById('lvl').innerText = state.lvl;
     document.getElementById('h-hp-text').innerText = state.hp;
     document.getElementById('xp-bar').style.width = state.xp + "%";
-    document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
-    document.getElementById('hHp').style.width = (state.hp/state.maxHp*100) + "%";
+    document.getElementById('mHp').style.width = Math.max(0, (state.mHp/state.mMax*100)) + "%";
+    document.getElementById('hHp').style.width = Math.max(0, (state.hp/state.maxHp*100)) + "%";
     document.getElementById('roleSelect').value = state.role;
 
-    // Visual Reset
     document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .vis-collar-svg').forEach(v => v.style.display = 'none');
 
     for(let s in state.equip) {
@@ -366,7 +391,6 @@ function render() {
         }
     }
     
-    // Pet Logic
     const pet = state.equip.pet;
     if(pet) {
         const svgContent = PET_SHAPES[pet.type].replace(/COLOR/g, pet.color);
@@ -381,7 +405,6 @@ function render() {
         document.getElementById('pet-container').style.display = 'none';
     }
 
-    // List Logic
     let qH = '';
     state.quests.forEach((q, i) => {
         let b = '';
@@ -400,7 +423,6 @@ function render() {
     document.getElementById('inv').innerHTML = iH;
 }
 
-// Start
 loadGame();
 </script>
 </body>
