@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - MASTER BUILD V5</title>
+  <title>Quest Kid RPG - MASTER BUILD V6</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -130,7 +130,7 @@
 
     <div class="panel">
         <h3>📜 Quest Board</h3>
-        <div id="parentQuestInput" style="display:flex; gap:10px; margin-bottom:15px;">
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
             <input id="qInput" style="background:var(--bg); border:1px solid var(--border); color:white; padding:12px; border-radius:10px; flex:1;" placeholder="Add a task...">
             <button class="btn btn-p" onclick="addQuest()" style="width:60px; font-size: 20px;">+</button>
         </div>
@@ -207,8 +207,8 @@ const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"}
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 50, max: 50, atk: 5, def: 2 }, curH = { atk: 0, def: 0, maxHp: 100 }, selectedIdx = -1, isActing = false;
 
-function save() { localStorage.setItem('QuestKid_Master_V5', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_Master_V5'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_Master_V6', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_Master_V6'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -225,7 +225,7 @@ function updateQuest(i, act) {
     if(act === 'done') {
         const q = state.quests[i];
         state.gold += 50; state.xp += 40; 
-        state.tokens++; // No cap to allow working out of debt
+        state.tokens++; 
         if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(generateItem());
         state.history.unshift(state.quests.splice(i, 1)[0]);
         checkLevelUp();
@@ -239,7 +239,6 @@ function checkLevelUp() {
         state.xp -= nextLvlXp; state.lvl++;
         calculateStats();
         state.hp = curH.maxHp;
-        // Only show pop-out if currently in child view
         if(state.role === 'child') {
             document.getElementById('lvlUpVal').innerText = state.lvl;
             document.getElementById('lvlUpM').style.display = 'flex';
@@ -280,18 +279,14 @@ function calculateStats() {
 function render() {
     calculateStats();
     if(state.hp > curH.maxHp) state.hp = curH.maxHp;
-    
     const isP = state.role === 'parent';
     let nextLvlXp = state.lvl * 100;
     
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     document.getElementById('heroStatsNav').style.visibility = isP ? 'hidden' : 'visible';
-    document.getElementById('parentQuestInput').style.display = isP ? 'flex' : 'none';
     
     document.getElementById('goldVal').innerText = state.gold;
-    
-    // Token Logic: Handle negative display
     const tVal = document.getElementById('tokenVal');
     tVal.innerText = state.tokens;
     tVal.className = state.tokens < 0 ? "token-neg" : "";
@@ -347,7 +342,7 @@ function doUpgrade() { const it = state.inv[selectedIdx]; const dupe = state.inv
 function doSell() { state.gold += 50; state.inv.splice(selectedIdx, 1); document.getElementById('itemM').style.display = 'none'; render(); }
 
 function startBattle() {
-    if(state.tokens < 3) return alert("Need 3 Battle Tokens to fight!");
+    if(state.tokens < 3) return alert("Need 3 Battle Tokens!");
     state.tokens -= 3;
     curM.max = 50 + (state.lvl * 25); curM.hp = curM.max;
     curM.atk = 6 + (state.lvl * 5); curM.def = 2 + (state.lvl * 3);
@@ -359,8 +354,8 @@ function startBattle() {
 
 function fleeBattle() {
     if(isActing) return;
-    state.tokens -= 1; // Can now go negative
-    alert("Fled! -1 Battle Token penalty. Do more quests to recover!");
+    state.tokens -= 1;
+    alert("Fled! -1 Battle Token penalty.");
     document.getElementById('battleM').style.display = 'none';
     render();
 }
