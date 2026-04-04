@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quest RPG: Battle Token Edition</title>
+  <title>Quest RPG: Adventure Log Edition</title>
   <style>
     :root {
       --bg: #f0f8ff; --card: #ffffff; --text: #334155;
@@ -59,6 +59,11 @@
     .btn-s { background: var(--gold); color: #fff; }
     .q-row { background: var(--slot); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
     
+    /* COLLAPSIBLE HISTORY */
+    .history-container { margin-top: 15px; border-top: 2px dashed var(--border); padding-top: 15px; }
+    .history-content { max-height: 0; overflow: hidden; transition: 0.3s; }
+    .history-content.open { max-height: 400px; overflow-y: auto; margin-top: 10px; }
+
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: #f1f5f9; border-radius: 12px; margin-top: 10px; min-height: 80px; border: 1px solid var(--border); }
     .inv-item { background: #ffffff; min-width: 65px; padding: 5px; border-radius: 10px; border: 2px solid var(--border); text-align: center; font-size: 11px; cursor: pointer; }
 
@@ -135,6 +140,14 @@
             <button class="btn btn-p" onclick="addQ()">Add Task</button>
         </div>
         <div id="qList"></div>
+
+        <div class="history-container">
+            <div class="q-row" style="cursor:pointer; background:#f1f5f9; border-color: #e2e8f0;" onclick="toggleHistory()">
+                <strong style="color:var(--success)">🌟 COMPLETED ADVENTURES</strong>
+                <span id="hIcon" style="font-weight:bold; color:#64748b;">▼</span>
+            </div>
+            <div class="history-content" id="hist-content"></div>
+        </div>
     </div>
 </div>
 
@@ -185,7 +198,7 @@
 let state = {
     role: 'child', gold: 100, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
     mHp: 50, mMax: 50, turn: 'hero',
-    quests: [], inv: [],
+    quests: [], history: [], inv: [],
     equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", icon:"🐕", slot:"pet"} }
 };
 
@@ -200,6 +213,11 @@ const DROPS = [
 
 function openM(id) { document.getElementById(id).style.display = 'flex'; }
 function closeM(id) { document.getElementById(id).style.display = 'none'; }
+function toggleHistory() { 
+    const el = document.getElementById('hist-content');
+    el.classList.toggle('open');
+    document.getElementById('hIcon').innerText = el.classList.contains('open') ? '▲' : '▼';
+}
 
 function addQ() {
     const v = document.getElementById('qIn').value;
@@ -211,14 +229,16 @@ function addQ() {
 
 function updateQ(i, s) {
     if(s === 'done') {
-        state.quests.splice(i, 1);
+        const completedTask = state.quests.splice(i, 1)[0];
+        completedTask.time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        state.history.unshift(completedTask); // Add to collapsible list
+        
         state.gold += 50; state.xp += 40; state.tokens += 1;
     } else state.quests[i].status = s;
     if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 10; state.hp = state.maxHp; }
     render();
 }
 
-// TURN BASED COMBAT
 function startBattle() {
     if(state.tokens < 3) return;
     if(state.hp <= 0) { alert("You are too tired! Buy a potion first."); return; }
@@ -281,7 +301,6 @@ function endBattle(win) {
         alert("Victory! You found 30 Gold!");
         state.gold += 30;
         state.mMax += 10;
-        // Random Drop Rate (40% chance)
         if(Math.random() < 0.4) {
             const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
             state.inv.push(loot);
@@ -329,10 +348,9 @@ function render() {
     document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
     document.getElementById('hHp').style.width = (state.hp/state.maxHp*100) + "%";
     
-    // Battle Button Lock
     document.getElementById('battleBtn').disabled = state.tokens < 3;
 
-    // Visual Equipment Logic
+    // Visual Equipment
     const allVis = document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .p-collar');
     allVis.forEach(v => v.style.display = 'none');
 
@@ -367,12 +385,17 @@ function render() {
         }
         qH += `<div class="q-row"><span>${q.txt} <small>(${q.status})</small></span> <div>${b}</div></div>`;
     });
-    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; color:#94a3b8;">No tasks. Do a task to earn Battle Tokens! 🎫</p>';
+    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; color:#94a3b8;">No tasks. Earn 🎫 by helping out!</p>';
+
+    // History List
+    let hH = '';
+    state.history.forEach(h => hH += `<div class="q-row" style="font-size:0.9em; color:#64748b; background: rgba(0,0,0,0.02);"><span>✅ ${h.txt}</span> <span>${h.time}</span></div>`);
+    document.getElementById('hist-content').innerHTML = hH || '<p style="text-align:center; color:#94a3b8; font-size:0.9em;">Completed tasks will appear here.</p>';
 
     // Inventory
     let iH = '';
     state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})"><strong style="font-size:24px;">${it.icon}</strong><br><b>${it.name}</b></div>`);
-    document.getElementById('inv').innerHTML = iH || '<div style="color:#94a3b8; width:100%; text-align:center;">Defeat the boss to find loot!</div>';
+    document.getElementById('inv').innerHTML = iH || '<div style="color:#94a3b8; width:100%; text-align:center;">Inventory is empty.</div>';
 }
 render();
 </script>
