@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - Power Update</title>
+  <title>Quest Kid RPG - Stat Scaling</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -21,7 +21,8 @@
 
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); cursor: pointer; transition: 0.2s; }
-    .gold-box:hover { transform: scale(1.05); background: #78350f; }
+    
+    .stats-bar { display: flex; gap: 10px; font-size: 11px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; margin-bottom: 10px; color: var(--accent); }
 
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
     @media (min-width: 768px) { .char-grid { grid-template-columns: 150px 1fr 150px; } }
@@ -65,6 +66,7 @@
     @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
 
     .shop-item { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .m-stats-overlay { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 4px; font-size: 10px; text-align: left; }
   </style>
 </head>
 <body>
@@ -90,11 +92,17 @@
     </div>
 
     <div id="childGameView">
+        <div class="stats-bar" id="liveStats">
+            <span>⚔️ ATK: <b id="sAtk">0</b></span>
+            <span>🛡️ DEF: <b id="sDef">0</b></span>
+            <span>❤️ HP: <b id="sHp">0/0</b></span>
+        </div>
+
         <div class="char-grid">
             <div class="slot-col">
-                <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head</span><div id="v-helmet"></div></div>
-                <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Wpn</span><div id="v-weapon"></div></div>
-                <div class="slot" onclick="unequip('shield')"><span class="slot-label">Off</span><div id="v-shield"></div></div>
+                <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head (DEF)</span><div id="v-helmet"></div></div>
+                <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Wpn (ATK)</span><div id="v-weapon"></div></div>
+                <div class="slot" onclick="unequip('shield')"><span class="slot-label">Off (ATK)</span><div id="v-shield"></div></div>
             </div>
             <div class="doll-house">
                 <div id="vis-pet" class="pet-vis" style="display:none;"></div>
@@ -103,14 +111,14 @@
                     <div class="h-body"><div id="vis-armor" style="display:none; width:54px; height:64px; background:var(--iron); border-radius:6px; position:absolute; top:-2px; left:-2px;"></div></div>
                 </div>
                 <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:11px;">
-                    LVL <span id="lvlVal">1</span> | HP <span id="hpVal">100</span>
+                    LVL <span id="lvlVal">1</span>
                     <div style="width:80px; height:4px; background:#000; margin:4px auto; border-radius:2px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
                 </div>
             </div>
             <div class="slot-col">
-                <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body</span><div id="v-armor"></div></div>
-                <div class="slot" onclick="unequip('shoes')"><span class="slot-label">Boots</span><div id="v-shoes"></div></div>
-                <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet</span><div id="v-pet"></div></div>
+                <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body (DEF)</span><div id="v-armor"></div></div>
+                <div class="slot" onclick="unequip('shoes')"><span class="slot-label">Boots (DEF)</span><div id="v-shoes"></div></div>
+                <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet (ATK/HP)</span><div id="v-pet"></div></div>
             </div>
         </div>
 
@@ -129,9 +137,6 @@
             <button class="btn btn-p" onclick="addQuest()" style="width:50px;">+</button>
         </div>
         <div id="activeQuestList"></div>
-
-        <button class="collapse-btn" onclick="toggleCol('historyBox')" style="margin-top:10px; color:var(--success)">🌟 COMPLETED TASKS <span>▼</span></button>
-        <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
     </div>
 </div>
 
@@ -147,39 +152,24 @@
     </div>
 </div>
 
-<div id="shopM" class="modal-overlay">
-    <div class="panel" style="width:90%; max-width:350px;">
-        <h2 style="color:var(--gold); margin-top:0;">🛒 Hero Shop</h2>
-        <div class="shop-item">
-            <div><strong>❤️ Potion</strong><br><small>+50 HP</small></div>
-            <button class="btn btn-s" onclick="buyItem('potion')">100g</button>
-        </div>
-        <div class="shop-item">
-            <div><strong>🎁 Treasure Chest</strong><br><small>Random Rarity Gear/Pet</small></div>
-            <button class="btn btn-s" onclick="buyItem('chest')">200g</button>
-        </div>
-        <button class="btn btn-danger" style="width:100%; padding:12px;" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button>
-    </div>
-</div>
-
 <div id="battleM" class="modal-overlay">
     <div class="panel" style="width:95%; max-width:400px; text-align:center;">
         <div class="arena" id="battleArena">
             <div id="battleMsg" style="text-align:center; padding-top:10px; color:var(--gold); font-weight:bold;">Fight!</div>
+            <div class="m-stats-overlay">
+                <span id="mName">Monster</span><br>
+                ⚔️ <span id="mAtk">0</span> | 🛡️ <span id="mDef">0</span>
+            </div>
             <div id="hF" style="position:absolute; bottom:40px; left:40px; transition:0.3s;">
                 <div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div>
                 <div style="width:30px; height:60px; background:var(--accent); border-radius:4px; margin:0 auto;"></div>
-                <div id="hFPet" style="position:absolute; left:35px; bottom:0; font-size:20px;"></div>
             </div>
             <div id="mF" style="position:absolute; top:40px; right:40px; transition:0.3s;">
                 <div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div>
                 <div id="mEmoji" style="font-size:50px;">👾</div>
             </div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ ATTACK</button>
-            <button class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
-        </div>
+        <button class="btn btn-p" style="width:100%; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ ATTACK</button>
     </div>
 </div>
 
@@ -194,7 +184,7 @@ const PET_TABLE = [
     {n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"},
     {n:"Dragon",i:"🐲",s:"pet"},{n:"Bird",i:"🐦",s:"pet"}
 ];
-const MONSTERS = [{n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},{n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}];
+const MONSTERS = [{n:"Slime",i:"👾",h:50,a:5,d:2},{n:"Drake",i:"🐉",h:100,a:12,d:8},{n:"Goblin",i:"👺",h:60,a:8,d:4}];
 
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
@@ -202,28 +192,50 @@ let state = {
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-let bActive = false, mHp = 50, mMaxHp = 50, selectedIdx = -1;
+let bActive = false, mHp = 50, mMaxHp = 50, mAtkVal = 0, mDefVal = 0, selectedIdx = -1;
+let currentHeroAtk = 0, currentHeroDef = 0;
 
-function save() { localStorage.setItem('questKid_Final_PowerBuild', JSON.stringify(state)); }
+function save() { localStorage.setItem('questKid_Stats_Build', JSON.stringify(state)); }
 function load() { 
-    const s = localStorage.getItem('questKid_Final_PowerBuild') || localStorage.getItem('questKid_Final_Build'); 
+    const s = localStorage.getItem('questKid_Stats_Build'); 
     if(s) state = JSON.parse(s); 
 }
 
 function getRandomDrop() {
     let raw = (Math.random() < 0.8) ? GEAR_TABLE[Math.floor(Math.random()*GEAR_TABLE.length)] : PET_TABLE[Math.floor(Math.random()*PET_TABLE.length)];
-    let rarityRoll = Math.random();
-    let rarity = 1;
-    if(rarityRoll < 0.05) rarity = 4;
-    else if(rarityRoll < 0.15) rarity = 3;
-    else if(rarityRoll < 0.40) rarity = 2;
+    let roll = Math.random();
+    let rarity = roll < 0.05 ? 4 : (roll < 0.15 ? 3 : (roll < 0.4 ? 2 : 1));
+    return { ...raw, v: 0, baseP: Math.floor(Math.random() * 3) + 1, r: rarity };
+}
 
-    return {
-        ...raw, 
-        v: 0, 
-        baseP: Math.floor(Math.random() * 3) + 1, // Random Power 1, 2, or 3
-        r: rarity 
-    };
+function calculateStats() {
+    // Base stats scale with Level
+    let baseAtk = 5 + (state.lvl * 2);
+    let baseDef = 2 + state.lvl;
+    let baseMaxHp = 100 + (state.lvl * 20);
+
+    // Gear Additions
+    let gearAtk = 0, gearDef = 0, gearHp = 0;
+
+    for (let slot in state.equip) {
+        let item = state.equip[slot];
+        if (!item) continue;
+        let power = (item.baseP * 3) + (item.v * 5) + (item.v); // Request: base + upgrade + 1 per upgrade
+
+        if (slot === 'weapon') gearAtk += power * 2;
+        if (slot === 'shield') gearAtk += power; // Offhand atk lower than main
+        if (slot === 'helmet' || slot === 'armor' || slot === 'shoes') gearDef += power;
+        if (slot === 'pet') { gearAtk += power; gearHp += power * 10; }
+    }
+
+    currentHeroAtk = baseAtk + gearAtk;
+    currentHeroDef = baseDef + gearDef;
+    state.maxHp = baseMaxHp + gearHp;
+    if (state.hp > state.maxHp) state.hp = state.maxHp;
+
+    document.getElementById('sAtk').innerText = currentHeroAtk;
+    document.getElementById('sDef').innerText = currentHeroDef;
+    document.getElementById('sHp').innerText = Math.round(state.hp) + "/" + state.maxHp;
 }
 
 function doLogin(r) {
@@ -233,41 +245,25 @@ function doLogin(r) {
     render();
 }
 
-function openShop() {
-    if(state.role !== 'child') return;
-    document.getElementById('shopM').style.display = 'flex';
-}
-
-function buyItem(type) {
-    if(type === 'potion' && state.gold >= 100) {
-        state.gold -= 100;
-        state.hp = Math.min(state.maxHp, state.hp + 50);
-        alert("HP Restored!");
-    } else if (type === 'chest' && state.gold >= 200) {
-        state.gold -= 200;
-        const item = getRandomDrop();
-        state.inv.push(item);
-        alert("You found: " + item.i + " " + item.n);
-    } else { alert("Not enough gold!"); }
-    save(); render();
-}
-
 function openItemMenu(i) {
     selectedIdx = i;
     const item = state.inv[i];
     document.getElementById('mItemTitle').innerText = item.n + (item.v > 0 ? ` +${item.v}` : "");
     document.getElementById('mItemIcon').innerText = item.i;
-    document.getElementById('mItemStats').innerHTML = `Rarity: ${item.r}/4 | Base Power: ${item.baseP}<br>${item.v > 0 ? `<span style="color:var(--success)">Upgrade Bonus: +${item.v}</span>` : ''}`;
-    
-    // Can only upgrade if name, baseP, and v level match
+    let type = (item.s === 'pet') ? "ATK/HP" : (['weapon','shield'].includes(item.s) ? "ATK" : "DEF");
+    document.getElementById('mItemStats').innerHTML = `Type: ${type} | Rarity: ${item.r}/4<br>Base Power: ${item.baseP} | Upgrade: +${item.v}`;
     const dupe = state.inv.findIndex((it, idx) => idx !== i && it.n === item.n && it.v === item.v && it.baseP === item.baseP);
     document.getElementById('upgradeBtn').disabled = (dupe === -1);
     document.getElementById('itemM').style.display = 'flex';
 }
 
 function doEquipFromMenu() {
-    equip(selectedIdx);
+    const it = state.inv.splice(selectedIdx, 1)[0];
+    const old = state.equip[it.s];
+    state.equip[it.s] = it;
+    if(old) state.inv.push(old);
     document.getElementById('itemM').style.display = 'none';
+    render();
 }
 
 function doUpgrade() {
@@ -276,96 +272,61 @@ function doUpgrade() {
     if(dupeIdx !== -1) {
         state.inv[selectedIdx].v++;
         state.inv.splice(dupeIdx, 1);
-        alert("Upgrade Success! Item is now +" + state.inv[selectedIdx].v);
+        alert("Upgrade Success!");
     }
     document.getElementById('itemM').style.display = 'none';
     render();
 }
-
-function doSell() {
-    state.gold += 50;
-    state.inv.splice(selectedIdx, 1);
-    document.getElementById('itemM').style.display = 'none';
-    render();
-}
-
-function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
 function addQuest() {
     const val = document.getElementById('qInput').value;
     if(!val) return;
     state.quests.push({txt: val, status: 'open', lucky: false});
     document.getElementById('qInput').value = '';
-    save(); render();
+    render();
 }
 
 function updateQuest(i, s) {
-    const q = state.quests[i];
     if(s === 'done') {
         state.gold += 50; state.xp += 40; state.tokens += 1;
-        let chance = q.lucky ? 0.8 : 0.3;
-        if(Math.random() < chance) state.inv.push(getRandomDrop());
-        state.history.push(state.quests.splice(i, 1)[0]);
-        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 15; state.hp = state.maxHp; }
-    } else { q.status = s; }
-    save(); render();
+        if(Math.random() < (state.quests[i].lucky ? 0.8 : 0.3)) state.inv.push(getRandomDrop());
+        state.quests.splice(i, 1);
+        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.hp = state.maxHp; alert("Level Up!"); }
+    } else { state.quests[i].status = s; }
+    render();
 }
 
 function render() {
+    calculateStats();
     const isP = state.role === 'parent';
-    document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
-    document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
-    document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
-    
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('hpVal').innerText = Math.round(state.hp);
     document.getElementById('xpBar').style.width = state.xp + "%";
 
     let qH = '';
     state.quests.forEach((q, i) => {
-        let actions = isP ? 
-        `<div><span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2</span>
-              ${q.status==='pending'?`<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:4px 8px;">✅</button>`:''}
-              <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px;">❌</button></div>` :
-        (q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `<button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:4px 10px;">RECALL</button>`);
-        qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${actions}</div>`;
+        let act = isP ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p">✅</button>` : `<button onclick="updateQuest(${i},'pending')" class="btn btn-p">DONE</button>`;
+        qH += `<div class="q-row"><span>${q.txt}</span>${act}</div>`;
     });
-    document.getElementById('activeQuestList').innerHTML = qH || '<small>No active tasks.</small>';
-
-    let hH = '';
-    state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
-    document.getElementById('historyList').innerHTML = hH || '<small>No history.</small>';
+    document.getElementById('activeQuestList').innerHTML = qH || 'No tasks.';
 
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
-        const html = `<div class="inv-item" onclick="openItemMenu(${i})" style="border-color:var(--rarity${it.r || 1})">
-            <div class="rarity-dot" style="background:var(--rarity${it.r || 1})"></div>
-            ${it.v > 0 ? `<div class="lvl-tag">+${it.v}</div>` : ''}
+        const html = `<div class="inv-item" onclick="openItemMenu(${i})" style="border-color:var(--rarity${it.r})">
+            <div class="rarity-dot" style="background:var(--rarity${it.r})"></div>
+            ${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}
             <div>${it.i}</div><small>${it.n}</small>
         </div>`;
         if(it.s === 'pet') petH += html; else gearH += html;
     });
-    document.getElementById('gearGrid').innerHTML = gearH || 'Empty';
-    document.getElementById('petGrid').innerHTML = petH || 'Empty';
+    document.getElementById('gearGrid').innerHTML = gearH;
+    document.getElementById('petGrid').innerHTML = petH;
 
     for(let s in state.equip) {
-        const item = state.equip[s];
-        document.getElementById('v-'+s).innerHTML = item ? `${item.i}${item.v > 0 ? `<sub style="font-size:8px; color:var(--gold)">+${item.v}</sub>` : ''}` : '';
-        if(document.getElementById('vis-'+s)) document.getElementById('vis-'+s).style.display = item ? 'block' : 'none';
+        document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
     }
-    if(state.equip.pet) document.getElementById('hFPet').innerText = state.equip.pet.i;
-    else document.getElementById('hFPet').innerText = '';
     save();
-}
-
-function equip(i) {
-    const it = state.inv.splice(i, 1)[0];
-    const old = state.equip[it.s];
-    state.equip[it.s] = it;
-    if(old) state.inv.push(old);
-    render();
 }
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
@@ -374,13 +335,16 @@ function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
     const m = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
-    mMaxHp = m.h + (state.lvl * 10); mHp = mMaxHp;
-    bActive = false;
+    mMaxHp = m.h + (state.lvl * 15); mHp = mMaxHp;
+    mAtkVal = m.a + (state.lvl * 3);
+    mDefVal = m.d + (state.lvl * 2);
+
+    document.getElementById('mName').innerText = m.n + " (Lv."+state.lvl+")";
+    document.getElementById('mAtk').innerText = mAtkVal;
+    document.getElementById('mDef').innerText = mDefVal;
     document.getElementById('mEmoji').innerText = m.i;
-    document.getElementById('battleMsg').innerText = m.n + " appears!";
     document.getElementById('battleM').style.display = 'flex';
-    document.getElementById('atkBtn').disabled = false;
-    updateBars();
+    bActive = false; updateBars();
 }
 
 function updateBars() {
@@ -388,56 +352,25 @@ function updateBars() {
     document.getElementById('mHpFill').style.width = (mHp/mMaxHp * 100) + "%";
 }
 
-function showDmg(dmg, x, y) {
-    const d = document.createElement('div'); d.className = 'dmg-text'; d.innerText = "-" + dmg;
-    d.style.left = x + "px"; d.style.top = y + "px";
-    document.getElementById('battleArena').appendChild(d);
-    setTimeout(() => d.remove(), 800);
-}
-
 function heroTurn() {
     if(bActive) return; bActive = true;
-    document.getElementById('atkBtn').disabled = true;
-    document.getElementById('hF').style.transform = 'translate(60px, -20px)';
-    
-    // NEW POWER CALCULATION
-    let wpn = state.equip.weapon;
-    let baseAtk = wpn ? wpn.baseP * 5 : 0;
-    let upgradeAtk = wpn ? wpn.v * 10 : 0; // +10 damage per level
-    let additionalAtk = wpn ? wpn.v * 1 : 0; // +1 additional per level request
-
-    setTimeout(() => {
-        const dmg = 15 + (state.lvl * 5) + baseAtk + upgradeAtk + additionalAtk; 
-        mHp = Math.max(0, mHp - dmg);
-        showDmg(dmg, 280, 60); updateBars();
-        document.getElementById('hF').style.transform = 'translate(0, 0)';
-        if(mHp <= 0) {
-            document.getElementById('battleMsg').innerText = "Victory!"; state.gold += 30;
-            if(Math.random() < 0.2) state.inv.push(getRandomDrop());
-            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
-        } else { setTimeout(monsterTurn, 800); }
-    }, 300);
+    let dmg = Math.max(2, currentHeroAtk - mDefVal);
+    mHp = Math.max(0, mHp - dmg);
+    updateBars();
+    if(mHp <= 0) {
+        alert("Victory! +30 Gold"); state.gold += 30;
+        document.getElementById('battleM').style.display='none'; render();
+    } else { setTimeout(monsterTurn, 600); }
 }
 
 function monsterTurn() {
-    document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
-    
-    let shield = state.equip.shield;
-    let armor = state.equip.armor;
-    let defVal = ((shield ? shield.baseP : 0) + (armor ? armor.baseP : 0)) * 2 + ((shield ? shield.v : 0) + (armor ? armor.v : 0)) * 4;
-    
-    setTimeout(() => {
-        const dmg = Math.max(2, 10 + (state.lvl * 2) - defVal); 
-        state.hp = Math.max(0, state.hp - dmg);
-        showDmg(dmg, 60, 150); updateBars();
-        document.getElementById('battleArena').style.animation = 'shake 0.3s';
-        document.getElementById('mF').style.transform = 'translate(0, 0)';
-        setTimeout(() => document.getElementById('battleArena').style.animation = '', 300);
-        if(state.hp <= 0) {
-            document.getElementById('battleMsg').innerText = "Defeated..."; state.hp = 20; 
-            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
-        } else { bActive = false; document.getElementById('atkBtn').disabled = false; render(); }
-    }, 300);
+    let dmg = Math.max(2, mAtkVal - currentHeroDef);
+    state.hp = Math.max(0, state.hp - dmg);
+    updateBars();
+    if(state.hp <= 0) {
+        alert("Fainted! HP reset to 20."); state.hp = 20;
+        document.getElementById('battleM').style.display='none'; render();
+    } else { bActive = false; }
 }
 
 load();
