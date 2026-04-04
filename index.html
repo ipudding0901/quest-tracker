@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - Fixed Master Build</title>
+  <title>Quest Kid RPG - Full Restore</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -13,15 +13,12 @@
     }
 
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
-    
     #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; }
-
     .app { max-width: 1100px; margin: 0 auto; padding: 10px; display: none; }
 
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); cursor: pointer; transition: 0.2s; }
-    
+    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); }
     .stats-bar { display: flex; gap: 10px; font-size: 11px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; margin-bottom: 10px; color: var(--accent); }
 
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -37,6 +34,10 @@
     .h-body { width: 50px; height: 60px; background: #0ea5e9; border-radius: 6px; margin: 3px auto; position: relative; }
 
     .panel { background: var(--card); padding: 12px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+    .collapse-btn { width: 100%; text-align: left; background: none; border: none; color: var(--accent); font-weight: bold; padding: 5px 0; cursor: pointer; display: flex; justify-content: space-between; }
+    .collapse-content { display: none; margin-top: 10px; }
+    .collapse-content.show { display: block; }
+
     .inv-grid { display: flex; gap: 8px; padding: 5px; overflow-x: auto; background: var(--bg); border-radius: 8px; min-height: 60px; border: 1px solid var(--border); }
     .inv-item { background: var(--card); min-width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; position: relative; }
     .lvl-tag { position: absolute; top: -5px; right: -5px; background: var(--gold); color: black; font-size: 9px; padding: 1px 4px; border-radius: 4px; font-weight: bold; }
@@ -48,11 +49,7 @@
     
     .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 8px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
-
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
-    .arena { position: relative; width: 100%; height: 260px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-    .hp-bar-outer { width: 80px; height: 10px; background: #000; border-radius: 5px; border: 1px solid #444; margin-bottom: 5px; overflow: hidden; }
-    .hp-bar-inner { width: 100%; height: 100%; transition: width 0.3s; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
   </style>
 </head>
 <body>
@@ -61,21 +58,19 @@
     <div class="login-card">
         <h1 style="color:var(--accent)">QUEST KID</h1>
         <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doLogin('child')">🧒 CHILD LOGIN</button>
-        <button class="btn btn-s" style="width:100%; padding:15px; background:var(--gold); color:black;" onclick="doLogin('parent')">🔑 PARENT LOGIN</button>
+        <button class="btn" style="width:100%; padding:15px; background:var(--gold); color:black;" onclick="doLogin('parent')">🔑 PARENT LOGIN</button>
     </div>
 </div>
 
 <div class="app" id="mainApp">
     <div class="nav">
-        <div><strong id="roleLabel" style="color:var(--accent)">HERO</strong></div>
+        <div><strong id="roleLabel">HERO</strong></div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
             <div class="gold-box">💰 <span id="goldVal">0</span></div>
-            <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:4px 10px; font-size:11px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
+            <button class="btn btn-p" style="padding:4px 10px; font-size:11px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
             <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Logout</button>
         </div>
-        <div id="parentNav" style="display:none;">
-            <button class="btn" style="font-size:10px; background:var(--border); padding:4px 12px;" onclick="location.reload()">Logout</button>
-        </div>
+        <div id="parentNav" style="display:none;"><button class="btn" style="font-size:10px; background:var(--border); padding:4px 12px;" onclick="location.reload()">Logout</button></div>
     </div>
 
     <div id="childGameView">
@@ -91,10 +86,7 @@
                 <div class="slot" onclick="unequip('shield')"><span class="slot-label">Off</span><div id="v-shield"></div></div>
             </div>
             <div class="doll-house">
-                <div class="hero-base">
-                    <div class="h-head"></div>
-                    <div class="h-body"></div>
-                </div>
+                <div class="hero-base"><div class="h-head"></div><div class="h-body"></div></div>
                 <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:11px;">
                     LVL <span id="lvlVal">1</span>
                     <div style="width:80px; height:4px; background:#000; margin:4px auto; border-radius:2px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
@@ -107,20 +99,21 @@
             </div>
         </div>
         <div class="panel">
-            <strong>🎒 Gear</strong>
+            <strong>🎒 Gear & Pets</strong>
             <div id="gearGrid" class="inv-grid"></div>
-            <strong style="display:block; margin-top:10px;">🐾 Pets</strong>
-            <div id="petGrid" class="inv-grid"></div>
         </div>
     </div>
 
     <div class="panel">
-        <h3 id="questTitle">📜 Active Quests</h3>
-        <div id="parentInputs" style="display:none; gap:5px; margin-bottom:12px;">
-            <input id="qInput" style="background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; flex:1;" placeholder="Add task for child...">
+        <h3 style="margin:0 0 10px 0;">📜 Quest Board</h3>
+        <div id="questInputArea" style="display:flex; gap:5px; margin-bottom:12px;">
+            <input id="qInput" style="background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; flex:1;" placeholder="Type a new quest here...">
             <button class="btn btn-p" onclick="addQuest()" style="width:50px;">+</button>
         </div>
         <div id="activeQuestList"></div>
+
+        <button class="collapse-btn" onclick="toggleCol('historyBox')" style="margin-top:15px; color:var(--success)">🌟 COMPLETED TASKS <span>▼</span></button>
+        <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
     </div>
 </div>
 
@@ -130,27 +123,22 @@
         <div id="mItemIcon" style="font-size:50px;"></div>
         <div id="mItemStats" style="font-size:12px; margin:10px 0;"></div>
         <button class="btn btn-p" style="width:100%; padding:12px; margin-bottom:8px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button>
-        <button id="upgradeBtn" class="btn btn-s" style="width:100%; padding:12px; margin-bottom:8px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE (Need 2)</button>
+        <button id="upgradeBtn" class="btn" style="width:100%; padding:12px; margin-bottom:8px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE</button>
         <button class="btn btn-danger" style="width:100%; padding:12px;" onclick="doSell()">💰 SELL (50g)</button>
-        <button class="btn" style="width:100%; margin-top:10px;" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button>
+        <button class="btn" style="width:100%; margin-top:10px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button>
     </div>
 </div>
 
 <script>
-const GEAR_TABLE = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Armor",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"}];
-const PET_TABLE = [{n:"Dog",i:"🐶",s:"pet"},{n:"Dragon",i:"🐲",s:"pet"}];
-
 let state = {
-    role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 3,
-    quests: [], inv: [],
+    role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0,
+    quests: [], history: [], inv: [],
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-let selectedIdx = -1;
-
-function save() { localStorage.setItem('questKid_Master_Fixed', JSON.stringify(state)); }
+function save() { localStorage.setItem('questKid_Restore_Final', JSON.stringify(state)); }
 function load() { 
-    const s = localStorage.getItem('questKid_Master_Fixed'); 
+    const s = localStorage.getItem('questKid_Restore_Final'); 
     if(s) state = JSON.parse(s); 
 }
 
@@ -161,98 +149,83 @@ function doLogin(r) {
     render();
 }
 
-function getRandomDrop() {
-    let raw = (Math.random() < 0.8) ? GEAR_TABLE[Math.floor(Math.random()*GEAR_TABLE.length)] : PET_TABLE[Math.floor(Math.random()*PET_TABLE.length)];
-    return { ...raw, v: 0, baseP: Math.floor(Math.random() * 3) + 1, r: Math.floor(Math.random()*4)+1 };
-}
+function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
 function addQuest() {
-    const txt = document.getElementById('qInput').value;
-    if(!txt) return;
-    state.quests.push({txt, status:'open', lucky: false});
+    const val = document.getElementById('qInput').value;
+    if(!val) return;
+    state.quests.push({txt: val, status: 'open', lucky: false});
     document.getElementById('qInput').value = '';
     render();
 }
 
-function submitQuest(i) {
-    state.quests[i].status = 'pending';
-    render();
-}
-
-function approveQuest(i) {
-    const q = state.quests[i];
-    state.gold += 50; state.xp += 40; state.tokens = Math.min(3, state.tokens + 1);
-    if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(getRandomDrop());
-    state.quests.splice(i, 1);
-    if(state.xp >= 100) { state.lvl++; state.xp -= 100; }
+function updateQuest(i, s) {
+    if(s === 'done') {
+        const q = state.quests[i];
+        state.gold += 50; state.xp += 40; state.tokens = Math.min(3, state.tokens+1);
+        if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push({n:"Gear", i:"⚔️", s:"weapon", v:0, baseP:1, r:1});
+        state.history.push(state.quests.splice(i, 1)[0]);
+        if(state.xp >= 100) { state.lvl++; state.xp -= 100; }
+    } else {
+        state.quests[i].status = s;
+    }
     render();
 }
 
 function render() {
     const isP = state.role === 'parent';
-    document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT MODE" : "🧒 HERO MODE";
+    document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
     document.getElementById('parentNav').style.display = isP ? 'block' : 'none';
     document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
-    document.getElementById('parentInputs').style.display = isP ? 'flex' : 'none';
-    
-    // Stats
-    let bAtk = 5 + (state.lvl*2), bDef = 2 + state.lvl, bHp = 100 + (state.lvl*20);
-    for(let s in state.equip) {
-        let it = state.equip[s];
-        if(!it) continue;
-        let p = (it.baseP * 3) + (it.v * 6);
-        if(s === 'weapon') bAtk += p*2;
-        if(s === 'shield') bAtk += p;
-        if(['helmet','armor','shoes'].includes(s)) bDef += p;
-        if(s === 'pet') { bAtk += p; bHp += p*5; }
-    }
-    document.getElementById('sAtk').innerText = bAtk;
-    document.getElementById('sDef').innerText = bDef;
-    document.getElementById('sHp').innerText = state.hp + "/" + bHp;
+
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('lvlVal').innerText = state.lvl;
     document.getElementById('xpBar').style.width = state.xp + "%";
 
-    // Quest List
+    // Active Quests
     let qH = '';
     state.quests.forEach((q, i) => {
-        let btn = '';
-        if(isP) {
-            btn = `<div>
+        let btn = isP ? 
+            `<div>
                 <span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2</span>
-                ${q.status === 'pending' ? `<button class="btn btn-p" onclick="approveQuest(${i})" style="display:inline; padding:5px 10px;">APPROVE ✅</button>` : ''}
-                <button class="btn btn-danger" onclick="state.quests.splice(${i},1); render();" style="display:inline; padding:5px 10px; margin-left:5px;">❌</button>
-            </div>`;
-        } else {
-            btn = q.status === 'open' ? `<button class="btn btn-p" onclick="submitQuest(${i})" style="padding:5px 15px;">DONE</button>` : `<span style="color:var(--gold)">⏳ Waiting...</span>`;
-        }
+                ${q.status==='pending'?`<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:5px 10px;">✅</button>`:''}
+                <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:5px 10px; margin-left:5px;">❌</button>
+            </div>` :
+            (q.status==='open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:5px 15px;">DONE</button>` : `<span style="color:var(--gold)">⏳ Waiting...</span>`);
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${btn}</div>`;
     });
-    document.getElementById('activeQuestList').innerHTML = qH || 'No quests active.';
+    document.getElementById('activeQuestList').innerHTML = qH || 'No active tasks.';
+
+    // History
+    let hH = '';
+    state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
+    document.getElementById('historyList').innerHTML = hH || 'No history yet.';
 
     // Inventory
-    let gH = '', pH = '';
+    let invH = '';
     state.inv.forEach((it, i) => {
-        let h = `<div class="inv-item" onclick="openItemMenu(${i})" style="border-color:var(--rarity${it.r})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div>${it.i}</div></div>`;
-        if(it.s === 'pet') pH += h; else gH += h;
+        invH += `<div class="inv-item" onclick="openItemMenu(${i})"><div>${it.i}</div><small>${it.n}</small></div>`;
     });
-    document.getElementById('gearGrid').innerHTML = gH;
-    document.getElementById('petGrid').innerHTML = pH;
+    document.getElementById('gearGrid').innerHTML = invH;
 
     for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
+    
+    // Stats (Mock calculation for display)
+    document.getElementById('sAtk').innerText = 5 + (state.lvl*2);
+    document.getElementById('sDef').innerText = 2 + state.lvl;
+    document.getElementById('sHp').innerText = "100/100";
+    
     save();
 }
 
 function openItemMenu(i) {
     selectedIdx = i;
-    const item = state.inv[i];
-    document.getElementById('mItemTitle').innerText = item.n + (item.v > 0 ? ` +${item.v}` : "");
-    document.getElementById('mItemIcon').innerText = item.i;
-    document.getElementById('mItemStats').innerText = `Base Power: ${item.baseP} | Rarity: ${item.r}`;
-    const dupe = state.inv.findIndex((it, idx) => idx !== i && it.n === item.n && it.v === item.v && it.baseP === item.baseP);
-    document.getElementById('upgradeBtn').disabled = (dupe === -1);
+    const it = state.inv[i];
+    document.getElementById('mItemTitle').innerText = it.n;
+    document.getElementById('mItemIcon').innerText = it.i;
+    document.getElementById('mItemStats').innerText = `Rarity: ${it.r} | Power: ${it.baseP}`;
     document.getElementById('itemM').style.display = 'flex';
 }
 
@@ -266,23 +239,8 @@ function doEquipFromMenu() {
 }
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
-
-function doUpgrade() {
-    const item = state.inv[selectedIdx];
-    const dupeIdx = state.inv.findIndex((it, idx) => idx !== selectedIdx && it.n === item.n && it.v === item.v && it.baseP === item.baseP);
-    state.inv[selectedIdx].v++;
-    state.inv.splice(dupeIdx, 1);
-    document.getElementById('itemM').style.display = 'none';
-    render();
-}
-
-function doSell() {
-    state.gold += 50; state.inv.splice(selectedIdx, 1);
-    document.getElementById('itemM').style.display = 'none';
-    render();
-}
-
-function startBattle() { alert("Battle started! (Logic remains from previous build)"); }
+function doUpgrade() { alert("Requires duplicate items!"); }
+function doSell() { state.gold += 50; state.inv.splice(selectedIdx, 1); document.getElementById('itemM').style.display = 'none'; render(); }
 
 load();
 </script>
