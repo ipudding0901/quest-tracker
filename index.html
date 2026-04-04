@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG</title>
+  <title>Quest Kid RPG - Master Build</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -181,7 +181,6 @@
 </div>
 
 <script>
-// --- DATA TABLES ---
 const GEAR_TABLE = [
     {n:"Sword",i:"⚔️",s:"weapon",v:0},{n:"Shield",i:"🛡️",s:"shield",v:0},
     {n:"Helm",i:"🪖",s:"helmet",v:0},{n:"Axe",i:"🪓",s:"weapon",v:0},
@@ -192,12 +191,8 @@ const PET_TABLE = [
     {n:"Dog",i:"🐶",s:"pet",v:0},{n:"Cat",i:"🐱",s:"pet",v:0},
     {n:"Dragon",i:"🐲",s:"pet",v:0},{n:"Bird",i:"🐦",s:"pet",v:0}
 ];
-const MONSTERS = [
-    {n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},
-    {n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}
-];
+const MONSTERS = [{n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},{n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}];
 
-// --- CORE STATE ---
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
     quests: [], history: [], inv: [],
@@ -206,18 +201,12 @@ let state = {
 
 let bActive = false, mHp = 50, mMaxHp = 50, selectedIdx = -1;
 
-// --- SAVE / LOAD FUNCTIONS ---
-function save() { 
-    localStorage.setItem('questKid_V8_Upgrades', JSON.stringify(state)); 
-}
+function save() { localStorage.setItem('questKid_Final_Build', JSON.stringify(state)); }
 function load() { 
-    const s = localStorage.getItem('questKid_V8_Upgrades'); 
-    if(s) {
-        state = JSON.parse(s); 
-    }
+    const s = localStorage.getItem('questKid_Final_Build') || localStorage.getItem('questKid_V8_Upgrades'); 
+    if(s) state = JSON.parse(s); 
 }
 
-// --- UTILITIES ---
 function getRandomDrop() {
     let raw = (Math.random() < 0.8) ? GEAR_TABLE[Math.floor(Math.random()*GEAR_TABLE.length)] : PET_TABLE[Math.floor(Math.random()*PET_TABLE.length)];
     return {...raw};
@@ -249,16 +238,13 @@ function buyItem(type) {
     save(); render();
 }
 
-// --- ITEM MANAGEMENT ---
 function openItemMenu(i) {
     selectedIdx = i;
     const item = state.inv[i];
     document.getElementById('mItemTitle').innerText = item.n + (item.v > 0 ? ` +${item.v}` : "");
     document.getElementById('mItemIcon').innerText = item.i;
-    
     const dupe = state.inv.findIndex((it, idx) => idx !== i && it.n === item.n && it.v === item.v);
     document.getElementById('upgradeBtn').disabled = (dupe === -1);
-    
     document.getElementById('itemM').style.display = 'flex';
 }
 
@@ -270,7 +256,6 @@ function doEquipFromMenu() {
 function doUpgrade() {
     const item = state.inv[selectedIdx];
     const dupeIdx = state.inv.findIndex((it, idx) => idx !== selectedIdx && it.n === item.n && it.v === item.v);
-    
     if(dupeIdx !== -1) {
         state.inv[selectedIdx].v++;
         state.inv.splice(dupeIdx, 1);
@@ -289,7 +274,6 @@ function doSell() {
 
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
-// --- QUEST LOGIC ---
 function addQuest() {
     const val = document.getElementById('qInput').value;
     if(!val) return;
@@ -310,7 +294,6 @@ function updateQuest(i, s) {
     save(); render();
 }
 
-// --- RENDER ---
 function render() {
     const isP = state.role === 'parent';
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
@@ -356,7 +339,6 @@ function render() {
     }
     if(state.equip.pet) document.getElementById('hFPet').innerText = state.equip.pet.i;
     else document.getElementById('hFPet').innerText = '';
-    
     save();
 }
 
@@ -370,7 +352,6 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
-// --- BATTLE SYSTEM ---
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
@@ -400,17 +381,13 @@ function heroTurn() {
     if(bActive) return; bActive = true;
     document.getElementById('atkBtn').disabled = true;
     document.getElementById('hF').style.transform = 'translate(60px, -20px)';
-    
     let bonusAtk = (state.equip.weapon ? state.equip.weapon.v * 10 : 0);
-    
     setTimeout(() => {
-        const dmg = 15 + (state.lvl * 5) + bonusAtk; 
-        mHp = Math.max(0, mHp - dmg);
+        const dmg = 15 + (state.lvl * 5) + bonusAtk; mHp = Math.max(0, mHp - dmg);
         showDmg(dmg, 280, 60); updateBars();
         document.getElementById('hF').style.transform = 'translate(0, 0)';
         if(mHp <= 0) {
-            document.getElementById('battleMsg').innerText = "Victory!"; 
-            state.gold += 30;
+            document.getElementById('battleMsg').innerText = "Victory!"; state.gold += 30;
             if(Math.random() < 0.2) state.inv.push(getRandomDrop());
             setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
         } else { setTimeout(monsterTurn, 800); }
@@ -419,12 +396,9 @@ function heroTurn() {
 
 function monsterTurn() {
     document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
-    
     let defVal = (state.equip.shield ? state.equip.shield.v * 3 : 0) + (state.equip.armor ? state.equip.armor.v * 3 : 0);
-    
     setTimeout(() => {
-        const dmg = Math.max(2, 10 + (state.lvl * 2) - defVal); 
-        state.hp = Math.max(0, state.hp - dmg);
+        const dmg = Math.max(2, 10 + (state.lvl * 2) - defVal); state.hp = Math.max(0, state.hp - dmg);
         showDmg(dmg, 60, 150); updateBars();
         document.getElementById('battleArena').style.animation = 'shake 0.3s';
         document.getElementById('mF').style.transform = 'translate(0, 0)';
@@ -436,7 +410,6 @@ function monsterTurn() {
     }, 300);
 }
 
-// Start
 load();
 </script>
 </body>
