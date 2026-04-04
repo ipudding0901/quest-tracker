@@ -31,19 +31,16 @@
     .h-legs { display: flex; justify-content: space-around; width: 50px; margin: 0 auto; }
     .h-leg { width: 20px; height: 50px; background: #1e3a8a; border-radius: 3px; position: relative; }
 
-    /* VECTOR PET STYLING */
     .pet-base { position: absolute; bottom: 40px; right: 40px; width: 80px; height: 80px; transition: 0.3s; display: flex; align-items: flex-end; justify-content: center; }
     .pet-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
     .vis-collar-svg { fill: var(--danger); display: none; }
 
-    /* EQUIPMENT VISUALS */
     .vis-helm { width: 44px; height: 25px; background: var(--iron); position: absolute; top: -2px; left: -2px; border-radius: 20px 20px 5px 5px; border: 2px solid #475569; display: none; }
     .vis-armor { width: 64px; height: 74px; background: var(--iron); position: absolute; top: -2px; left: -2px; border-radius: 6px; border: 2px solid #475569; display: none; }
     .vis-weapon { width: 10px; height: 60px; background: var(--steel); position: absolute; top: 10px; left: -25px; border: 2px solid #475569; transform: rotate(-15deg); display: none; }
     .vis-shield { width: 40px; height: 50px; background: var(--wood); position: absolute; top: 10px; right: -35px; border: 3px solid #78350f; border-radius: 5px 5px 20px 20px; display: none; }
     .vis-boot { width: 24px; height: 15px; background: #334155; position: absolute; bottom: -2px; left: -2px; border-radius: 3px; display: none; }
 
-    /* ARENA & BATTLE */
     .arena { position: relative; width: 100%; height: 300px; background: #bbf7d0; border-radius: 12px; overflow: hidden; perspective: 800px; border: 2px solid #86efac; }
     .floor { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #4ade80 2px, transparent 2px), linear-gradient(to right, #4ade80 2px, transparent 2px); background-size: 40px 40px; transform: rotateX(60deg); transform-origin: bottom; opacity: 0.5; }
     .combatant { position: absolute; transition: 0.4s; }
@@ -54,7 +51,7 @@
 
     .panel { background: var(--card); padding: 20px; border-radius: 16px; margin-top: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     .btn { cursor: pointer; border: none; border-radius: 8px; padding: 10px 16px; font-weight: bold; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .btn:disabled { background: #cbd5e1 !important; cursor: not-allowed; }
+    .btn:disabled { background: #cbd5e1 !important; cursor: not-allowed; opacity: 0.6; }
     .btn-p { background: var(--accent); color: #fff; }
     .btn-s { background: var(--gold); color: #fff; }
     .q-row { background: var(--slot); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
@@ -73,13 +70,13 @@
 <div class="app">
     <div class="nav">
         <strong style="font-size: 1.2em; color: var(--accent);">🛡️ QUEST KID</strong>
-        <select onchange="state.role=this.value; render();" style="background:#fff; border:2px solid var(--border); border-radius:8px; padding:6px;">
+        <select onchange="state.role=this.value; render();" id="roleSelect" style="background:#fff; border:2px solid var(--border); border-radius:8px; padding:6px;">
             <option value="child">Child Mode</option>
             <option value="parent">Parent Mode</option>
         </select>
         <div class="token-box">🎫 <span id="tokens">0</span>/3</div>
         <div class="gold-box">💰 <span id="gold">0</span></div>
-        <button class="btn btn-s" onclick="openM('shopM')">SHOP</button>
+        <button class="btn btn-s" onclick="resetSave()" style="font-size: 10px; background: var(--iron);">RESET SAVE</button>
         <button id="battleBtn" class="btn btn-p" onclick="startBattle()">BATTLE! (Costs 3🎫)</button>
     </div>
 
@@ -180,7 +177,7 @@
                 <div class="hp-bar-container" style="position: absolute; bottom: -20px; left: 0;"><div id="hHp" style="width:100%; height:100%; background:var(--success);"></div></div>
             </div>
             <div class="combatant monster-pos" id="mTeam">
-                <div style="font-size:80px;">👾</div>
+                <div id="mEmojiDisplay" style="font-size:80px;">👾</div>
                 <div class="hp-bar-container"><div id="mHp" style="width:100%; height:100%; background:var(--danger);"></div></div>
             </div>
         </div>
@@ -199,13 +196,6 @@ const PET_SHAPES = {
     unicorn: `<ellipse cx="40" cy="70" rx="30" ry="20" fill="COLOR"/><circle cx="70" cy="45" r="15" fill="COLOR"/><path d="M70,35 L75,10 L80,35" fill="#fbbf24"/>`
 };
 
-let state = {
-    role: 'child', gold: 100, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
-    mHp: 50, mMax: 50, turn: 'hero',
-    quests: [], history: [], inv: [],
-    equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", type:"dog", color:"#94a3b8", icon:"🐕", slot:"pet"} }
-};
-
 const DROPS = [
     { name: "Iron Helm", icon: "🪖", slot: "helmet", cssId: "vis-helmet" },
     { name: "Iron Sword", icon: "⚔️", slot: "weapon", cssId: "vis-weapon" },
@@ -218,19 +208,32 @@ const DROPS = [
     { name: "Star Unicorn", icon: "🦄", slot: "pet", type: "unicorn", color: "#f472b6" }
 ];
 
+let state = {
+    role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
+    mHp: 50, mMax: 50, turn: 'hero',
+    quests: [], history: [], inv: [],
+    equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", type:"dog", color:"#94a3b8", icon:"🐕", slot:"pet"} }
+};
+
+// --- STORAGE SYSTEM ---
+function saveGame() { localStorage.setItem('questKidSave', JSON.stringify(state)); }
+function loadGame() {
+    const saved = localStorage.getItem('questKidSave');
+    if (saved) { state = JSON.parse(saved); }
+    render();
+}
+function resetSave() { if(confirm("Start new game?")) { localStorage.removeItem('questKidSave'); location.reload(); } }
+
 function openM(id) { document.getElementById(id).style.display = 'flex'; }
 function closeM(id) { document.getElementById(id).style.display = 'none'; }
-function toggleHistory() { 
-    const el = document.getElementById('hist-content');
-    el.classList.toggle('open');
-}
+function toggleHistory() { document.getElementById('hist-content').classList.toggle('open'); }
 
 function addQ() {
     const v = document.getElementById('qIn').value;
     if(!v) return;
     state.quests.push({txt: v, status: 'open'});
     document.getElementById('qIn').value = '';
-    render();
+    saveGame(); render();
 }
 
 function updateQ(i, s) {
@@ -239,46 +242,92 @@ function updateQ(i, s) {
         completedTask.time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         state.history.unshift(completedTask);
         state.gold += 50; state.xp += 40; state.tokens += 1;
+        
+        // --- 40% LOOT DROP ON TASK COMPLETION ---
+        if(Math.random() < 0.4) {
+            const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
+            state.inv.push(loot);
+            alert("Reward Found: " + loot.name + "!");
+        }
     } else state.quests[i].status = s;
-    if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 10; state.hp = state.maxHp; }
-    render();
+    
+    checkLevelUp();
+    saveGame(); render();
 }
 
+function checkLevelUp() {
+    if(state.xp >= 100) { 
+        state.lvl++; state.xp -= 100; state.maxHp += 10; state.hp = state.maxHp; 
+        alert("Level Up! You are now Level " + state.lvl);
+    }
+}
+
+// --- STRICT TURN-BASED BATTLE ---
 function startBattle() {
-    if(state.tokens < 3) return;
+    if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
     state.tokens -= 3; state.mHp = state.mMax; state.turn = 'hero';
+    document.getElementById('mEmojiDisplay').innerText = state.lvl > 5 ? '🐉' : '👾';
     openM('battleM'); render();
 }
 
 function heroAttack() {
+    if(state.turn !== 'hero') return;
+    state.turn = 'waiting'; // Prevent spamming during animation
+    document.getElementById('atkBtn').disabled = true;
+
     const team = document.getElementById('hTeam');
     team.classList.add('lunge');
+    
     setTimeout(() => {
-        state.mHp -= (15 + state.lvl * 2);
+        let crit = Math.random() > 0.8 ? 2 : 1;
+        let power = (15 + state.lvl * 2) * crit;
+        state.mHp -= power;
         team.classList.remove('lunge');
         render();
-        if(state.mHp <= 0) endBattle(true);
-        else { state.turn = 'monster'; setTimeout(monsterAttack, 1000); }
+
+        if(state.mHp <= 0) { setTimeout(() => endBattle(true), 500); } 
+        else {
+            state.turn = 'monster';
+            document.getElementById('battleStatus').innerText = "Monster is attacking...";
+            setTimeout(monsterAttack, 1200);
+        }
     }, 400);
 }
 
 function monsterAttack() {
     const m = document.getElementById('mTeam');
     m.classList.add('m-lunge');
+    
     setTimeout(() => {
-        let dmg = 12 + state.lvl;
+        let dmg = 10 + state.lvl * 2;
         if(state.equip.armor) dmg -= 5;
         state.hp -= Math.max(2, dmg);
         m.classList.remove('m-lunge');
         render();
-        if(state.hp <= 0) endBattle(false);
-        else state.turn = 'hero';
+
+        if(state.hp <= 0) { setTimeout(() => endBattle(false), 500); } 
+        else {
+            state.turn = 'hero';
+            document.getElementById('battleStatus').innerText = "Your Turn!";
+            document.getElementById('atkBtn').disabled = false;
+        }
     }, 400);
 }
 
 function endBattle(win) {
-    if(win) { state.gold += 30; state.mMax += 10; if(Math.random() < 0.4) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]); }
-    closeM('battleM'); render();
+    if(win) { 
+        alert("Victory!"); state.gold += 30; state.mMax += 15; 
+        if(Math.random() < 0.4) {
+            const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
+            state.inv.push(loot);
+            alert("Battle Loot: " + loot.name + "!");
+        }
+    } else { 
+        alert("Defeated! Rest up."); 
+        state.hp = Math.floor(state.maxHp * 0.2); 
+    }
+    closeM('battleM');
+    saveGame(); render();
 }
 
 function equip(i) {
@@ -287,11 +336,11 @@ function equip(i) {
     state.equip[it.slot] = it;
     state.inv.splice(i, 1);
     if(old) state.inv.push(old);
-    render();
+    saveGame(); render();
 }
 
 function unequip(slot) {
-    if(state.equip[slot]) { state.inv.push(state.equip[slot]); state.equip[slot] = null; render(); }
+    if(state.equip[slot]) { state.inv.push(state.equip[slot]); state.equip[slot] = null; saveGame(); render(); }
 }
 
 function render() {
@@ -302,9 +351,10 @@ function render() {
     document.getElementById('xp-bar').style.width = state.xp + "%";
     document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
     document.getElementById('hHp').style.width = (state.hp/state.maxHp*100) + "%";
+    document.getElementById('roleSelect').value = state.role;
 
-    const allVis = document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .vis-collar-svg');
-    allVis.forEach(v => v.style.display = 'none');
+    // Visual Reset
+    document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .vis-collar-svg').forEach(v => v.style.display = 'none');
 
     for(let s in state.equip) {
         const item = state.equip[s];
@@ -316,6 +366,7 @@ function render() {
         }
     }
     
+    // Pet Logic
     const pet = state.equip.pet;
     if(pet) {
         const svgContent = PET_SHAPES[pet.type].replace(/COLOR/g, pet.color);
@@ -330,14 +381,15 @@ function render() {
         document.getElementById('pet-container').style.display = 'none';
     }
 
+    // List Logic
     let qH = '';
     state.quests.forEach((q, i) => {
         let b = '';
         if(state.role === 'child' && q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p">Submit</button>`;
         if(state.role === 'parent' && q.status === 'pending') b = `<button onclick="updateQ(${i},'done')" class="btn btn-s">Approve</button>`;
-        qH += `<div class="q-row"><span>${q.txt}</span> <div>${b}</div></div>`;
+        qH += `<div class="q-row"><span>${q.txt} <small>(${q.status})</small></span> <div>${b}</div></div>`;
     });
-    document.getElementById('qList').innerHTML = qH;
+    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; opacity:0.5;">Add a task above!</p>';
 
     let hH = '';
     state.history.forEach(h => hH += `<div class="q-row" style="font-size:0.9em; opacity:0.7;"><span>✅ ${h.txt}</span></div>`);
@@ -347,7 +399,9 @@ function render() {
     state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})"><div style="font-size:20px;">${it.icon}</div><b>${it.name}</b></div>`);
     document.getElementById('inv').innerHTML = iH;
 }
-render();
+
+// Start
+loadGame();
 </script>
 </body>
 </html>
