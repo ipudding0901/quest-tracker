@@ -17,10 +17,10 @@
 
     /* Compact Nav */
     .nav { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between; }
-    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 10px; border-radius: 15px; border: 1px solid var(--gold); }
-    .token-box { color: var(--accent); font-weight: bold; background: #082f49; padding: 4px 10px; border-radius: 15px; border: 1px solid var(--accent); }
+    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); }
+    
     .nav-btns { display: flex; gap: 5px; width: 100%; margin-top: 5px; }
-    .nav-btns .btn { padding: 8px; flex: 1; font-size: 12px; }
+    .nav-btns .btn { padding: 10px; flex: 1; font-size: 12px; }
 
     /* Layout */
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -30,7 +30,6 @@
     @media (min-width: 768px) { .slot-col { display: flex; flex-direction: column; } }
 
     .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 10px; padding: 8px; min-height: 50px; text-align: center; cursor: pointer; }
-    .slot.active { border: 1px solid var(--accent); background: #1e293b; }
     .slot-label { font-size: 8px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
     .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 16px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
@@ -58,7 +57,7 @@
     .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border: 1px solid var(--border); }
     .q-btns { display: flex; gap: 4px; }
 
-    /* Battle/Shop Modals */
+    /* Modals */
     .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding: 15px; }
     .arena { position: relative; width: 100%; height: 200px; background: #064e3b; border-radius: 10px; overflow: hidden; border: 1px solid #065f46; }
     .floor { position: absolute; bottom: 0; width: 100%; height: 80px; background: linear-gradient(to bottom, #059669 1px, transparent 1px); opacity: 0.2; }
@@ -82,14 +81,11 @@
             <option value="parent">Parent</option>
         </select>
         
-        <div style="display:flex; gap:8px;">
-          <div class="token-box">🎫 <span id="tokens-main">0</span>/3</div>
-          <div class="gold-box">💰 <span id="gold">0</span></div>
-        </div>
+        <div class="gold-box">💰 <span id="gold">0</span></div>
         
         <div class="nav-btns">
           <button class="btn btn-s" onclick="openM('shopM')">🛒 SHOP</button>
-          <button id="battleBtn" class="btn btn-p" onclick="startBattle()">⚔️ BATTLE (<span id="btn-tokens">0</span>/3)</button>
+          <button id="battleBtn" class="btn btn-p" onclick="startBattle()">⚔️ BATTLE (<span id="btn-tokens">0</span>/3 🎫)</button>
         </div>
     </div>
 
@@ -204,7 +200,7 @@ function loadGame() {
     if (saved) state = JSON.parse(saved);
     render();
 }
-function resetSave() { if(confirm("Start a new game? This clears all progress.")) { localStorage.clear(); location.reload(); } }
+function resetSave() { if(confirm("Start a new game?")) { localStorage.clear(); location.reload(); } }
 
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 function openM(id) { document.getElementById(id).style.display = 'flex'; }
@@ -238,7 +234,7 @@ function updateQ(i, s) {
 }
 
 function startBattle() {
-    if(state.tokens < 3) { alert("Need 3 tokens! Complete quests to earn them."); return; }
+    if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
     state.tokens -= 3; state.mMax = 50 + (state.lvl * 10); state.mHp = state.mMax;
     openM('battleM'); render();
 }
@@ -269,7 +265,6 @@ function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state
 
 function render() {
     document.getElementById('gold').innerText = state.gold;
-    document.getElementById('tokens-main').innerText = state.tokens;
     document.getElementById('btn-tokens').innerText = state.tokens;
     document.getElementById('lvl').innerText = state.lvl;
     document.getElementById('h-hp-text').innerText = state.hp;
