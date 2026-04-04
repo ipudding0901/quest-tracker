@@ -52,8 +52,14 @@
     .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 8px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
+    /* BETTER BATTLE UI */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
-    .arena { position: relative; width: 100%; height: 220px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .arena { position: relative; width: 100%; height: 260px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    .hp-bar-outer { width: 80px; height: 10px; background: #000; border-radius: 5px; border: 1px solid #444; margin-bottom: 5px; overflow: hidden; }
+    .hp-bar-inner { width: 100%; height: 100%; transition: width 0.3s; }
+    .dmg-text { position: absolute; font-weight: bold; font-size: 20px; color: var(--danger); animation: floatUp 0.8s forwards; pointer-events: none; }
+    @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-40px); opacity: 0; } }
+    @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
   </style>
 </head>
 <body>
@@ -125,23 +131,37 @@
 </div>
 
 <div id="battleM" class="modal-overlay">
-    <div class="panel" style="width:95%; max-width:400px;">
-        <div class="arena">
-            <div id="battleMsg" style="text-align:center; padding-top:10px; color:var(--gold);">Battle Start!</div>
-            <div id="hF" style="position:absolute; bottom:40px; left:40px; width:30px; height:60px; background:var(--accent); transition:0.3s;"></div>
-            <div id="hFPet" style="position:absolute; bottom:40px; left:75px; font-size:20px;"></div>
-            <div id="mF" style="position:absolute; top:40px; right:40px; font-size:50px; transition:0.3s;">👾</div>
+    <div class="panel" style="width:95%; max-width:400px; text-align:center;">
+        <div class="arena" id="battleArena">
+            <div id="battleMsg" style="text-align:center; padding-top:10px; color:var(--gold); font-weight:bold;">Fight!</div>
+            
+            <div id="hF" style="position:absolute; bottom:40px; left:40px; transition:0.3s;">
+                <div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div>
+                <div style="width:30px; height:60px; background:var(--accent); border-radius:4px; margin:0 auto;"></div>
+                <div id="hFPet" style="position:absolute; left:35px; bottom:0; font-size:20px;"></div>
+            </div>
+
+            <div id="mF" style="position:absolute; top:40px; right:40px; transition:0.3s;">
+                <div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div>
+                <div id="mEmoji" style="font-size:50px;">👾</div>
+            </div>
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ STRIKE</button>
-            <button class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
+            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ ATTACK</button>
+            <button id="runBtn" class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
         </div>
     </div>
 </div>
 
 <script>
 const DROPS = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"}];
-const MONSTERS = ["👾","🐉","👺","👻","🕷️"];
+const MONSTERS = [
+    {n:"Grumble Slime", i:"👾", h:50},
+    {n:"Fire Drake", i:"🐉", h:80},
+    {n:"Cave Goblin", i:"👺", h:45},
+    {n:"Shadow Ghost", i:"👻", h:40},
+    {n:"Forest Spider", i:"🕷️", h:35}
+];
 
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
@@ -151,9 +171,10 @@ let state = {
 
 let bActive = false;
 let mHp = 50;
+let mMaxHp = 50;
 
-function save() { localStorage.setItem('questKid_Final_Fixed', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_Final_Fixed'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('questKid_V5_Final', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('questKid_V5_Final'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) {
     state.role = r;
@@ -179,7 +200,7 @@ function updateQuest(i, s) {
         let chance = q.lucky ? 0.8 : 0.3;
         if(Math.random() < chance) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
         state.history.push(state.quests.splice(i, 1)[0]);
-        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 10; state.hp = state.maxHp; }
+        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 15; state.hp = state.maxHp; }
     } else { q.status = s; }
     save(); render();
 }
@@ -249,32 +270,53 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
+// BETTER BATTLE ENGINE
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
-    mHp = 50 + (state.lvl * 5);
+    const m = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
+    mMaxHp = m.h + (state.lvl * 10);
+    mHp = mMaxHp;
     bActive = false;
-    document.getElementById('mF').innerText = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
-    document.getElementById('battleMsg').innerText = "Fight!";
+    document.getElementById('mEmoji').innerText = m.i;
+    document.getElementById('battleMsg').innerText = m.n + " appears!";
     document.getElementById('battleM').style.display = 'flex';
+    document.getElementById('atkBtn').disabled = false;
+    updateBars();
+}
+
+function updateBars() {
+    document.getElementById('hHpFill').style.width = (state.hp/state.maxHp * 100) + "%";
+    document.getElementById('mHpFill').style.width = (mHp/mMaxHp * 100) + "%";
+}
+
+function showDmg(dmg, x, y) {
+    const d = document.createElement('div');
+    d.className = 'dmg-text';
+    d.innerText = "-" + dmg;
+    d.style.left = x + "px";
+    d.style.top = y + "px";
+    document.getElementById('battleArena').appendChild(d);
+    setTimeout(() => d.remove(), 800);
 }
 
 function heroTurn() {
     if(bActive) return;
     bActive = true;
     document.getElementById('atkBtn').disabled = true;
-    document.getElementById('hF').style.transform = 'translateX(50px)';
+    document.getElementById('hF').style.transform = 'translate(60px, -20px)'; // Dash hop
     
     setTimeout(() => {
-        const dmg = 15 + (state.lvl * 2);
-        mHp -= dmg;
-        document.getElementById('battleMsg').innerText = `You hit for ${dmg}!`;
-        document.getElementById('hF').style.transform = 'translateX(0)';
+        const dmg = 15 + (state.lvl * 5);
+        mHp = Math.max(0, mHp - dmg);
+        showDmg(dmg, 280, 60);
+        updateBars();
+        document.getElementById('hF').style.transform = 'translate(0, 0)';
         
         if(mHp <= 0) {
             document.getElementById('battleMsg').innerText = "Victory!";
             state.gold += 30;
-            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
+            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
         } else {
             setTimeout(monsterTurn, 800);
         }
@@ -282,17 +324,22 @@ function heroTurn() {
 }
 
 function monsterTurn() {
-    document.getElementById('mF').style.transform = 'translateX(-50px)';
+    document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
+    
     setTimeout(() => {
-        const dmg = 10 + state.lvl;
-        state.hp -= dmg;
-        document.getElementById('battleMsg').innerText = `Monster hits for ${dmg}!`;
-        document.getElementById('mF').style.transform = 'translateX(0)';
+        const dmg = 10 + (state.lvl * 2);
+        state.hp = Math.max(0, state.hp - dmg);
+        showDmg(dmg, 60, 150);
+        updateBars();
+        document.getElementById('battleArena').style.animation = 'shake 0.3s';
+        document.getElementById('mF').style.transform = 'translate(0, 0)';
         
+        setTimeout(() => document.getElementById('battleArena').style.animation = '', 300);
+
         if(state.hp <= 0) {
             document.getElementById('battleMsg').innerText = "Defeated...";
             state.hp = 20; 
-            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
+            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
         } else {
             bActive = false;
             document.getElementById('atkBtn').disabled = false;
