@@ -75,7 +75,7 @@
             <strong id="roleLabel" style="color:var(--accent)">HERO</strong>
             <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Switch</button>
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
+        <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
             <div class="gold-box">💰 <span id="goldVal">0</span></div>
             <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:4px 10px; font-size:11px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
@@ -136,7 +136,10 @@
             <div id="hFPet" style="position:absolute; bottom:40px; left:75px; font-size:20px;"></div>
             <div id="mF" style="position:absolute; top:40px; right:40px; font-size:50px; transition:0.3s;">👾</div>
         </div>
-        <button class="btn btn-p" style="width:100%; padding:15px; margin-top:10px;" id="atkBtn" onclick="fightStep()">⚔️ STRIKE</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="fightStep()">⚔️ STRIKE</button>
+            <button class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
+        </div>
     </div>
 </div>
 
@@ -150,8 +153,8 @@ let state = {
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-function save() { localStorage.setItem('questKid_Pro', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_Pro'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('questKid_Final_Pro', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('questKid_Final_Pro'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) {
     state.role = r;
@@ -185,6 +188,9 @@ function updateQuest(i, s) {
 function render() {
     const isP = state.role === 'parent';
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
+    
+    // Toggle Visibility of UI blocks
+    document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     
     document.getElementById('goldVal').innerText = state.gold;
@@ -193,7 +199,7 @@ function render() {
     document.getElementById('hpVal').innerText = state.hp;
     document.getElementById('xpBar').style.width = state.xp + "%";
 
-    // Quest List
+    // Quest List logic
     let qH = '';
     state.quests.forEach((q, i) => {
         let actions = '';
@@ -204,18 +210,18 @@ function render() {
                 <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px; margin-left:5px;">🗑️</button>
             </div>`;
         } else {
-            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `⏳`;
+            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `⏳ Pending`;
         }
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${actions}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || '<small>No active tasks.</small>';
 
-    // History
+    // History logic
     let hH = '';
     state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
     document.getElementById('historyList').innerHTML = hH || '<small>Nothing completed yet.</small>';
 
-    // Gear & Pets
+    // Gear & Pets logic
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
         const html = `<div class="inv-item" onclick="equip(${i})"><div>${it.i}</div><small>${it.n}</small></div>`;
@@ -224,7 +230,7 @@ function render() {
     document.getElementById('gearGrid').innerHTML = gearH || 'Empty';
     document.getElementById('petGrid').innerHTML = petH || 'Empty';
 
-    // Visuals
+    // Dollhouse visuals
     for(let s in state.equip) {
         const item = state.equip[s];
         document.getElementById('v-'+s).innerText = item ? item.i : '';
@@ -249,13 +255,13 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
-// Simplified Battle Step
 let mHp = 50;
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
     mHp = 50; 
     document.getElementById('mF').innerText = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
+    document.getElementById('battleMsg').innerText = "Battle Start!";
     document.getElementById('battleM').style.display = 'flex';
 }
 
@@ -272,6 +278,11 @@ function fightStep() {
             setTimeout(() => {
                 state.hp -= 10;
                 document.getElementById('mF').style.transform = 'translateX(0)';
+                if(state.hp <= 0) {
+                    document.getElementById('battleMsg').innerText = "Defeat...";
+                    state.hp = 20;
+                    setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
+                }
                 render();
             }, 300);
         }
