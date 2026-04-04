@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quest RPG: Epic Pets Edition</title>
+  <title>Quest Kid</title>
   <style>
     :root {
       --bg: #f0f8ff; --card: #ffffff; --text: #334155;
@@ -24,20 +24,17 @@
     .slot-label { font-size: 10px; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: bold; }
 
     .doll-house { background: radial-gradient(circle, #e0f2fe, #bae6fd); border-radius: 16px; height: 400px; position: relative; border: 2px solid #7dd3fc; overflow: hidden; }
-    .hero-base { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 80px; height: 180px; transition: 0.3s; }
+    .hero-base { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 80px; height: 180px; transition: 0.3s; z-index: 10; }
     
-    /* HERO PARTS */
     .h-head { width: 40px; height: 40px; background: #fcd34d; border-radius: 50%; margin: 0 auto; position: relative; }
     .h-body { width: 60px; height: 70px; background: #38bdf8; border-radius: 6px; margin: 4px auto; position: relative; }
     .h-legs { display: flex; justify-content: space-around; width: 50px; margin: 0 auto; }
     .h-leg { width: 20px; height: 50px; background: #1e3a8a; border-radius: 3px; position: relative; }
 
-    /* PET STYLING */
-    .pet-base { position: absolute; bottom: 40px; right: 40px; width: 60px; height: 60px; transition: 0.3s; }
-    .p-body { width: 45px; height: 35px; background: #e7e5e4; border-radius: 20px 20px 10px 10px; position: absolute; bottom: 0; left: 0; border: 2px solid rgba(0,0,0,0.1); }
-    .p-head { width: 30px; height: 30px; background: #e7e5e4; border-radius: 50%; position: absolute; top: 5px; right: 0; border: 2px solid rgba(0,0,0,0.1); }
-    .p-emoji { position: absolute; top: 4px; right: 4px; font-size: 18px; z-index: 2; }
-    .vis-collar { width: 20px; height: 5px; background: var(--danger); position: absolute; top: 30px; right: 8px; border-radius: 2px; display: none; z-index: 3; border: 1px solid #991b1b; }
+    /* VECTOR PET STYLING */
+    .pet-base { position: absolute; bottom: 40px; right: 40px; width: 80px; height: 80px; transition: 0.3s; display: flex; align-items: flex-end; justify-content: center; }
+    .pet-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+    .vis-collar-svg { fill: var(--danger); display: none; }
 
     /* EQUIPMENT VISUALS */
     .vis-helm { width: 44px; height: 25px; background: var(--iron); position: absolute; top: -2px; left: -2px; border-radius: 20px 20px 5px 5px; border: 2px solid #475569; display: none; }
@@ -50,7 +47,7 @@
     .arena { position: relative; width: 100%; height: 300px; background: #bbf7d0; border-radius: 12px; overflow: hidden; perspective: 800px; border: 2px solid #86efac; }
     .floor { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #4ade80 2px, transparent 2px), linear-gradient(to right, #4ade80 2px, transparent 2px); background-size: 40px 40px; transform: rotateX(60deg); transform-origin: bottom; opacity: 0.5; }
     .combatant { position: absolute; transition: 0.4s; }
-    .hero-team { bottom: 40px; left: 60px; display: flex; align-items: flex-end; gap: 10px; }
+    .hero-team { bottom: 40px; left: 40px; display: flex; align-items: flex-end; gap: 5px; }
     .monster-pos { top: 60px; right: 80px; text-align: center; }
     .lunge { transform: translate(140px, -80px) scale(1.1); }
     .m-lunge { transform: translate(-140px, 80px) scale(1.1); }
@@ -108,10 +105,10 @@
             </div>
 
             <div class="pet-base" id="pet-container">
-                <div class="p-body" id="pet-body-color"></div>
-                <div class="p-head" id="pet-head-color"></div>
-                <div id="pet-emoji" class="p-emoji">🐕</div>
-                <div id="vis-collar" class="vis-collar"></div>
+                <svg id="pet-svg-element" class="pet-svg" viewBox="0 0 100 100">
+                    <g id="pet-paths"></g>
+                    <rect id="vis-collar" class="vis-collar-svg" x="35" y="45" width="30" height="6" rx="2" />
+                </svg>
             </div>
 
             <div style="position:absolute; bottom:15px; width:100%; text-align:center;">
@@ -134,7 +131,7 @@
 
     <div class="panel">
         <h3>🎒 Inventory</h3>
-        <div class="inv-grid" id="inv"></div>
+        <div id="inv" class="inv-grid"></div>
     </div>
 
     <div class="panel">
@@ -160,13 +157,12 @@
         <div class="arena">
             <div class="floor"></div>
             <div class="combatant hero-team" id="hTeam">
-                <div id="b-pet-container" style="position:relative; width:40px; height:40px; transform: scaleX(-1);">
-                    <div class="p-body" id="b-pet-body-color" style="width:30px; height:25px;"></div>
-                    <div class="p-head" id="b-pet-head-color" style="width:20px; height:20px; top:3px;"></div>
-                    <div id="b-pet-emoji" class="p-emoji" style="font-size:12px; top:3px; right:2px;">🐕</div>
-                    <div id="b-vis-collar" class="vis-collar" style="top:20px; right:5px; width:15px;"></div>
+                <div style="width:50px; height:50px; transform: scaleX(-1);">
+                    <svg id="b-pet-svg" viewBox="0 0 100 100">
+                        <g id="b-pet-paths"></g>
+                        <rect id="b-vis-collar" class="vis-collar-svg" x="35" y="45" width="30" height="6" rx="2" />
+                    </svg>
                 </div>
-
                 <div style="width: 50px; height: 110px; position: relative;">
                     <div style="position: absolute; bottom: 0; left: -15px; transform: scaleX(-1) scale(0.6); transform-origin: bottom center; width: 80px; height: 180px;">
                         <div class="h-head"><div id="b-vis-helmet" class="vis-helm"></div></div>
@@ -184,7 +180,7 @@
                 <div class="hp-bar-container" style="position: absolute; bottom: -20px; left: 0;"><div id="hHp" style="width:100%; height:100%; background:var(--success);"></div></div>
             </div>
             <div class="combatant monster-pos" id="mTeam">
-                <div id="mEmoji" style="font-size:80px;">👾</div>
+                <div style="font-size:80px;">👾</div>
                 <div class="hp-bar-container"><div id="mHp" style="width:100%; height:100%; background:var(--danger);"></div></div>
             </div>
         </div>
@@ -196,11 +192,18 @@
 </div>
 
 <script>
+const PET_SHAPES = {
+    dog: `<circle cx="50" cy="65" r="25" fill="COLOR"/><circle cx="65" cy="40" r="18" fill="COLOR"/><circle cx="78" cy="30" r="8" fill="COLOR"/><circle cx="55" cy="30" r="8" fill="COLOR"/>`,
+    cat: `<ellipse cx="50" cy="70" rx="25" ry="20" fill="COLOR"/><circle cx="50" cy="45" r="18" fill="COLOR"/><path d="M35,35 L45,45 L32,50 Z" fill="COLOR"/><path d="M65,35 L55,45 L68,50 Z" fill="COLOR"/>`,
+    dragon: `<path d="M20,80 Q50,20 80,80" fill="COLOR"/><circle cx="80" cy="40" r="15" fill="COLOR"/><path d="M70,30 L80,10 L90,30" fill="COLOR"/><path d="M30,50 L10,30 L30,40" fill="#94a3b8" opacity="0.6"/>`,
+    unicorn: `<ellipse cx="40" cy="70" rx="30" ry="20" fill="COLOR"/><circle cx="70" cy="45" r="15" fill="COLOR"/><path d="M70,35 L75,10 L80,35" fill="#fbbf24"/>`
+};
+
 let state = {
     role: 'child', gold: 100, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
     mHp: 50, mMax: 50, turn: 'hero',
     quests: [], history: [], inv: [],
-    equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", icon:"🐕", color:"#e7e5e4", slot:"pet"} }
+    equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, collar:null, pet:{name:"Dog", type:"dog", color:"#94a3b8", icon:"🐕", slot:"pet"} }
 };
 
 const DROPS = [
@@ -210,10 +213,9 @@ const DROPS = [
     { name: "Wood Shield", icon: "🛡️", slot: "shield", cssId: "vis-shield" },
     { name: "Iron Boots", icon: "👢", slot: "shoes", cssId: "vis-shoes" },
     { name: "Magic Collar", icon: "🎀", slot: "collar", cssId: "vis-collar" },
-    // Rare Pets
-    { name: "Cat Friend", icon: "🐈", slot: "pet", color: "#fdba74" },
-    { name: "Baby Dragon", icon: "🐲", slot: "pet", color: "#4ade80" },
-    { name: "Unicorn", icon: "🦄", slot: "pet", color: "#f472b6" }
+    { name: "Cat Friend", icon: "🐱", slot: "pet", type: "cat", color: "#fdba74" },
+    { name: "Dragon Hatchling", icon: "🐲", slot: "pet", type: "dragon", color: "#4ade80" },
+    { name: "Star Unicorn", icon: "🦄", slot: "pet", type: "unicorn", color: "#f472b6" }
 ];
 
 function openM(id) { document.getElementById(id).style.display = 'flex'; }
@@ -221,7 +223,6 @@ function closeM(id) { document.getElementById(id).style.display = 'none'; }
 function toggleHistory() { 
     const el = document.getElementById('hist-content');
     el.classList.toggle('open');
-    document.getElementById('hIcon').innerText = el.classList.contains('open') ? '▲' : '▼';
 }
 
 function addQ() {
@@ -245,18 +246,11 @@ function updateQ(i, s) {
 
 function startBattle() {
     if(state.tokens < 3) return;
-    if(state.hp <= 0) { alert("Restore HP first!"); return; }
-    state.tokens -= 3;
-    state.mHp = state.mMax;
-    state.turn = 'hero';
-    document.getElementById('battleStatus').innerText = "Your Turn!";
-    document.getElementById('atkBtn').disabled = false;
-    openM('battleM');
-    render();
+    state.tokens -= 3; state.mHp = state.mMax; state.turn = 'hero';
+    openM('battleM'); render();
 }
 
 function heroAttack() {
-    if(state.turn !== 'hero') return;
     const team = document.getElementById('hTeam');
     team.classList.add('lunge');
     setTimeout(() => {
@@ -264,12 +258,7 @@ function heroAttack() {
         team.classList.remove('lunge');
         render();
         if(state.mHp <= 0) endBattle(true);
-        else {
-            state.turn = 'monster';
-            document.getElementById('battleStatus').innerText = "Monster Turn...";
-            document.getElementById('atkBtn').disabled = true;
-            setTimeout(monsterAttack, 1000);
-        }
+        else { state.turn = 'monster'; setTimeout(monsterAttack, 1000); }
     }, 400);
 }
 
@@ -283,25 +272,13 @@ function monsterAttack() {
         m.classList.remove('m-lunge');
         render();
         if(state.hp <= 0) endBattle(false);
-        else {
-            state.turn = 'hero';
-            document.getElementById('battleStatus').innerText = "Your Turn!";
-            document.getElementById('atkBtn').disabled = false;
-        }
+        else state.turn = 'hero';
     }, 400);
 }
 
 function endBattle(win) {
-    if(win) {
-        alert("Victory!"); state.gold += 30; state.mMax += 10;
-        if(Math.random() < 0.4) {
-            const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
-            state.inv.push(loot);
-            alert("Found: " + loot.name + "!");
-        }
-    } else { alert("Defeat!"); state.hp = 0; }
-    closeM('battleM');
-    render();
+    if(win) { state.gold += 30; state.mMax += 10; if(Math.random() < 0.4) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]); }
+    closeM('battleM'); render();
 }
 
 function equip(i) {
@@ -314,11 +291,7 @@ function equip(i) {
 }
 
 function unequip(slot) {
-    if(state.equip[slot]) {
-        state.inv.push(state.equip[slot]);
-        state.equip[slot] = null;
-        render();
-    }
+    if(state.equip[slot]) { state.inv.push(state.equip[slot]); state.equip[slot] = null; render(); }
 }
 
 function render() {
@@ -329,67 +302,50 @@ function render() {
     document.getElementById('xp-bar').style.width = state.xp + "%";
     document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
     document.getElementById('hHp').style.width = (state.hp/state.maxHp*100) + "%";
-    document.getElementById('battleBtn').disabled = state.tokens < 3;
 
-    // Visual Equipment Logic
-    const allVis = document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .vis-collar');
+    const allVis = document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .vis-collar-svg');
     allVis.forEach(v => v.style.display = 'none');
 
     for(let s in state.equip) {
         const item = state.equip[s];
         if(document.getElementById('v-'+s)) document.getElementById('v-'+s).innerText = item ? item.icon : '';
         if(document.getElementById('s-'+s)) document.getElementById('s-'+s).className = item ? 'slot active' : 'slot';
-        
-        if(item && item.cssId) {
-            if(item.slot === 'shoes') {
-                ['vis-shoes-l', 'vis-shoes-r', 'b-vis-shoes-l', 'b-vis-shoes-r'].forEach(id => {
-                    if(document.getElementById(id)) document.getElementById(id).style.display = 'block';
-                });
-            } else {
-                if(document.getElementById(item.cssId)) document.getElementById(item.cssId).style.display = 'block';
-                if(document.getElementById('b-' + item.cssId)) document.getElementById('b-' + item.cssId).style.display = 'block';
-            }
+        if(item && item.cssId && document.getElementById(item.cssId)) {
+            document.getElementById(item.cssId).style.display = 'block';
+            if(document.getElementById('b-'+item.cssId)) document.getElementById('b-'+item.cssId).style.display = 'block';
         }
     }
     
-    // Pet Special Visuals
     const pet = state.equip.pet;
     if(pet) {
-        const pColor = pet.color || "#e7e5e4";
-        document.getElementById('pet-container').style.display = 'block';
-        document.getElementById('pet-emoji').innerText = pet.icon;
-        document.getElementById('pet-body-color').style.background = pColor;
-        document.getElementById('pet-head-color').style.background = pColor;
-        
-        document.getElementById('b-pet-container').style.display = 'block';
-        document.getElementById('b-pet-emoji').innerText = pet.icon;
-        document.getElementById('b-pet-body-color').style.background = pColor;
-        document.getElementById('b-pet-head-color').style.background = pColor;
+        const svgContent = PET_SHAPES[pet.type].replace(/COLOR/g, pet.color);
+        document.getElementById('pet-paths').innerHTML = svgContent;
+        document.getElementById('b-pet-paths').innerHTML = svgContent;
+        document.getElementById('pet-container').style.display = 'flex';
+        if(state.equip.collar) {
+            document.getElementById('vis-collar').style.display = 'block';
+            document.getElementById('b-vis-collar').style.display = 'block';
+        }
     } else {
         document.getElementById('pet-container').style.display = 'none';
-        document.getElementById('b-pet-container').style.display = 'none';
     }
 
-    // List Rendering
     let qH = '';
     state.quests.forEach((q, i) => {
         let b = '';
         if(state.role === 'child' && q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p">Submit</button>`;
-        if(state.role === 'parent') {
-            if(q.status === 'pending') b = `<button onclick="updateQ(${i},'done')" class="btn btn-s">Approve</button>`;
-            b += ` <button onclick="state.quests.splice(${i},1); render();" class="btn" style="margin-left:5px; background:#fee2e2; color:#ef4444;">✖</button>`;
-        }
-        qH += `<div class="q-row"><span>${q.txt} <small>(${q.status})</small></span> <div>${b}</div></div>`;
+        if(state.role === 'parent' && q.status === 'pending') b = `<button onclick="updateQ(${i},'done')" class="btn btn-s">Approve</button>`;
+        qH += `<div class="q-row"><span>${q.txt}</span> <div>${b}</div></div>`;
     });
-    document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; color:#94a3b8;">No active tasks.</p>';
+    document.getElementById('qList').innerHTML = qH;
 
     let hH = '';
-    state.history.forEach(h => hH += `<div class="q-row" style="font-size:0.9em; color:#64748b;"><span>✅ ${h.txt}</span> <span>${h.time}</span></div>`);
-    document.getElementById('hist-content').innerHTML = hH || '<p style="text-align:center; color:#94a3b8;">No history yet.</p>';
+    state.history.forEach(h => hH += `<div class="q-row" style="font-size:0.9em; opacity:0.7;"><span>✅ ${h.txt}</span></div>`);
+    document.getElementById('hist-content').innerHTML = hH;
 
     let iH = '';
-    state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})"><strong style="font-size:24px;">${it.icon}</strong><br><b>${it.name}</b></div>`);
-    document.getElementById('inv').innerHTML = iH || '<div style="color:#94a3b8; width:100%; text-align:center;">No items.</div>';
+    state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})"><div style="font-size:20px;">${it.icon}</div><b>${it.name}</b></div>`);
+    document.getElementById('inv').innerHTML = iH;
 }
 render();
 </script>
