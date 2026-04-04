@@ -11,121 +11,94 @@
       --slot: #334155; --border: #475569; --iron: #94a3b8;
     }
 
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
     
     /* Login System */
     #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-    .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; }
 
     .app { max-width: 1100px; margin: 0 auto; padding: 10px; display: none; }
 
     /* Nav */
-    .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+    .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); }
 
-    /* 2.5D Dollhouse & Grid */
+    /* Character Grid */
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
     @media (min-width: 768px) { .char-grid { grid-template-columns: 150px 1fr 150px; } }
     .slot-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     @media (min-width: 768px) { .slot-col { display: flex; flex-direction: column; } }
-    
-    .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 10px; padding: 8px; min-height: 55px; text-align: center; cursor: pointer; position: relative; }
+    .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 10px; padding: 8px; min-height: 55px; text-align: center; cursor: pointer; }
     .slot-label { font-size: 8px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
     .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 16px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
-    .hero-base { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 10; }
+    .hero-base { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; }
     .h-head { width: 35px; height: 35px; background: #fbbf24; border-radius: 50%; margin: 0 auto; position: relative; }
     .h-body { width: 50px; height: 60px; background: #0ea5e9; border-radius: 6px; margin: 3px auto; position: relative; }
-    .pet-vis { position: absolute; bottom: 50px; left: calc(50% + 40px); font-size: 30px; z-index: 9; transition: 0.3s; }
+    .pet-vis { position: absolute; bottom: 50px; left: calc(50% + 40px); font-size: 28px; z-index: 9; }
 
-    /* Panels & Inventory */
+    /* Panels & Collapsibles */
     .panel { background: var(--card); padding: 12px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
-    .inv-grid { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 8px; min-height: 70px; border: 1px solid var(--border); }
-    .inv-item { background: var(--card); min-width: 65px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; }
+    .collapse-btn { width: 100%; text-align: left; background: none; border: none; color: var(--accent); font-weight: bold; padding: 5px 0; cursor: pointer; display: flex; justify-content: space-between; }
+    .collapse-content { display: none; margin-top: 10px; }
+    .collapse-content.show { display: block; }
 
-    /* Buttons */
+    .inv-grid { display: flex; gap: 8px; padding: 5px; overflow-x: auto; background: var(--bg); border-radius: 8px; min-height: 60px; border: 1px solid var(--border); }
+    .inv-item { background: var(--card); min-width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; }
+
     .btn { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-s { background: var(--gold); color: #451a03; }
-    .btn-danger { background: var(--danger); }
-    .q-row { background: var(--bg); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
+    .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border: 1px solid var(--border); }
     
-    /* Parent Specific */
-    .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 5px; }
+    .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 8px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
-    /* Battle Arena */
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
-    .arena { position: relative; width: 100%; height: 240px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; perspective: 600px; border: 1px solid var(--border); }
-    .floor { position: absolute; bottom: 0; width: 100%; height: 100px; background: #334155; transform: rotateX(60deg); transform-origin: bottom; border-top: 4px solid var(--success); opacity: 0.3; }
-    .combatant { position: absolute; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .hp-bar { width: 70px; height: 8px; background: #000; border-radius: 4px; border: 1px solid var(--border); margin-top: 5px; overflow: hidden; }
+    /* Battle */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
+    .arena { position: relative; width: 100%; height: 220px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
   </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h1 style="color:var(--accent); margin:0 0 5px 0;">QUEST KID</h1>
-        <p style="color:var(--iron); font-size:12px; margin-bottom:20px;">Adventure or Management?</p>
-        <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:12px;" onclick="switchRole('child')">🧒 PLAY AS HERO</button>
-        <button class="btn btn-s" style="width:100%; padding:15px;" onclick="switchRole('parent')">🔑 PARENT DASHBOARD</button>
+        <h1 style="color:var(--accent)">QUEST KID</h1>
+        <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doLogin('child')">🧒 CHILD LOGIN</button>
+        <button class="btn btn-s" style="width:100%; padding:15px;" onclick="doLogin('parent')">🔑 PARENT LOGIN</button>
     </div>
 </div>
 
 <div class="app" id="mainApp">
     <div class="nav">
         <div style="display:flex; align-items:center; gap:10px;">
-            <strong id="roleIndicator" style="color:var(--accent)">HERO MODE</strong>
-            <button class="btn" style="font-size:10px; background:var(--border); padding:3px 8px;" onclick="location.reload()">Switch Role</button>
+            <strong id="roleLabel" style="color:var(--accent)">HERO</strong>
+            <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Switch</button>
         </div>
-        <div id="topStats" style="display:flex; gap:10px; align-items:center;">
+        <div style="display:flex; gap:10px; align-items:center;">
             <div class="gold-box">💰 <span id="goldVal">0</span></div>
-            <button id="battleEntryBtn" class="btn btn-p" onclick="startBattle()" style="padding:5px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
+            <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:4px 10px; font-size:11px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
     </div>
 
-    <div id="parentView" style="display:none;">
-        <div class="panel">
-            <h3 style="margin-top:0">➕ Create Task</h3>
-            <div style="display:flex; gap:8px;">
-                <input id="pTaskIn" style="background:var(--bg); border:1px solid var(--border); color:white; padding:12px; border-radius:8px; flex:1;" placeholder="Clean your room, Finish homework...">
-                <button class="btn btn-p" onclick="createTask()" style="width:80px;">ADD</button>
-            </div>
-        </div>
-        <div class="panel">
-            <h3>📋 Task Management</h3>
-            <div id="parentTaskList"></div>
-        </div>
-    </div>
-
-    <div id="childView" style="display:none;">
+    <div id="childGameView">
         <div class="char-grid">
             <div class="slot-col">
                 <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head</span><div id="v-helmet"></div></div>
                 <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Wpn</span><div id="v-weapon"></div></div>
                 <div class="slot" onclick="unequip('shield')"><span class="slot-label">Off</span><div id="v-shield"></div></div>
             </div>
-
             <div class="doll-house">
                 <div id="vis-pet" class="pet-vis" style="display:none;"></div>
                 <div class="hero-base">
-                    <div class="h-head">
-                        <div id="vis-helmet" style="display:none; width:38px; height:20px; background:var(--iron); border-radius:15px 15px 0 0; position:absolute; top:-2px; left:-2px;"></div>
-                    </div>
-                    <div class="h-body">
-                        <div id="vis-armor" style="display:none; width:54px; height:64px; background:var(--iron); border-radius:6px; position:absolute; top:-2px; left:-2px;"></div>
-                    </div>
+                    <div class="h-head"><div id="vis-helmet" style="display:none; width:38px; height:20px; background:var(--iron); border-radius:15px 15px 0 0; position:absolute; top:-2px; left:-2px;"></div></div>
+                    <div class="h-body"><div id="vis-armor" style="display:none; width:54px; height:64px; background:var(--iron); border-radius:6px; position:absolute; top:-2px; left:-2px;"></div></div>
                 </div>
-                <div style="position:absolute; bottom:10px; width:100%; text-align:center;">
-                    <strong style="color:var(--accent); font-size:11px;">LVL <span id="lvlVal">1</span> | HP <span id="hpVal">100</span></strong>
-                    <div style="width:100px; height:5px; background:#000; margin:5px auto; border-radius:3px; overflow:hidden; border:1px solid var(--border);">
-                        <div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div>
-                    </div>
+                <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:11px;">
+                    LVL <span id="lvlVal">1</span> | HP <span id="hpVal">100</span>
+                    <div style="width:80px; height:4px; background:#000; margin:4px auto; border-radius:2px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
                 </div>
             </div>
-
             <div class="slot-col">
                 <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body</span><div id="v-armor"></div></div>
                 <div class="slot" onclick="unequip('shoes')"><span class="slot-label">Boots</span><div id="v-shoes"></div></div>
@@ -134,256 +107,178 @@
         </div>
 
         <div class="panel">
-            <h3 style="margin-top:0">🎒 Inventory & Pets</h3>
-            <div id="invGrid" class="inv-grid"></div>
+            <button class="collapse-btn" onclick="toggleCol('invGear')">🎒 GEAR INVENTORY <span>▼</span></button>
+            <div id="invGear" class="collapse-content show"><div id="gearGrid" class="inv-grid"></div></div>
+            
+            <button class="collapse-btn" onclick="toggleCol('invPets')" style="margin-top:10px;">🐾 PET COLLECTION <span>▼</span></button>
+            <div id="invPets" class="collapse-content"><div id="petGrid" class="inv-grid"></div></div>
         </div>
+    </div>
 
-        <div class="panel">
-            <h3>📜 My Quests</h3>
-            <div id="childTaskList"></div>
+    <div class="panel">
+        <h3 style="margin-top:0">📜 Quests</h3>
+        <div style="display:flex; gap:5px; margin-bottom:12px;">
+            <input id="qInput" style="background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; flex:1;" placeholder="New task...">
+            <button class="btn btn-p" onclick="addQuest()" style="width:50px;">+</button>
         </div>
+        <div id="activeQuestList"></div>
+
+        <button class="collapse-btn" onclick="toggleCol('historyBox')" style="margin-top:10px; color:var(--success)">🌟 COMPLETED TASKS <span>▼</span></button>
+        <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
     </div>
 </div>
 
 <div id="battleM" class="modal-overlay">
-    <div class="panel" style="width:95%; max-width:400px; padding:20px;">
+    <div class="panel" style="width:95%; max-width:400px;">
         <div class="arena">
-            <div class="floor"></div>
-            <div id="battleTicker" style="position:absolute; top:10px; width:100%; text-align:center; color:var(--gold); font-weight:bold; text-shadow:0 2px 4px #000;">Ready?</div>
-            
-            <div class="combatant" id="hFight" style="bottom:40px; left:40px; transform:scale(1.2);">
-                <div style="width:35px; height:70px; background:var(--accent); border-radius:4px;"></div>
-                <div id="hFightPet" style="position:absolute; right:-25px; bottom:0; font-size:20px;"></div>
-                <div class="hp-bar"><div id="hHpBar" style="width:100%; height:100%; background:var(--success);"></div></div>
-            </div>
-
-            <div class="combatant" id="mFight" style="top:40px; right:40px;">
-                <div id="mEmoji" style="font-size:50px;">👾</div>
-                <div class="hp-bar"><div id="mHpBar" style="width:100%; height:100%; background:var(--danger);"></div></div>
-            </div>
+            <div id="battleMsg" style="text-align:center; padding-top:10px; color:var(--gold);">Battle Start!</div>
+            <div id="hF" style="position:absolute; bottom:40px; left:40px; width:30px; height:60px; background:var(--accent); transition:0.3s;"></div>
+            <div id="hFPet" style="position:absolute; bottom:40px; left:75px; font-size:20px;"></div>
+            <div id="mF" style="position:absolute; top:40px; right:40px; font-size:50px; transition:0.3s;">👾</div>
         </div>
-        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-top:20px;">
-            <button id="atkBtn" class="btn btn-p" style="padding:15px;" onclick="heroAttack()">⚔️ STRIKE</button>
-            <button class="btn btn-danger" onclick="closeBattle()">RUN</button>
-        </div>
+        <button class="btn btn-p" style="width:100%; padding:15px; margin-top:10px;" id="atkBtn" onclick="fightStep()">⚔️ STRIKE</button>
     </div>
 </div>
 
 <script>
-const DROPS = [
-    {n:"Steel Sword", i:"⚔️", s:"weapon"}, {n:"Great Shield", i:"🛡️", s:"shield"},
-    {n:"Iron Helm", i:"🪖", s:"helmet"}, {n:"Plate Armor", i:"🥋", s:"armor"},
-    {n:"Dragon Pet", i:"🐲", s:"pet"}, {n:"Magic Fox", i:"🦊", s:"pet"},
-    {n:"Power Boots", i:"👢", s:"shoes"}
-];
-
-const MONSTERS = [
-    {n:"Slime", i:"💧", h:40, d:8}, {n:"Goblin", i:"👺", h:70, d:12},
-    {n:"Wraith", i:"👻", h:50, d:15}, {n:"Drake", i:"🐉", h:120, d:20}
-];
+const DROPS = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"}];
+const MONSTERS = ["👾","🐉","👺","👻","🕷️"];
 
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
-    quests: [], inv: [],
-    equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null }
+    quests: [], history: [], inv: [],
+    equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-let isTurnActive = false;
-let currentMonster = null;
-let curMHp = 0;
+function save() { localStorage.setItem('questKid_Pro', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('questKid_Pro'); if(s) state = JSON.parse(s); }
 
-// LOGIC CORE
-function switchRole(r) {
+function doLogin(r) {
     state.role = r;
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     render();
 }
 
-function save() { localStorage.setItem('questKid_Final', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_Final'); if(s) state = JSON.parse(s); }
+function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
-function createTask() {
-    const val = document.getElementById('pTaskIn').value;
+function addQuest() {
+    const val = document.getElementById('qInput').value;
     if(!val) return;
     state.quests.push({txt: val, status: 'open', lucky: false});
-    document.getElementById('pTaskIn').value = '';
+    document.getElementById('qInput').value = '';
     save(); render();
 }
 
-function toggleLucky(i) {
-    state.quests[i].lucky = !state.quests[i].lucky;
-    save(); render();
-}
-
-function updateQuest(i, newStatus) {
+function updateQuest(i, s) {
     const q = state.quests[i];
-    if(newStatus === 'approved') {
+    if(s === 'done') {
         state.gold += 50; state.xp += 40; state.tokens += 1;
-        // Drop Logic
-        let dropChance = q.lucky ? 0.8 : 0.3;
-        if(Math.random() < dropChance) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
-        state.quests.splice(i, 1);
-        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 20; state.hp = state.maxHp; }
-    } else {
-        q.status = newStatus;
-    }
+        let chance = q.lucky ? 0.8 : 0.3;
+        if(Math.random() < chance) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
+        state.history.push(state.quests.splice(i, 1)[0]);
+        if(state.xp >= 100) { state.lvl++; state.xp -= 100; }
+    } else { q.status = s; }
     save(); render();
 }
 
-// BATTLE ENGINE (STRICT TURN-BASED)
-function startBattle() {
-    if(state.tokens < 3) return alert("Need 3 Battle Tokens! (Earn by doing tasks)");
-    state.tokens -= 3;
-    currentMonster = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
-    curMHp = currentMonster.h + (state.lvl * 10);
-    document.getElementById('mEmoji').innerText = currentMonster.i;
-    document.getElementById('battleTicker').innerText = `A wild ${currentMonster.n} appeared!`;
-    document.getElementById('battleM').style.display = 'flex';
-    isTurnActive = false;
-    updateBattleBars();
-}
-
-function heroAttack() {
-    if(isTurnActive) return;
-    isTurnActive = true;
-    const btn = document.getElementById('atkBtn');
-    btn.disabled = true; btn.innerText = "WAITING...";
-
-    const h = document.getElementById('hFight');
-    h.style.transform = 'translateX(60px) scale(1.3)';
-
-    setTimeout(() => {
-        const dmg = 15 + (state.lvl * 5);
-        curMHp = Math.max(0, curMHp - dmg);
-        document.getElementById('battleTicker').innerText = `You dealt ${dmg} damage!`;
-        updateBattleBars();
-        h.style.transform = 'scale(1.2)';
-
-        if(curMHp <= 0) {
-            document.getElementById('battleTicker').innerText = "VICTORY!";
-            state.gold += 30; state.xp += 20;
-            setTimeout(closeBattle, 1200);
-        } else {
-            setTimeout(monsterAttack, 1000);
-        }
-    }, 400);
-}
-
-function monsterAttack() {
-    const m = document.getElementById('mFight');
-    m.style.transform = 'translateX(-60px) scale(1.1)';
-    
-    setTimeout(() => {
-        const dmg = currentMonster.d + state.lvl;
-        state.hp = Math.max(0, state.hp - dmg);
-        document.getElementById('battleTicker').innerText = `${currentMonster.n} hits for ${dmg}!`;
-        updateBattleBars();
-        m.style.transform = 'scale(1)';
-
-        if(state.hp <= 0) {
-            document.getElementById('battleTicker').innerText = "YOU WERE DEFEATED!";
-            setTimeout(() => { state.hp = 20; closeBattle(); }, 1500);
-        } else {
-            setTimeout(() => {
-                isTurnActive = false;
-                const btn = document.getElementById('atkBtn');
-                btn.disabled = false; btn.innerText = "⚔️ STRIKE";
-                document.getElementById('battleTicker').innerText = "Your Turn!";
-            }, 800);
-        }
-    }, 400);
-}
-
-function updateBattleBars() {
-    document.getElementById('hHpBar').style.width = (state.hp/state.maxHp * 100) + "%";
-    document.getElementById('mHpBar').style.width = (curMHp/(currentMonster.h + (state.lvl*10)) * 100) + "%";
-}
-
-function closeBattle() { document.getElementById('battleM').style.display='none'; render(); }
-
-// GEAR SYSTEM
-function equip(i) {
-    const item = state.inv.splice(i, 1)[0];
-    const old = state.equip[item.s];
-    state.equip[item.s] = item;
-    if(old) state.inv.push(old);
-    save(); render();
-}
-
-function unequip(slot) {
-    if(state.equip[slot]) {
-        state.inv.push(state.equip[slot]);
-        state.equip[slot] = null;
-        save(); render();
-    }
-}
-
-// UI RENDERER
 function render() {
     const isP = state.role === 'parent';
-    document.getElementById('roleIndicator').innerText = isP ? "🔑 PARENT DASHBOARD" : "🧒 HERO MODE";
-    document.getElementById('parentView').style.display = isP ? 'block' : 'none';
-    document.getElementById('childView').style.display = isP ? 'none' : 'block';
-
-    // Shared Stats
+    document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
+    document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
+    
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('lvlVal').innerText = state.lvl;
     document.getElementById('hpVal').innerText = state.hp;
     document.getElementById('xpBar').style.width = state.xp + "%";
 
-    // Parent Task List
-    let pH = '';
+    // Quest List
+    let qH = '';
     state.quests.forEach((q, i) => {
-        pH += `<div class="q-row">
-            <span>${q.txt} ${q.status==='pending' ? '⏳' : ''}</span>
-            <div style="display:flex; align-items:center;">
-                <div onclick="toggleLucky(${i})" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2 Drop</div>
-                ${q.status==='pending' ? `
-                    <button class="btn btn-p" onclick="updateQuest(${i},'approved')" style="padding:5px 10px; margin-right:5px;">✅</button>
-                    <button class="btn btn-danger" onclick="updateQuest(${i},'open')" style="padding:5px 10px;">❌</button>
-                `: `<button class="btn" style="background:#475569; padding:5px; font-size:10px" onclick="state.quests.splice(${i},1); save(); render();">🗑️</button>`}
-            </div>
-        </div>`;
+        let actions = '';
+        if(isP) {
+            actions = `<div>
+                <span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2 Drop</span>
+                ${q.status==='pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:4px 8px;">✅</button>` : ''}
+                <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px; margin-left:5px;">🗑️</button>
+            </div>`;
+        } else {
+            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `⏳`;
+        }
+        qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${actions}</div>`;
     });
-    document.getElementById('parentTaskList').innerHTML = pH || 'No tasks assigned.';
+    document.getElementById('activeQuestList').innerHTML = qH || '<small>No active tasks.</small>';
 
-    // Child Task List
-    let cH = '';
-    state.quests.forEach((q, i) => {
-        let btn = q.status === 'open' ? 
-            `<button class="btn btn-p" onclick="updateQuest(${i},'pending')" style="padding:5px 12px;">I'M DONE!</button>` :
-            `<span style="color:var(--gold); font-size:12px;">Waiting for Parent...</span>`;
-        cH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${btn}</div>`;
-    });
-    document.getElementById('childTaskList').innerHTML = cH || 'No quests. Ask your parents for some!';
+    // History
+    let hH = '';
+    state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
+    document.getElementById('historyList').innerHTML = hH || '<small>Nothing completed yet.</small>';
 
-    // Inventory
-    let invH = '';
+    // Gear & Pets
+    let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
-        invH += `<div class="inv-item" onclick="equip(${i})"><div style="font-size:20px">${it.i}</div><div style="font-size:9px">${it.n}</div></div>`;
+        const html = `<div class="inv-item" onclick="equip(${i})"><div>${it.i}</div><small>${it.n}</small></div>`;
+        if(it.s === 'pet') petH += html; else gearH += html;
     });
-    document.getElementById('invGrid').innerHTML = invH || '<small>Inventory is empty.</small>';
+    document.getElementById('gearGrid').innerHTML = gearH || 'Empty';
+    document.getElementById('petGrid').innerHTML = petH || 'Empty';
 
-    // Visual Gear Overlays
+    // Visuals
     for(let s in state.equip) {
-        const it = state.equip[s];
-        document.getElementById('v-'+s).innerText = it ? it.i : '';
+        const item = state.equip[s];
+        document.getElementById('v-'+s).innerText = item ? item.i : '';
         const vis = document.getElementById('vis-'+s);
-        if(vis) vis.style.display = it ? 'block' : 'none';
-        
+        if(vis) vis.style.display = item ? 'block' : 'none';
         if(s === 'pet') {
-            document.getElementById('vis-pet').innerText = it ? it.i : '';
-            document.getElementById('vis-pet').style.display = it ? 'block' : 'none';
-            document.getElementById('hFightPet').innerText = it ? it.i : '';
+            document.getElementById('vis-pet').innerText = item ? item.i : '';
+            document.getElementById('vis-pet').style.display = item ? 'block' : 'none';
+            document.getElementById('hFPet').innerText = item ? item.i : '';
         }
     }
     save();
 }
 
+function equip(i) {
+    const it = state.inv.splice(i, 1)[0];
+    const old = state.equip[it.s];
+    state.equip[it.s] = it;
+    if(old) state.inv.push(old);
+    render();
+}
+
+function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
+
+// Simplified Battle Step
+let mHp = 50;
+function startBattle() {
+    if(state.tokens < 3) return alert("Need 3 Tokens!");
+    state.tokens -= 3;
+    mHp = 50; 
+    document.getElementById('mF').innerText = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
+    document.getElementById('battleM').style.display = 'flex';
+}
+
+function fightStep() {
+    document.getElementById('hF').style.transform = 'translateX(50px)';
+    setTimeout(() => {
+        mHp -= 20;
+        document.getElementById('hF').style.transform = 'translateX(0)';
+        if(mHp <= 0) {
+            document.getElementById('battleMsg').innerText = "Victory!";
+            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
+        } else {
+            document.getElementById('mF').style.transform = 'translateX(-50px)';
+            setTimeout(() => {
+                state.hp -= 10;
+                document.getElementById('mF').style.transform = 'translateX(0)';
+                render();
+            }, 300);
+        }
+    }, 300);
+}
+
 load();
-render();
 </script>
 </body>
 </html>
