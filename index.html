@@ -41,7 +41,8 @@
     .collapse-content.show { display: block; }
 
     .inv-grid { display: flex; gap: 8px; padding: 5px; overflow-x: auto; background: var(--bg); border-radius: 8px; min-height: 60px; border: 1px solid var(--border); }
-    .inv-item { background: var(--card); min-width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; }
+    .inv-item { background: var(--card); min-width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; position: relative; }
+    .lvl-tag { position: absolute; top: -5px; right: -5px; background: var(--gold); color: black; font-size: 9px; padding: 1px 4px; border-radius: 4px; font-weight: bold; }
 
     .btn { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -61,7 +62,6 @@
     @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-40px); opacity: 0; } }
     @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
 
-    /* Shop UI */
     .shop-item { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   </style>
 </head>
@@ -133,6 +133,17 @@
     </div>
 </div>
 
+<div id="itemM" class="modal-overlay">
+    <div class="panel" style="width:90%; max-width:300px; text-align:center;">
+        <h2 id="mItemTitle" style="margin-top:0">Item Name</h2>
+        <div id="mItemIcon" style="font-size:50px; margin-bottom:10px;"></div>
+        <button class="btn btn-p" style="width:100%; padding:12px; margin-bottom:8px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button>
+        <button id="upgradeBtn" class="btn btn-s" style="width:100%; padding:12px; margin-bottom:8px;" onclick="doUpgrade()">⭐ UPGRADE (Need 2)</button>
+        <button class="btn btn-danger" style="width:100%; padding:12px; margin-bottom:8px;" onclick="doSell()">💰 SELL (50g)</button>
+        <button class="btn" style="width:100%; background:var(--border); padding:10px;" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button>
+    </div>
+</div>
+
 <div id="shopM" class="modal-overlay">
     <div class="panel" style="width:90%; max-width:350px;">
         <h2 style="color:var(--gold); margin-top:0;">🛒 Hero Shop</h2>
@@ -141,7 +152,7 @@
             <button class="btn btn-s" onclick="buyItem('potion')">100g</button>
         </div>
         <div class="shop-item">
-            <div><strong>🎁 Treasure Chest</strong><br><small>Random Gear/Pet</small></div>
+            <div><strong>🎁 Treasure Chest</strong><br><small>Gear (80%) or Rare Pet (20%)</small></div>
             <button class="btn btn-s" onclick="buyItem('chest')">200g</button>
         </div>
         <button class="btn btn-danger" style="width:100%; padding:12px;" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button>
@@ -170,7 +181,17 @@
 </div>
 
 <script>
-const DROPS = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"},{n:"Dragon",i:"🐲",s:"pet"},{n:"Axe",i:"🪓",s:"weapon"}];
+const GEAR_TABLE = [
+    {n:"Sword",i:"⚔️",s:"weapon",v:0},{n:"Shield",i:"🛡️",s:"shield",v:0},
+    {n:"Helm",i:"🪖",s:"helmet",v:0},{n:"Axe",i:"🪓",s:"weapon",v:0},
+    {n:"Bow",i:"🏹",s:"weapon",v:0},{n:"Boots",i:"👢",s:"shoes",v:0},
+    {n:"Armor",i:"👕",s:"armor",v:0}
+];
+const PET_TABLE = [
+    {n:"Dog",i:"🐶",s:"pet",v:0},{n:"Cat",i:"🐱",s:"pet",v:0},
+    {n:"Dragon",i:"🐲",s:"pet",v:0},{n:"Bird",i:"🐦",s:"pet",v:0}
+];
+
 const MONSTERS = [{n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},{n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}];
 
 let state = {
@@ -179,10 +200,18 @@ let state = {
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-let bActive = false, mHp = 50, mMaxHp = 50;
+let bActive = false, mHp = 50, mMaxHp = 50, selectedIdx = -1;
 
-function save() { localStorage.setItem('questKid_Final_Shop', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_Final_Shop'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('questKid_V8_Upgrades', JSON.stringify(state)); }
+function load() { 
+    const s = localStorage.getItem('questKid_V8_Upgrades'); 
+    if(s) state = JSON.parse(s); 
+}
+
+function getRandomDrop() {
+    let raw = (Math.random() < 0.8) ? GEAR_TABLE[Math.floor(Math.random()*GEAR_TABLE.length)] : PET_TABLE[Math.floor(Math.random()*PET_TABLE.length)];
+    return {...raw}; // Clone to ensure unique upgrade levels
+}
 
 function doLogin(r) {
     state.role = r;
@@ -203,12 +232,49 @@ function buyItem(type) {
         alert("HP Restored!");
     } else if (type === 'chest' && state.gold >= 200) {
         state.gold -= 200;
-        const item = DROPS[Math.floor(Math.random()*DROPS.length)];
+        const item = getRandomDrop();
         state.inv.push(item);
         alert("You found: " + item.i + " " + item.n);
-    } else {
-        alert("Not enough gold!");
+    } else { alert("Not enough gold!"); }
+    save(); render();
+}
+
+// EQUIPMENT MANAGEMENT
+function openItemMenu(i) {
+    selectedIdx = i;
+    const item = state.inv[i];
+    document.getElementById('mItemTitle').innerText = item.n + (item.v > 0 ? ` +${item.v}` : "");
+    document.getElementById('mItemIcon').innerText = item.i;
+    
+    // Check if duplicate exists for upgrade
+    const dupe = state.inv.findIndex((it, idx) => idx !== i && it.n === item.n && it.v === item.v);
+    document.getElementById('upgradeBtn').disabled = (dupe === -1);
+    
+    document.getElementById('itemM').style.display = 'flex';
+}
+
+function doEquipFromMenu() {
+    equip(selectedIdx);
+    document.getElementById('itemM').style.display = 'none';
+}
+
+function doUpgrade() {
+    const item = state.inv[selectedIdx];
+    const dupeIdx = state.inv.findIndex((it, idx) => idx !== selectedIdx && it.n === item.n && it.v === item.v);
+    
+    if(dupeIdx !== -1) {
+        state.inv[selectedIdx].v++; // Level up
+        state.inv.splice(dupeIdx, 1); // Remove the material
+        alert("Upgrade Success! Item is now +" + state.inv[selectedIdx].v);
     }
+    document.getElementById('itemM').style.display = 'none';
+    render();
+}
+
+function doSell() {
+    state.gold += 50;
+    state.inv.splice(selectedIdx, 1);
+    document.getElementById('itemM').style.display = 'none';
     render();
 }
 
@@ -227,7 +293,7 @@ function updateQuest(i, s) {
     if(s === 'done') {
         state.gold += 50; state.xp += 40; state.tokens += 1;
         let chance = q.lucky ? 0.8 : 0.3;
-        if(Math.random() < chance) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
+        if(Math.random() < chance) state.inv.push(getRandomDrop());
         state.history.push(state.quests.splice(i, 1)[0]);
         if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 15; state.hp = state.maxHp; }
     } else { q.status = s; }
@@ -243,7 +309,7 @@ function render() {
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('hpVal').innerText = state.hp;
+    document.getElementById('hpVal').innerText = Math.round(state.hp);
     document.getElementById('xpBar').style.width = state.xp + "%";
 
     let qH = '';
@@ -263,7 +329,10 @@ function render() {
 
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
-        const html = `<div class="inv-item" onclick="equip(${i})"><div>${it.i}</div><small>${it.n}</small></div>`;
+        const html = `<div class="inv-item" onclick="openItemMenu(${i})">
+            ${it.v > 0 ? `<div class="lvl-tag">+${it.v}</div>` : ''}
+            <div>${it.i}</div><small>${it.n}</small>
+        </div>`;
         if(it.s === 'pet') petH += html; else gearH += html;
     });
     document.getElementById('gearGrid').innerHTML = gearH || 'Empty';
@@ -271,10 +340,11 @@ function render() {
 
     for(let s in state.equip) {
         const item = state.equip[s];
-        document.getElementById('v-'+s).innerText = item ? item.i : '';
+        document.getElementById('v-'+s).innerHTML = item ? `${item.i}${item.v > 0 ? `<sub style="font-size:8px; color:var(--gold)">+${item.v}</sub>` : ''}` : '';
         if(document.getElementById('vis-'+s)) document.getElementById('vis-'+s).style.display = item ? 'block' : 'none';
     }
     if(state.equip.pet) document.getElementById('hFPet').innerText = state.equip.pet.i;
+    else document.getElementById('hFPet').innerText = '';
     save();
 }
 
@@ -317,12 +387,19 @@ function heroTurn() {
     if(bActive) return; bActive = true;
     document.getElementById('atkBtn').disabled = true;
     document.getElementById('hF').style.transform = 'translate(60px, -20px)';
+    
+    // Weapon Power Upgrade
+    let bonusAtk = (state.equip.weapon ? state.equip.weapon.v * 10 : 0);
+    
     setTimeout(() => {
-        const dmg = 15 + (state.lvl * 5); mHp = Math.max(0, mHp - dmg);
+        const dmg = 15 + (state.lvl * 5) + bonusAtk; 
+        mHp = Math.max(0, mHp - dmg);
         showDmg(dmg, 280, 60); updateBars();
         document.getElementById('hF').style.transform = 'translate(0, 0)';
         if(mHp <= 0) {
-            document.getElementById('battleMsg').innerText = "Victory!"; state.gold += 30;
+            document.getElementById('battleMsg').innerText = "Victory!"; 
+            state.gold += 30;
+            if(Math.random() < 0.2) state.inv.push(getRandomDrop());
             setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
         } else { setTimeout(monsterTurn, 800); }
     }, 300);
@@ -330,8 +407,13 @@ function heroTurn() {
 
 function monsterTurn() {
     document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
+    
+    // Defense Power Upgrade
+    let defVal = (state.equip.shield ? state.equip.shield.v * 3 : 0) + (state.equip.armor ? state.equip.armor.v * 3 : 0);
+    
     setTimeout(() => {
-        const dmg = 10 + (state.lvl * 2); state.hp = Math.max(0, state.hp - dmg);
+        const dmg = Math.max(2, 10 + (state.lvl * 2) - defVal); 
+        state.hp = Math.max(0, state.hp - dmg);
         showDmg(dmg, 60, 150); updateBars();
         document.getElementById('battleArena').style.animation = 'shake 0.3s';
         document.getElementById('mF').style.transform = 'translate(0, 0)';
