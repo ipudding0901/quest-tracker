@@ -19,7 +19,8 @@
     .app { max-width: 1100px; margin: 0 auto; padding: 10px; display: none; }
 
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); }
+    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); cursor: pointer; transition: 0.2s; }
+    .gold-box:hover { transform: scale(1.05); background: #78350f; }
 
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
     @media (min-width: 768px) { .char-grid { grid-template-columns: 150px 1fr 150px; } }
@@ -52,7 +53,6 @@
     .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 8px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
-    /* BETTER BATTLE UI */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
     .arena { position: relative; width: 100%; height: 260px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
     .hp-bar-outer { width: 80px; height: 10px; background: #000; border-radius: 5px; border: 1px solid #444; margin-bottom: 5px; overflow: hidden; }
@@ -60,6 +60,9 @@
     .dmg-text { position: absolute; font-weight: bold; font-size: 20px; color: var(--danger); animation: floatUp 0.8s forwards; pointer-events: none; }
     @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-40px); opacity: 0; } }
     @keyframes shake { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 75% { transform: translate(5px, -5px); } }
+
+    /* Shop UI */
+    .shop-item { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -79,7 +82,7 @@
             <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Logout</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
-            <div class="gold-box">💰 <span id="goldVal">0</span></div>
+            <div class="gold-box" id="pouchBtn" onclick="openShop()">💰 <span id="goldVal">0</span></div>
             <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:4px 10px; font-size:11px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
     </div>
@@ -130,17 +133,30 @@
     </div>
 </div>
 
+<div id="shopM" class="modal-overlay">
+    <div class="panel" style="width:90%; max-width:350px;">
+        <h2 style="color:var(--gold); margin-top:0;">🛒 Hero Shop</h2>
+        <div class="shop-item">
+            <div><strong>❤️ Potion</strong><br><small>+50 HP</small></div>
+            <button class="btn btn-s" onclick="buyItem('potion')">100g</button>
+        </div>
+        <div class="shop-item">
+            <div><strong>🎁 Treasure Chest</strong><br><small>Random Gear/Pet</small></div>
+            <button class="btn btn-s" onclick="buyItem('chest')">200g</button>
+        </div>
+        <button class="btn btn-danger" style="width:100%; padding:12px;" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button>
+    </div>
+</div>
+
 <div id="battleM" class="modal-overlay">
     <div class="panel" style="width:95%; max-width:400px; text-align:center;">
         <div class="arena" id="battleArena">
             <div id="battleMsg" style="text-align:center; padding-top:10px; color:var(--gold); font-weight:bold;">Fight!</div>
-            
             <div id="hF" style="position:absolute; bottom:40px; left:40px; transition:0.3s;">
                 <div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div>
                 <div style="width:30px; height:60px; background:var(--accent); border-radius:4px; margin:0 auto;"></div>
                 <div id="hFPet" style="position:absolute; left:35px; bottom:0; font-size:20px;"></div>
             </div>
-
             <div id="mF" style="position:absolute; top:40px; right:40px; transition:0.3s;">
                 <div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div>
                 <div id="mEmoji" style="font-size:50px;">👾</div>
@@ -148,20 +164,14 @@
         </div>
         <div style="display:flex; gap:10px;">
             <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ ATTACK</button>
-            <button id="runBtn" class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
+            <button class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
         </div>
     </div>
 </div>
 
 <script>
-const DROPS = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"}];
-const MONSTERS = [
-    {n:"Grumble Slime", i:"👾", h:50},
-    {n:"Fire Drake", i:"🐉", h:80},
-    {n:"Cave Goblin", i:"👺", h:45},
-    {n:"Shadow Ghost", i:"👻", h:40},
-    {n:"Forest Spider", i:"🕷️", h:35}
-];
+const DROPS = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"},{n:"Dragon",i:"🐲",s:"pet"},{n:"Axe",i:"🪓",s:"weapon"}];
+const MONSTERS = [{n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},{n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}];
 
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
@@ -169,17 +179,36 @@ let state = {
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-let bActive = false;
-let mHp = 50;
-let mMaxHp = 50;
+let bActive = false, mHp = 50, mMaxHp = 50;
 
-function save() { localStorage.setItem('questKid_V5_Final', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_V5_Final'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('questKid_Final_Shop', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('questKid_Final_Shop'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) {
     state.role = r;
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
+    render();
+}
+
+function openShop() {
+    if(state.role !== 'child') return;
+    document.getElementById('shopM').style.display = 'flex';
+}
+
+function buyItem(type) {
+    if(type === 'potion' && state.gold >= 100) {
+        state.gold -= 100;
+        state.hp = Math.min(state.maxHp, state.hp + 50);
+        alert("HP Restored!");
+    } else if (type === 'chest' && state.gold >= 200) {
+        state.gold -= 200;
+        const item = DROPS[Math.floor(Math.random()*DROPS.length)];
+        state.inv.push(item);
+        alert("You found: " + item.i + " " + item.n);
+    } else {
+        alert("Not enough gold!");
+    }
     render();
 }
 
@@ -219,24 +248,18 @@ function render() {
 
     let qH = '';
     state.quests.forEach((q, i) => {
-        let actions = '';
-        if(isP) {
-            actions = `<div>
-                <span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2 Drop</span>
-                ${q.status==='pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:4px 8px;">✅</button>` : ''}
-                <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px; margin-left:5px;">❌</button>
-            </div>`;
-        } else {
-            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : 
-            `<button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:4px 10px;">RECALL</button>`;
-        }
+        let actions = isP ? 
+        `<div><span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2</span>
+              ${q.status==='pending'?`<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:4px 8px;">✅</button>`:''}
+              <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px;">❌</button></div>` :
+        (q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `<button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:4px 10px;">RECALL</button>`);
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${actions}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || '<small>No active tasks.</small>';
 
     let hH = '';
     state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
-    document.getElementById('historyList').innerHTML = hH || '<small>Nothing completed yet.</small>';
+    document.getElementById('historyList').innerHTML = hH || '<small>No history.</small>';
 
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
@@ -249,14 +272,9 @@ function render() {
     for(let s in state.equip) {
         const item = state.equip[s];
         document.getElementById('v-'+s).innerText = item ? item.i : '';
-        const vis = document.getElementById('vis-'+s);
-        if(vis) vis.style.display = item ? 'block' : 'none';
-        if(s === 'pet') {
-            document.getElementById('vis-pet').innerText = item ? item.i : '';
-            document.getElementById('vis-pet').style.display = item ? 'block' : 'none';
-            document.getElementById('hFPet').innerText = item ? item.i : '';
-        }
+        if(document.getElementById('vis-'+s)) document.getElementById('vis-'+s).style.display = item ? 'block' : 'none';
     }
+    if(state.equip.pet) document.getElementById('hFPet').innerText = state.equip.pet.i;
     save();
 }
 
@@ -270,13 +288,11 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
-// BETTER BATTLE ENGINE
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
     const m = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
-    mMaxHp = m.h + (state.lvl * 10);
-    mHp = mMaxHp;
+    mMaxHp = m.h + (state.lvl * 10); mHp = mMaxHp;
     bActive = false;
     document.getElementById('mEmoji').innerText = m.i;
     document.getElementById('battleMsg').innerText = m.n + " appears!";
@@ -291,61 +307,39 @@ function updateBars() {
 }
 
 function showDmg(dmg, x, y) {
-    const d = document.createElement('div');
-    d.className = 'dmg-text';
-    d.innerText = "-" + dmg;
-    d.style.left = x + "px";
-    d.style.top = y + "px";
+    const d = document.createElement('div'); d.className = 'dmg-text'; d.innerText = "-" + dmg;
+    d.style.left = x + "px"; d.style.top = y + "px";
     document.getElementById('battleArena').appendChild(d);
     setTimeout(() => d.remove(), 800);
 }
 
 function heroTurn() {
-    if(bActive) return;
-    bActive = true;
+    if(bActive) return; bActive = true;
     document.getElementById('atkBtn').disabled = true;
-    document.getElementById('hF').style.transform = 'translate(60px, -20px)'; // Dash hop
-    
+    document.getElementById('hF').style.transform = 'translate(60px, -20px)';
     setTimeout(() => {
-        const dmg = 15 + (state.lvl * 5);
-        mHp = Math.max(0, mHp - dmg);
-        showDmg(dmg, 280, 60);
-        updateBars();
+        const dmg = 15 + (state.lvl * 5); mHp = Math.max(0, mHp - dmg);
+        showDmg(dmg, 280, 60); updateBars();
         document.getElementById('hF').style.transform = 'translate(0, 0)';
-        
         if(mHp <= 0) {
-            document.getElementById('battleMsg').innerText = "Victory!";
-            state.gold += 30;
+            document.getElementById('battleMsg').innerText = "Victory!"; state.gold += 30;
             setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
-        } else {
-            setTimeout(monsterTurn, 800);
-        }
+        } else { setTimeout(monsterTurn, 800); }
     }, 300);
 }
 
 function monsterTurn() {
     document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
-    
     setTimeout(() => {
-        const dmg = 10 + (state.lvl * 2);
-        state.hp = Math.max(0, state.hp - dmg);
-        showDmg(dmg, 60, 150);
-        updateBars();
+        const dmg = 10 + (state.lvl * 2); state.hp = Math.max(0, state.hp - dmg);
+        showDmg(dmg, 60, 150); updateBars();
         document.getElementById('battleArena').style.animation = 'shake 0.3s';
         document.getElementById('mF').style.transform = 'translate(0, 0)';
-        
         setTimeout(() => document.getElementById('battleArena').style.animation = '', 300);
-
         if(state.hp <= 0) {
-            document.getElementById('battleMsg').innerText = "Defeated...";
-            state.hp = 20; 
+            document.getElementById('battleMsg').innerText = "Defeated..."; state.hp = 20; 
             setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1200);
-        } else {
-            bActive = false;
-            document.getElementById('atkBtn').disabled = false;
-            document.getElementById('battleMsg').innerText = "Your Turn!";
-            render();
-        }
+        } else { bActive = false; document.getElementById('atkBtn').disabled = false; render(); }
     }, 300);
 }
 
