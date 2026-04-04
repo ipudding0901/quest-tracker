@@ -181,6 +181,7 @@
 </div>
 
 <script>
+// --- DATA TABLES ---
 const GEAR_TABLE = [
     {n:"Sword",i:"⚔️",s:"weapon",v:0},{n:"Shield",i:"🛡️",s:"shield",v:0},
     {n:"Helm",i:"🪖",s:"helmet",v:0},{n:"Axe",i:"🪓",s:"weapon",v:0},
@@ -191,9 +192,12 @@ const PET_TABLE = [
     {n:"Dog",i:"🐶",s:"pet",v:0},{n:"Cat",i:"🐱",s:"pet",v:0},
     {n:"Dragon",i:"🐲",s:"pet",v:0},{n:"Bird",i:"🐦",s:"pet",v:0}
 ];
+const MONSTERS = [
+    {n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},
+    {n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}
+];
 
-const MONSTERS = [{n:"Slime",i:"👾",h:50},{n:"Drake",i:"🐉",h:80},{n:"Goblin",i:"👺",h:45},{n:"Ghost",i:"👻",h:40},{n:"Spider",i:"🕷️",h:35}];
-
+// --- CORE STATE ---
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
     quests: [], history: [], inv: [],
@@ -202,15 +206,21 @@ let state = {
 
 let bActive = false, mHp = 50, mMaxHp = 50, selectedIdx = -1;
 
-function save() { localStorage.setItem('questKid_V8_Upgrades', JSON.stringify(state)); }
+// --- SAVE / LOAD FUNCTIONS ---
+function save() { 
+    localStorage.setItem('questKid_V8_Upgrades', JSON.stringify(state)); 
+}
 function load() { 
     const s = localStorage.getItem('questKid_V8_Upgrades'); 
-    if(s) state = JSON.parse(s); 
+    if(s) {
+        state = JSON.parse(s); 
+    }
 }
 
+// --- UTILITIES ---
 function getRandomDrop() {
     let raw = (Math.random() < 0.8) ? GEAR_TABLE[Math.floor(Math.random()*GEAR_TABLE.length)] : PET_TABLE[Math.floor(Math.random()*PET_TABLE.length)];
-    return {...raw}; // Clone to ensure unique upgrade levels
+    return {...raw};
 }
 
 function doLogin(r) {
@@ -239,14 +249,13 @@ function buyItem(type) {
     save(); render();
 }
 
-// EQUIPMENT MANAGEMENT
+// --- ITEM MANAGEMENT ---
 function openItemMenu(i) {
     selectedIdx = i;
     const item = state.inv[i];
     document.getElementById('mItemTitle').innerText = item.n + (item.v > 0 ? ` +${item.v}` : "");
     document.getElementById('mItemIcon').innerText = item.i;
     
-    // Check if duplicate exists for upgrade
     const dupe = state.inv.findIndex((it, idx) => idx !== i && it.n === item.n && it.v === item.v);
     document.getElementById('upgradeBtn').disabled = (dupe === -1);
     
@@ -263,9 +272,9 @@ function doUpgrade() {
     const dupeIdx = state.inv.findIndex((it, idx) => idx !== selectedIdx && it.n === item.n && it.v === item.v);
     
     if(dupeIdx !== -1) {
-        state.inv[selectedIdx].v++; // Level up
-        state.inv.splice(dupeIdx, 1); // Remove the material
-        alert("Upgrade Success! Item is now +" + state.inv[selectedIdx].v);
+        state.inv[selectedIdx].v++;
+        state.inv.splice(dupeIdx, 1);
+        alert("Upgrade Success! +" + state.inv[selectedIdx].v);
     }
     document.getElementById('itemM').style.display = 'none';
     render();
@@ -280,6 +289,7 @@ function doSell() {
 
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
+// --- QUEST LOGIC ---
 function addQuest() {
     const val = document.getElementById('qInput').value;
     if(!val) return;
@@ -300,6 +310,7 @@ function updateQuest(i, s) {
     save(); render();
 }
 
+// --- RENDER ---
 function render() {
     const isP = state.role === 'parent';
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
@@ -345,6 +356,7 @@ function render() {
     }
     if(state.equip.pet) document.getElementById('hFPet').innerText = state.equip.pet.i;
     else document.getElementById('hFPet').innerText = '';
+    
     save();
 }
 
@@ -358,6 +370,7 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
+// --- BATTLE SYSTEM ---
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
@@ -388,7 +401,6 @@ function heroTurn() {
     document.getElementById('atkBtn').disabled = true;
     document.getElementById('hF').style.transform = 'translate(60px, -20px)';
     
-    // Weapon Power Upgrade
     let bonusAtk = (state.equip.weapon ? state.equip.weapon.v * 10 : 0);
     
     setTimeout(() => {
@@ -408,7 +420,6 @@ function heroTurn() {
 function monsterTurn() {
     document.getElementById('mF').style.transform = 'translate(-60px, 20px)';
     
-    // Defense Power Upgrade
     let defVal = (state.equip.shield ? state.equip.shield.v * 3 : 0) + (state.equip.armor ? state.equip.armor.v * 3 : 0);
     
     setTimeout(() => {
@@ -425,6 +436,7 @@ function monsterTurn() {
     }, 300);
 }
 
+// Start
 load();
 </script>
 </body>
