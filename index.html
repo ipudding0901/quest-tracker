@@ -54,6 +54,7 @@
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-s { background: var(--gold); color: #451a03; }
     .btn-danger { background: var(--danger); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--iron); font-size: 10px !important; }
     .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border: 1px solid var(--border); }
     .q-btns { display: flex; gap: 4px; }
 
@@ -71,15 +72,21 @@
 
 <div class="app">
     <div class="nav">
-        <strong style="color: var(--accent);">🛡️ QUEST KID</strong>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong style="color: var(--accent);">🛡️ QUEST KID</strong>
+          <button class="btn btn-ghost" onclick="resetSave()">RESET</button>
+        </div>
+        
         <select onchange="state.role=this.value; render();" id="roleSelect" style="background:var(--card); border:1px solid var(--border); color:white; border-radius:6px; padding:4px;">
             <option value="child">Child</option>
             <option value="parent">Parent</option>
         </select>
+        
         <div style="display:flex; gap:8px;">
           <div class="token-box">🎫 <span id="tokens">0</span>/3</div>
           <div class="gold-box">💰 <span id="gold">0</span></div>
         </div>
+        
         <div class="nav-btns">
           <button class="btn btn-s" onclick="openM('shopM')">🛒 SHOP</button>
           <button id="battleBtn" class="btn btn-p" onclick="startBattle()">⚔️ BATTLE</button>
@@ -197,6 +204,7 @@ function loadGame() {
     if (saved) state = JSON.parse(saved);
     render();
 }
+function resetSave() { if(confirm("Start a new game? This clears all progress.")) { localStorage.clear(); location.reload(); } }
 
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 function openM(id) { document.getElementById(id).style.display = 'flex'; }
@@ -229,7 +237,6 @@ function updateQ(i, s) {
     saveGame(); render();
 }
 
-// Battle logic
 function startBattle() {
     if(state.tokens < 3) return;
     state.tokens -= 3; state.mMax = 50 + (state.lvl * 10); state.mHp = state.mMax;
@@ -275,18 +282,17 @@ function render() {
         if(vis) vis.style.display = state.equip[s] ? 'block' : 'none';
     }
 
-    // Quest Render
     let qH = '';
     state.quests.forEach((q, i) => {
         let b = '';
         if(state.role === 'child') {
-            if(q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p">Send</button>`;
-            else if(q.status === 'pending') b = `<button onclick="updateQ(${i},'open')" class="btn btn-danger">↩️ Recall</button>`;
+            if(q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p" style="padding:4px 8px">Send</button>`;
+            else if(q.status === 'pending') b = `<button onclick="updateQ(${i},'open')" class="btn btn-danger" style="padding:4px 8px">↩️</button>`;
         } else {
             if(q.status === 'pending') b = `
                 <div class="q-btns">
-                    <button onclick="updateQ(${i},'done')" class="btn btn-p">✅</button>
-                    <button onclick="updateQ(${i},'open')" class="btn btn-danger">❌</button>
+                    <button onclick="updateQ(${i},'done')" class="btn btn-p" style="padding:4px 8px">✅</button>
+                    <button onclick="updateQ(${i},'open')" class="btn btn-danger" style="padding:4px 8px">❌</button>
                 </div>`;
         }
         qH += `<div class="q-row"><span>${q.txt} ${q.status==='pending'?'⏳':''}</span>${b}</div>`;
@@ -297,7 +303,6 @@ function render() {
     state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
     document.getElementById('hList').innerHTML = hH;
 
-    // Inventory Segregation
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
         const html = `<div class="inv-item" onclick="handleInv(${i})"><div>${it.icon}</div><b>${it.name}</b></div>`;
