@@ -32,7 +32,7 @@
     .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 10px; padding: 8px; min-height: 50px; text-align: center; cursor: pointer; }
     .slot-label { font-size: 8px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
-    .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 16px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+    .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 166px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
     .hero-base { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 10; }
     .h-head { width: 35px; height: 35px; background: #fbbf24; border-radius: 50%; margin: 0 auto; position: relative; }
     .h-body { width: 50px; height: 60px; background: #0ea5e9; border-radius: 6px; margin: 3px auto; position: relative; }
@@ -50,6 +50,7 @@
 
     /* Buttons */
     .btn { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-s { background: var(--gold); color: #451a03; }
     .btn-danger { background: var(--danger); }
@@ -57,14 +58,17 @@
     .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border: 1px solid var(--border); }
     .q-btns { display: flex; gap: 4px; }
 
-    /* Modals */
+    /* Modals & 2.5D Battle */
     .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding: 15px; }
-    .arena { position: relative; width: 100%; height: 200px; background: #064e3b; border-radius: 10px; overflow: hidden; border: 1px solid #065f46; }
-    .floor { position: absolute; bottom: 0; width: 100%; height: 80px; background: linear-gradient(to bottom, #059669 1px, transparent 1px); opacity: 0.2; }
-    .combatant { position: absolute; transition: 0.3s; }
-    .hero-team { bottom: 20px; left: 20px; display: flex; align-items: flex-end; gap: 5px; }
-    .monster-pos { top: 30px; right: 30px; text-align: center; }
-    .hp-bar-container { width: 60px; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; border: 1px solid var(--border); margin-top: 3px; }
+    .arena { position: relative; width: 100%; height: 220px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); perspective: 600px; }
+    .floor { position: absolute; bottom: 0; width: 100%; height: 100px; background: #334155; transform: rotateX(60deg); transform-origin: bottom; border-top: 4px solid var(--success); opacity: 0.3; }
+    
+    .combatant { position: absolute; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .hero-pos { bottom: 40px; left: 40px; transform: scale(1.2); z-index: 5; }
+    .monster-pos { top: 40px; right: 40px; transform: scale(0.9); z-index: 2; }
+    
+    .hp-bar-container { width: 70px; height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-top: 5px; }
+    .battle-msg { position: absolute; top: 10px; width: 100%; text-align: center; color: var(--gold); font-weight: bold; text-shadow: 0 2px 4px black; font-size: 12px; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -121,7 +125,6 @@
     <div class="panel">
         <button class="collapse-btn" onclick="toggleCol('invItems')">🎒 GEAR & ITEMS <span>▼</span></button>
         <div id="invItems" class="collapse-content show"><div id="invGrid" class="inv-grid"></div></div>
-        
         <button class="collapse-btn" onclick="toggleCol('invPets')" style="margin-top:10px;">🐾 PET COLLECTION <span>▼</span></button>
         <div id="invPets" class="collapse-content"><div id="petGrid" class="inv-grid"></div></div>
     </div>
@@ -133,7 +136,6 @@
             <button class="btn btn-p" onclick="addQ()" style="width:40px;">+</button>
         </div>
         <div id="qList"></div>
-
         <button class="collapse-btn" onclick="toggleCol('completedLog')" style="margin-top:10px; color:var(--success)">🌟 COMPLETED <span>▼</span></button>
         <div id="completedLog" class="collapse-content"><div id="hList"></div></div>
     </div>
@@ -143,36 +145,31 @@
     <div class="panel" style="width:90%; max-width:300px;">
         <h3 style="text-align:center; margin:0 0 10px 0;">🛒 Shop</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
-                🧪<br><small>Heal 50</small><br>
-                <button class="btn btn-p" style="width:100%; margin-top:5px;" onclick="buyItem('potion')">20💰</button>
-            </div>
-            <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
-                🎁<br><small>Random</small><br>
-                <button class="btn btn-s" style="width:100%; margin-top:5px;" onclick="buyItem('chest')">100💰</button>
-            </div>
+            <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">🧪<br><small>Heal 50</small><br><button class="btn btn-p" style="width:100%; margin-top:5px;" onclick="buyItem('potion')">20💰</button></div>
+            <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">🎁<br><small>Random</small><br><button class="btn btn-s" style="width:100%; margin-top:5px;" onclick="buyItem('chest')">100💰</button></div>
         </div>
         <button class="btn" style="margin-top:10px; width:100%; background:var(--border);" onclick="closeM('shopM')">Back</button>
     </div>
 </div>
 
 <div id="battleM" class="modal-overlay">
-    <div class="panel" style="width:95%; max-width:400px;">
+    <div class="panel" style="width:95%; max-width:400px; padding: 15px;">
         <div class="arena">
             <div class="floor"></div>
-            <div class="combatant hero-team" id="hTeam">
-                <div style="width:30px; height:60px; background:var(--accent); border-radius:4px;"></div>
-                <div class="hp-bar-container" style="position:absolute; bottom:-10px;"><div id="hHp" style="width:100%; height:100%; background:var(--success);"></div></div>
+            <div class="battle-msg" id="battleMsg">Your Turn!</div>
+            <div class="combatant hero-pos" id="hFight">
+                <div style="width:35px; height:70px; background:var(--accent); border-radius:4px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+                <div class="hp-bar-container"><div id="hHp" style="width:100%; height:100%; background:var(--success);"></div></div>
             </div>
-            <div class="combatant monster-pos" id="mTeam">
-                <div id="mEmoji" style="font-size:40px;">👾</div>
+            <div class="combatant monster-pos" id="mFight">
+                <div id="mEmoji" style="font-size:50px; filter: drop-shadow(0 5px 15px black);">👾</div>
                 <div class="hp-bar-container"><div id="mHp" style="width:100%; height:100%; background:var(--danger);"></div></div>
             </div>
         </div>
-        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:5px; margin-top:10px;">
-            <button id="atkBtn" class="btn btn-p" onclick="heroAttack()">⚔️ STRIKE</button>
-            <button class="btn btn-s" onclick="usePotionInBattle()">🧪</button>
-            <button class="btn" style="background:var(--border);" onclick="closeM('battleM')">🏃</button>
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:8px; margin-top:15px;">
+            <button id="atkBtn" class="btn btn-p" onclick="heroTurn()">⚔️ STRIKE</button>
+            <button id="potBtn" class="btn btn-s" onclick="usePotionInBattle()">🧪</button>
+            <button id="runBtn" class="btn" style="background:var(--border);" onclick="closeM('battleM')">🏃</button>
         </div>
     </div>
 </div>
@@ -193,6 +190,8 @@ let state = {
     mHp: 50, mMax: 50, quests: [], history: [], inv: [],
     equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null }
 };
+
+let isTurnProcessing = false;
 
 function saveGame() { localStorage.setItem('questKidV3', JSON.stringify(state)); }
 function loadGame() {
@@ -226,27 +225,99 @@ function updateQ(i, s) {
         state.history.push(q);
         state.gold += 50; state.xp += 40; state.tokens += 1;
         if(Math.random() < 0.4) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
-    } else {
-        state.quests[i].status = s;
-    }
+    } else { state.quests[i].status = s; }
     if(state.xp>=100) { state.lvl++; state.xp-=100; }
     saveGame(); render();
 }
 
 function startBattle() {
     if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
-    state.tokens -= 3; state.mMax = 50 + (state.lvl * 10); state.mHp = state.mMax;
-    openM('battleM'); render();
+    state.tokens -= 3; 
+    state.mMax = 50 + (state.lvl * 10); 
+    state.mHp = state.mMax;
+    isTurnProcessing = false;
+    document.getElementById('battleMsg').innerText = "Battle Started!";
+    updateBattleUI();
+    openM('battleM');
+    render();
 }
 
-function heroAttack() {
-    document.getElementById('hTeam').style.transform = 'translateX(50px)';
+// TURN BASED SYSTEM
+function heroTurn() {
+    if(isTurnProcessing) return;
+    isTurnProcessing = true;
+    updateBattleUI();
+
+    // Hero Jumps forward
+    const h = document.getElementById('hFight');
+    h.style.transform = 'translate(60px, -40px) scale(1.3)';
+    
     setTimeout(() => {
-        state.mHp -= 20;
-        document.getElementById('hTeam').style.transform = 'translateX(0)';
+        const dmg = 15 + (state.lvl * 2);
+        state.mHp = Math.max(0, state.mHp - dmg);
+        document.getElementById('battleMsg').innerText = `You hit for ${dmg}!`;
+        h.style.transform = 'scale(1.2)';
         render();
-        if(state.mHp <= 0) { alert("Win!"); closeM('battleM'); state.gold+=30; saveGame(); render(); }
-    }, 200);
+
+        if(state.mHp <= 0) {
+            document.getElementById('battleMsg').innerText = "VICTORY!";
+            setTimeout(() => { closeM('battleM'); state.gold+=30; state.xp+=20; saveGame(); render(); }, 1200);
+        } else {
+            document.getElementById('battleMsg').innerText = "Monster is thinking...";
+            setTimeout(monsterTurn, 1200);
+        }
+    }, 400);
+}
+
+function monsterTurn() {
+    const m = document.getElementById('mFight');
+    m.style.transform = 'translate(-60px, 40px) scale(1.1)';
+    
+    setTimeout(() => {
+        const dmg = 10 + state.lvl;
+        state.hp = Math.max(0, state.hp - dmg);
+        document.getElementById('battleMsg').innerText = `Monster hits for ${dmg}!`;
+        m.style.transform = 'scale(0.9)';
+        render();
+
+        if(state.hp <= 0) {
+            document.getElementById('battleMsg').innerText = "DEFEAT!";
+            setTimeout(() => { closeM('battleM'); state.hp = 20; saveGame(); render(); }, 1200);
+        } else {
+            setTimeout(() => {
+                isTurnProcessing = false;
+                document.getElementById('battleMsg').innerText = "Your Turn!";
+                updateBattleUI();
+            }, 600);
+        }
+    }, 400);
+}
+
+function updateBattleUI() {
+    const btn = document.getElementById('atkBtn');
+    if(isTurnProcessing) {
+        btn.disabled = true;
+        btn.innerText = "WAIT...";
+    } else {
+        btn.disabled = false;
+        btn.innerText = "⚔️ STRIKE";
+    }
+}
+
+function usePotionInBattle() {
+    if(isTurnProcessing) return;
+    const idx = state.inv.findIndex(i => i.name === "Potion");
+    if(idx > -1) {
+        state.hp = Math.min(state.maxHp, state.hp + 50);
+        state.inv.splice(idx, 1);
+        document.getElementById('battleMsg').innerText = "Healed 50 HP!";
+        render();
+        isTurnProcessing = true;
+        updateBattleUI();
+        setTimeout(monsterTurn, 1000);
+    } else {
+        alert("No potions!");
+    }
 }
 
 function handleInv(i) {
@@ -285,11 +356,7 @@ function render() {
             if(q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p" style="padding:4px 8px">Send</button>`;
             else if(q.status === 'pending') b = `<button onclick="updateQ(${i},'open')" class="btn btn-danger" style="padding:4px 8px">↩️</button>`;
         } else {
-            if(q.status === 'pending') b = `
-                <div class="q-btns">
-                    <button onclick="updateQ(${i},'done')" class="btn btn-p" style="padding:4px 8px">✅</button>
-                    <button onclick="updateQ(${i},'open')" class="btn btn-danger" style="padding:4px 8px">❌</button>
-                </div>`;
+            if(q.status === 'pending') b = `<div class="q-btns"><button onclick="updateQ(${i},'done')" class="btn btn-p" style="padding:4px 8px">✅</button><button onclick="updateQ(${i},'open')" class="btn btn-danger" style="padding:4px 8px">❌</button></div>`;
         }
         qH += `<div class="q-row"><span>${q.txt} ${q.status==='pending'?'⏳':''}</span>${b}</div>`;
     });
