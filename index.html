@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quest RPG: Vector Smithy Edition</title>
+  <title>Quest RPG: Fully Equipped Battle Edition</title>
   <style>
     :root {
       --bg: #0b0e14; --card: #161b22; --text: #c9d1d9;
@@ -155,8 +155,23 @@
         <div class="arena">
             <div class="floor"></div>
             <div class="combatant hero-team" id="hTeam">
-                <div id="b-pet" style="font-size:30px; transform:scaleX(-1)">🐕</div>
-                <div style="font-size:60px; transform:scaleX(-1)">🧑‍🚀</div>
+                <div id="b-pet" style="font-size:30px; transform:scaleX(-1); margin-bottom: 5px;">🐕</div>
+                
+                <div style="width: 50px; height: 110px; position: relative;">
+                    <div style="position: absolute; bottom: 0; left: -15px; transform: scaleX(-1) scale(0.6); transform-origin: bottom center; width: 80px; height: 180px;">
+                        <div class="h-head"><div id="b-vis-helmet" class="vis-helm"></div></div>
+                        <div class="h-body">
+                            <div id="b-vis-armor" class="vis-armor"></div>
+                            <div id="b-vis-weapon" class="vis-weapon"></div>
+                            <div id="b-vis-shield" class="vis-shield"></div>
+                        </div>
+                        <div class="h-legs">
+                            <div class="h-leg"><div id="b-vis-shoes-l" class="vis-boot"></div></div>
+                            <div class="h-leg"><div id="b-vis-shoes-r" class="vis-boot"></div></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="combatant monster-pos">
                 <div style="font-size:80px;">👾</div>
@@ -256,7 +271,7 @@ function render() {
     document.getElementById('xp-bar').style.width = state.xp + "%";
     document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
 
-    // Equipment Visibility Logic
+    // Equipment Visibility Logic (Now updates BOTH the Main Doll and the Battle Doll)
     const allVis = document.querySelectorAll('.vis-helm, .vis-armor, .vis-weapon, .vis-shield, .vis-boot, .p-collar');
     allVis.forEach(v => v.style.display = 'none');
 
@@ -267,10 +282,12 @@ function render() {
         
         if(item && item.cssId) {
             if(item.slot === 'shoes') {
-                document.getElementById('vis-shoes-l').style.display = 'block';
-                document.getElementById('vis-shoes-r').style.display = 'block';
+                ['vis-shoes-l', 'vis-shoes-r', 'b-vis-shoes-l', 'b-vis-shoes-r'].forEach(id => {
+                    if(document.getElementById(id)) document.getElementById(id).style.display = 'block';
+                });
             } else {
-                document.getElementById(item.cssId).style.display = 'block';
+                if(document.getElementById(item.cssId)) document.getElementById(item.cssId).style.display = 'block';
+                if(document.getElementById('b-' + item.cssId)) document.getElementById('b-' + item.cssId).style.display = 'block';
             }
         }
     }
