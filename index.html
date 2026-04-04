@@ -63,6 +63,10 @@
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: #f1f5f9; border-radius: 12px; margin-top: 10px; min-height: 80px; border: 1px solid var(--border); }
     .inv-item { background: #ffffff; min-width: 65px; padding: 5px; border-radius: 10px; border: 2px solid var(--border); text-align: center; font-size: 11px; cursor: pointer; }
     .hp-bar-container { width: 100px; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; border: 1px solid #cbd5e1; margin-top: 5px; }
+    
+    .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:100; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+    .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+    .shop-item { border: 2px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; background: var(--slot); }
   </style>
 </head>
 <body>
@@ -76,8 +80,9 @@
         </select>
         <div class="token-box">🎫 <span id="tokens">0</span>/3</div>
         <div class="gold-box">💰 <span id="gold">0</span></div>
-        <button class="btn btn-s" onclick="resetSave()" style="font-size: 10px; background: var(--iron);">RESET SAVE</button>
+        <button class="btn btn-s" onclick="openM('shopM')">🛒 SHOP</button>
         <button id="battleBtn" class="btn btn-p" onclick="startBattle()">BATTLE! (Costs 3🎫)</button>
+        <button class="btn btn-s" onclick="resetSave()" style="font-size: 10px; background: var(--iron);">RESET</button>
     </div>
 
     <div class="char-grid">
@@ -148,7 +153,28 @@
     </div>
 </div>
 
-<div id="battleM" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:100; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+<div id="shopM" class="modal-overlay">
+    <div class="panel" style="width:400px; text-align: center;">
+        <h2>🛒 Magic Shop</h2>
+        <div class="shop-grid">
+            <div class="shop-item">
+                <div style="font-size: 30px;">🧪</div>
+                <strong>Health Potion</strong><br>
+                <small>Heals 50 HP</small><br><br>
+                <button class="btn btn-p" onclick="buyItem('potion')">Buy (20💰)</button>
+            </div>
+            <div class="shop-item">
+                <div style="font-size: 30px;">🎁</div>
+                <strong>Treasure Chest</strong><br>
+                <small>Random Gear Drop</small><br><br>
+                <button class="btn btn-s" onclick="buyItem('chest')">Buy (100💰)</button>
+            </div>
+        </div>
+        <button class="btn" style="margin-top:20px; width:100%;" onclick="closeM('shopM')">Close</button>
+    </div>
+</div>
+
+<div id="battleM" class="modal-overlay">
     <div class="panel" style="width:600px;">
         <h2 id="battleStatus" style="text-align: center; color: var(--accent);">Your Turn!</h2>
         <div class="arena">
@@ -183,6 +209,7 @@
         </div>
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button id="atkBtn" class="btn btn-p" style="flex:2; padding:15px;" onclick="heroAttack()">⚔️ STRIKE!</button>
+            <button id="healBtn" class="btn btn-s" style="flex:1;" onclick="usePotionInBattle()">🧪 POTION</button>
             <button id="fleeBtn" class="btn" style="flex:1; background:#e2e8f0;" onclick="closeM('battleM')">🏃 Run</button>
         </div>
     </div>
@@ -232,6 +259,39 @@ function openM(id) { document.getElementById(id).style.display = 'flex'; }
 function closeM(id) { document.getElementById(id).style.display = 'none'; }
 function toggleHistory() { document.getElementById('hist-content').classList.toggle('open'); }
 
+// --- SHOP LOGIC ---
+function buyItem(type) {
+    if (type === 'potion') {
+        if (state.gold >= 20) {
+            state.gold -= 20;
+            state.inv.push({ name: "Healing Potion", icon: "🧪", type: "consumable", effect: "heal" });
+        } else alert("Not enough gold!");
+    } else if (type === 'chest') {
+        if (state.gold >= 100) {
+            state.gold -= 100;
+            const loot = DROPS[Math.floor(Math.random() * DROPS.length)];
+            state.inv.push(loot);
+            alert("Chest opened! You found: " + loot.name);
+        } else alert("Not enough gold!");
+    }
+    saveGame(); render();
+}
+
+function usePotionInBattle() {
+    const potIndex = state.inv.findIndex(i => i.effect === 'heal');
+    if (potIndex === -1) { alert("You don't have any potions!"); return; }
+    if (state.turn !== 'hero') return;
+
+    state.hp = Math.min(state.maxHp, state.hp + 50);
+    state.inv.splice(potIndex, 1);
+    alert("Healed 50 HP!");
+    
+    state.turn = 'monster';
+    document.getElementById('battleStatus').innerText = "Monster is attacking...";
+    setTimeout(monsterAttack, 1000);
+    render();
+}
+
 function addQ() {
     const v = document.getElementById('qIn').value;
     if(!v) return;
@@ -243,17 +303,14 @@ function addQ() {
 function updateQ(i, s) {
     if(s === 'done') {
         const completedTask = state.quests.splice(i, 1)[0];
-        completedTask.time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         state.history.unshift(completedTask);
         state.gold += 50; state.xp += 40; state.tokens += 1;
-        
         if(Math.random() < 0.4) {
             const loot = DROPS[Math.floor(Math.random()*DROPS.length)];
             state.inv.push(loot);
             alert("Reward Found: " + loot.name + "!");
         }
     } else state.quests[i].status = s;
-    
     checkLevelUp();
     saveGame(); render();
 }
@@ -265,20 +322,15 @@ function checkLevelUp() {
     }
 }
 
-// --- REPAIRED BATTLE SYSTEM ---
 function startBattle() {
     if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
     state.tokens -= 3; 
-    
-    // Reset Battle Variables
     state.mMax = 50 + (state.lvl * 15);
     state.mHp = state.mMax;
     state.turn = 'hero';
-    
     document.getElementById('battleStatus').innerText = "Your Turn!";
     document.getElementById('atkBtn').disabled = false;
     document.getElementById('mEmojiDisplay').innerText = state.lvl > 5 ? '🐉' : '👾';
-    
     openM('battleM'); 
     render();
 }
@@ -287,20 +339,16 @@ function heroAttack() {
     if(state.turn !== 'hero') return;
     state.turn = 'waiting'; 
     document.getElementById('atkBtn').disabled = true;
-
     const team = document.getElementById('hTeam');
     team.classList.add('lunge');
-    
     setTimeout(() => {
         let crit = Math.random() > 0.85 ? 2 : 1;
         let power = (15 + state.lvl * 3) * crit;
         state.mHp -= power;
         team.classList.remove('lunge');
         render();
-
-        if(state.mHp <= 0) { 
-            setTimeout(() => endBattle(true), 500); 
-        } else {
+        if(state.mHp <= 0) setTimeout(() => endBattle(true), 500); 
+        else {
             state.turn = 'monster';
             document.getElementById('battleStatus').innerText = "Monster is attacking...";
             setTimeout(monsterAttack, 1200);
@@ -309,23 +357,18 @@ function heroAttack() {
 }
 
 function monsterAttack() {
-    if(document.getElementById('battleM').style.display === 'none') return; // Stop if player fled
-
+    if(document.getElementById('battleM').style.display === 'none') return;
     const m = document.getElementById('mTeam');
     m.classList.add('m-lunge');
-    
     setTimeout(() => {
         let dmg = 8 + (state.lvl * 2);
         if(state.equip.armor) dmg -= 4;
         if(state.equip.shield) dmg -= 3;
-        
         state.hp -= Math.max(3, dmg);
         m.classList.remove('m-lunge');
         render();
-
-        if(state.hp <= 0) { 
-            setTimeout(() => endBattle(false), 500); 
-        } else {
+        if(state.hp <= 0) setTimeout(() => endBattle(false), 500); 
+        else {
             state.turn = 'hero';
             document.getElementById('battleStatus').innerText = "Your Turn!";
             document.getElementById('atkBtn').disabled = false;
@@ -342,26 +385,26 @@ function endBattle(win) {
             state.inv.push(loot);
             alert("Battle Loot: " + loot.name + "!");
         }
-    } else { 
-        alert("Defeated! Rest up."); 
-        state.hp = Math.floor(state.maxHp * 0.3); 
-    }
-    
-    // Clear animations/states for next time
-    document.getElementById('hTeam').classList.remove('lunge');
-    document.getElementById('mTeam').classList.remove('m-lunge');
-    
+    } else alert("Defeated! Rest up."); 
+    state.hp = Math.max(state.hp, Math.floor(state.maxHp * 0.3));
     closeM('battleM');
-    saveGame(); 
-    render();
+    saveGame(); render();
 }
 
-function equip(i) {
+function handleInventory(i) {
     const it = state.inv[i];
-    const old = state.equip[it.slot];
-    state.equip[it.slot] = it;
-    state.inv.splice(i, 1);
-    if(old) state.inv.push(old);
+    if (it.type === 'consumable') {
+        if (it.effect === 'heal') {
+            state.hp = Math.min(state.maxHp, state.hp + 50);
+            state.inv.splice(i, 1);
+            alert("Used potion! Healed 50 HP.");
+        }
+    } else {
+        const old = state.equip[it.slot];
+        state.equip[it.slot] = it;
+        state.inv.splice(i, 1);
+        if(old) state.inv.push(old);
+    }
     saveGame(); render();
 }
 
@@ -401,15 +444,12 @@ function render() {
             document.getElementById('vis-collar').style.display = 'block';
             document.getElementById('b-vis-collar').style.display = 'block';
         }
-    } else {
-        document.getElementById('pet-container').style.display = 'none';
-    }
+    } else document.getElementById('pet-container').style.display = 'none';
 
     let qH = '';
     state.quests.forEach((q, i) => {
-        let b = '';
-        if(state.role === 'child' && q.status === 'open') b = `<button onclick="updateQ(${i},'pending')" class="btn btn-p">Submit</button>`;
-        if(state.role === 'parent' && q.status === 'pending') b = `<button onclick="updateQ(${i},'done')" class="btn btn-s">Approve</button>`;
+        let b = (state.role === 'child' && q.status === 'open') ? `<button onclick="updateQ(${i},'pending')" class="btn btn-p">Submit</button>` :
+                (state.role === 'parent' && q.status === 'pending') ? `<button onclick="updateQ(${i},'done')" class="btn btn-s">Approve</button>` : '';
         qH += `<div class="q-row"><span>${q.txt} <small>(${q.status})</small></span> <div>${b}</div></div>`;
     });
     document.getElementById('qList').innerHTML = qH || '<p style="text-align:center; opacity:0.5;">Add a task above!</p>';
@@ -419,7 +459,7 @@ function render() {
     document.getElementById('hist-content').innerHTML = hH;
 
     let iH = '';
-    state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="equip(${i})"><div style="font-size:20px;">${it.icon}</div><b>${it.name}</b></div>`);
+    state.inv.forEach((it, i) => iH += `<div class="inv-item" onclick="handleInventory(${i})"><div style="font-size:20px;">${it.icon}</div><b>${it.name}</b></div>`);
     document.getElementById('inv').innerHTML = iH;
 }
 
