@@ -32,14 +32,14 @@
     .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 10px; padding: 8px; min-height: 50px; text-align: center; cursor: pointer; }
     .slot-label { font-size: 8px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 2px; }
 
-    .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 166px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+    .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 16px; height: 300px; position: relative; border: 1px solid var(--border); overflow: hidden; }
     .hero-base { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 10; }
     .h-head { width: 35px; height: 35px; background: #fbbf24; border-radius: 50%; margin: 0 auto; position: relative; }
     .h-body { width: 50px; height: 60px; background: #0ea5e9; border-radius: 6px; margin: 3px auto; position: relative; }
-    .h-legs { display: flex; justify-content: space-around; width: 40px; margin: 0 auto; }
-    .h-leg { width: 15px; height: 40px; background: #1e40af; border-radius: 3px; }
+    
+    /* Pet Visuals */
+    .pet-vis { position: absolute; bottom: 50px; left: calc(50% + 40px); font-size: 24px; transition: 0.3s; z-index: 9; }
 
-    /* Inventory & Collapsibles */
     .panel { background: var(--card); padding: 12px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
     .collapse-btn { width: 100%; text-align: left; background: none; border: none; color: var(--accent); font-weight: bold; padding: 5px 0; cursor: pointer; display: flex; justify-content: space-between; }
     .collapse-content { display: none; margin-top: 10px; }
@@ -56,8 +56,7 @@
     .btn-danger { background: var(--danger); }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--iron); font-size: 10px !important; }
     .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border: 1px solid var(--border); }
-    .q-btns { display: flex; gap: 4px; }
-
+    
     /* Modals & 2.5D Battle */
     .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100; align-items:center; justify-content:center; padding: 15px; }
     .arena { position: relative; width: 100%; height: 220px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); perspective: 600px; }
@@ -101,6 +100,7 @@
         </div>
 
         <div class="doll-house">
+            <div id="vis-pet" class="pet-vis" style="display:none;"></div>
             <div class="hero-base">
                 <div class="h-head"><div id="vis-helmet" style="display:none; width:38px; height:20px; background:var(--iron); border-radius:15px 15px 0 0; position:absolute; top:-2px;"></div></div>
                 <div class="h-body">
@@ -153,16 +153,17 @@
 </div>
 
 <div id="battleM" class="modal-overlay">
-    <div class="panel" style="width:95%; max-width:400px; padding: 15px;">
+    <div class="panel" style="width:95%; max-width:400px;">
         <div class="arena">
             <div class="floor"></div>
             <div class="battle-msg" id="battleMsg">Your Turn!</div>
             <div class="combatant hero-pos" id="hFight">
-                <div style="width:35px; height:70px; background:var(--accent); border-radius:4px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+                <div style="width:35px; height:70px; background:var(--accent); border-radius:4px;"></div>
+                <div id="hFightPet" style="position:absolute; right:-25px; bottom:0; font-size:20px;"></div>
                 <div class="hp-bar-container"><div id="hHp" style="width:100%; height:100%; background:var(--success);"></div></div>
             </div>
             <div class="combatant monster-pos" id="mFight">
-                <div id="mEmoji" style="font-size:50px; filter: drop-shadow(0 5px 15px black);">👾</div>
+                <div id="mEmoji" style="font-size:50px;">👾</div>
                 <div class="hp-bar-container"><div id="mHp" style="width:100%; height:100%; background:var(--danger);"></div></div>
             </div>
         </div>
@@ -176,18 +177,28 @@
 
 <script>
 const DROPS = [
-    { name: "Helm", icon: "🪖", slot: "helmet", cssId: "vis-helmet" },
+    { name: "Helm", icon: "🪖", slot: "helmet" },
     { name: "Sword", icon: "⚔️", slot: "weapon" },
-    { name: "Plate", icon: "🛡️", slot: "armor", cssId: "vis-armor" },
+    { name: "Plate", icon: "🛡️", slot: "armor" },
     { name: "Shield", icon: "🛡️", slot: "shield" },
     { name: "Boots", icon: "👢", slot: "shoes" },
-    { name: "Cat", icon: "🐱", slot: "pet", type: "cat", color: "#fdba74" },
-    { name: "Dragon", icon: "🐲", slot: "pet", type: "dragon", color: "#4ade80" }
+    { name: "Cat", icon: "🐱", slot: "pet" },
+    { name: "Dragon", icon: "🐲", slot: "pet" },
+    { name: "Owl", icon: "🦉", slot: "pet" },
+    { name: "Fox", icon: "🦊", slot: "pet" }
+];
+
+const MONSTERS = [
+    { name: "Slime", icon: "💧", hp: 30, dmg: 8 },
+    { name: "Goblin", icon: "👺", hp: 50, dmg: 12 },
+    { name: "Spider", icon: "🕷️", hp: 40, dmg: 15 },
+    { name: "Ghost", icon: "👻", hp: 60, dmg: 10 },
+    { name: "Dragon", icon: "🐲", hp: 100, dmg: 20 }
 ];
 
 let state = {
     role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, maxHp: 100, tokens: 0,
-    mHp: 50, mMax: 50, quests: [], history: [], inv: [],
+    mHp: 50, mMax: 50, mDmg: 10, quests: [], history: [], inv: [],
     equip: { helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null }
 };
 
@@ -226,34 +237,38 @@ function updateQ(i, s) {
         state.gold += 50; state.xp += 40; state.tokens += 1;
         if(Math.random() < 0.4) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
     } else { state.quests[i].status = s; }
-    if(state.xp>=100) { state.lvl++; state.xp-=100; }
+    if(state.xp>=100) { state.lvl++; state.xp-=100; state.maxHp += 10; state.hp = state.maxHp; }
     saveGame(); render();
 }
 
 function startBattle() {
     if(state.tokens < 3) { alert("Need 3 tokens!"); return; }
     state.tokens -= 3; 
-    state.mMax = 50 + (state.lvl * 10); 
+    
+    // Pick Variable Monster
+    const m = MONSTERS[Math.floor(Math.random() * MONSTERS.length)];
+    state.mMax = m.hp + (state.lvl * 8); 
     state.mHp = state.mMax;
+    state.mDmg = m.dmg + state.lvl;
+    document.getElementById('mEmoji').innerText = m.icon;
+    
     isTurnProcessing = false;
-    document.getElementById('battleMsg').innerText = "Battle Started!";
+    document.getElementById('battleMsg').innerText = `A wild ${m.name} appeared!`;
     updateBattleUI();
     openM('battleM');
     render();
 }
 
-// TURN BASED SYSTEM
 function heroTurn() {
     if(isTurnProcessing) return;
     isTurnProcessing = true;
     updateBattleUI();
 
-    // Hero Jumps forward
     const h = document.getElementById('hFight');
     h.style.transform = 'translate(60px, -40px) scale(1.3)';
     
     setTimeout(() => {
-        const dmg = 15 + (state.lvl * 2);
+        const dmg = 15 + (state.lvl * 3);
         state.mHp = Math.max(0, state.mHp - dmg);
         document.getElementById('battleMsg').innerText = `You hit for ${dmg}!`;
         h.style.transform = 'scale(1.2)';
@@ -263,8 +278,7 @@ function heroTurn() {
             document.getElementById('battleMsg').innerText = "VICTORY!";
             setTimeout(() => { closeM('battleM'); state.gold+=30; state.xp+=20; saveGame(); render(); }, 1200);
         } else {
-            document.getElementById('battleMsg').innerText = "Monster is thinking...";
-            setTimeout(monsterTurn, 1200);
+            setTimeout(monsterTurn, 1000);
         }
     }, 400);
 }
@@ -274,9 +288,8 @@ function monsterTurn() {
     m.style.transform = 'translate(-60px, 40px) scale(1.1)';
     
     setTimeout(() => {
-        const dmg = 10 + state.lvl;
-        state.hp = Math.max(0, state.hp - dmg);
-        document.getElementById('battleMsg').innerText = `Monster hits for ${dmg}!`;
+        state.hp = Math.max(0, state.hp - state.mDmg);
+        document.getElementById('battleMsg').innerText = `Monster hits for ${state.mDmg}!`;
         m.style.transform = 'scale(0.9)';
         render();
 
@@ -295,13 +308,8 @@ function monsterTurn() {
 
 function updateBattleUI() {
     const btn = document.getElementById('atkBtn');
-    if(isTurnProcessing) {
-        btn.disabled = true;
-        btn.innerText = "WAIT...";
-    } else {
-        btn.disabled = false;
-        btn.innerText = "⚔️ STRIKE";
-    }
+    btn.disabled = isTurnProcessing;
+    btn.innerText = isTurnProcessing ? "WAIT..." : "⚔️ STRIKE";
 }
 
 function usePotionInBattle() {
@@ -315,8 +323,6 @@ function usePotionInBattle() {
         isTurnProcessing = true;
         updateBattleUI();
         setTimeout(monsterTurn, 1000);
-    } else {
-        alert("No potions!");
     }
 }
 
@@ -343,10 +349,19 @@ function render() {
     document.getElementById('mHp').style.width = (state.mHp/state.mMax*100) + "%";
     document.getElementById('hHp').style.width = (state.hp/state.maxHp*100) + "%";
 
+    // Equipment & Pet Visuals
     for(let s in state.equip) {
         document.getElementById('v-'+s).innerText = state.equip[s] ? state.equip[s].icon : '';
         const vis = document.getElementById('vis-'+s);
-        if(vis) vis.style.display = state.equip[s] ? 'block' : 'none';
+        if(vis) {
+            if(s === 'pet') {
+                vis.innerText = state.equip[s] ? state.equip[s].icon : '';
+                vis.style.display = state.equip[s] ? 'block' : 'none';
+                document.getElementById('hFightPet').innerText = state.equip[s] ? state.equip[s].icon : '';
+            } else {
+                vis.style.display = state.equip[s] ? 'block' : 'none';
+            }
+        }
     }
 
     let qH = '';
