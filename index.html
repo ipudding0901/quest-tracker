@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - MASTER BUILD V13.1</title>
+  <title>Quest Kid RPG - MASTER BUILD V13.2</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -13,42 +13,58 @@
     }
 
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
+    
+    /* LOGIN FIX */
     #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+    
     .app { max-width: 1000px; margin: 0 auto; padding: 10px; display: none; }
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    
     .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); }
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
     @media (min-width: 768px) { .char-grid { grid-template-columns: 160px 1fr 160px; } }
+    
     .slot-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     @media (min-width: 768px) { .slot-col { display: flex; flex-direction: column; } }
+    
     .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 12px; padding: 10px; min-height: 60px; text-align: center; cursor: pointer; position: relative; }
     .slot-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: bold; }
     .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 20px; height: 320px; position: relative; border: 1px solid var(--border); overflow: hidden; }
     .hero-base { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 5; }
     .h-head { width: 40px; height: 40px; background: #ffdbac; border-radius: 50%; margin: 0 auto; }
     .h-body { width: 55px; height: 70px; background: #3b82f6; border-radius: 8px; margin: 4px auto; }
+    
     .panel { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid var(--border); }
     .collapse-btn { width: 100%; text-align: left; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--success); font-weight: bold; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px; margin-top: 10px; }
     .collapse-content { display: none; margin-top: 10px; }
     .collapse-content.show { display: block; }
+    
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 80px; border: 1px solid var(--border); }
     .inv-item { background: var(--card); min-width: 70px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
+    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+    
     .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-danger { background: var(--danger); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
     .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .lucky-tag { font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); margin-right: 10px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
+    
+    /* ARENA ENHANCEMENTS */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
     .arena { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; }
     .decor-layer { position: absolute; inset: 0; pointer-events: none; font-size: 30px; opacity: 0.6; }
+    
     .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
     .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
+    
     .dmg-num { position: absolute; font-weight: 900; font-size: 28px; color: #ff4444; animation: floatUp 0.8s ease-out forwards; pointer-events: none; z-index: 100; text-shadow: 2px 2px #000; }
     @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+    
     #hF { position: absolute; bottom: 40px; left: 40px; transition: 0.2s; text-align: center; z-index: 10; }
     #mF { position: absolute; top: 40px; right: 40px; transition: 0.2s; text-align: center; z-index: 10; }
     .bump-right { transform: translate(120px, -40px); }
@@ -127,7 +143,9 @@
 </div>
 
 <div id="lvlUpM" class="modal-overlay"><div class="panel" style="width:90%; max-width:300px; text-align:center; border: 2px solid var(--gold);"><h1 style="color:var(--gold); margin:0;">🎉 LEVEL UP!</h1><p style="font-size:18px;">Level <span id="lvlUpVal">1</span></p><button class="btn btn-p" style="width:100%; padding:15px;" onclick="document.getElementById('lvlUpM').style.display='none'">AWESOME!</button></div></div>
-<div id="itemM" class="modal-overlay"><div class="panel" style="width:90%; max-width:320px; text-align:center;"><h2 id="mItemTitle"></h2><div id="mItemIcon" style="font-size:60px; margin:10px 0;"></div><div id="mItemStats" style="margin-bottom:15px;"></div><div id="equipActions"><button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button></div><button class="btn" style="width:100%; margin-top:10px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button></div></div>
+
+<div id="itemM" class="modal-overlay"><div class="panel" style="width:90%; max-width:320px; text-align:center;"><h2 id="mItemTitle"></h2><div id="mItemIcon" style="font-size:60px; margin:10px 0;"></div><div id="mItemStats" style="margin-bottom:15px;"></div><div id="equipActions"><button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button><button id="upgradeBtn" class="btn" style="width:100%; padding:15px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE</button></div><button class="btn" style="width:100%; margin-top:10px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button></div></div>
+
 <div id="shopM" class="modal-overlay"><div class="panel" style="width:90%; max-width:400px;"><h2 style="color:var(--gold); text-align:center;">💰 VAULT</h2><button class="btn" style="width:100%; background:var(--gold); color:black; padding:15px; margin-bottom:10px;" onclick="buyChest()">📦 Mystery Chest (250g)</button><button class="btn" style="width:100%; margin-top:15px; background:var(--border);" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button></div></div>
 
 <script>
@@ -143,8 +161,8 @@ const MONSTERS = ["👾","👹","🐉","👻","🧟","🦂"];
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 0, max: 0, atk: 0, def: 0 }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_V13_1', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_V13_1'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_V13_2', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_V13_2'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -154,7 +172,7 @@ function startBattle() {
     state.tokens -= 3;
     const bio = BIOMES[Math.floor(Math.random()*BIOMES.length)];
     document.getElementById('arenaBg').style.background = `linear-gradient(to bottom, ${bio.sky} 60%, ${bio.ground} 60%)`;
-    let dH = ''; for(let i=0; i<8; i++) dH += `<span style="position:absolute; left:${Math.random()*90}%; top:${45+Math.random()*40}%;">${bio.decor[Math.floor(Math.random()*bio.decor.length)]}</span>`;
+    let dH = ''; for(let i=0; i<8; i++) dH += `<span style="position:absolute; left:${Math.random()*90}%; top:${50+Math.random()*35}%;">${bio.decor[Math.floor(Math.random()*bio.decor.length)]}</span>`;
     document.getElementById('decorLayer').innerHTML = dH;
     document.getElementById('mEmoji').innerText = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
     curM.max = 50 + (state.lvl * 25); curM.hp = curM.max; curM.atk = 6 + (state.lvl * 5); curM.def = 2 + (state.lvl * 3);
@@ -203,18 +221,35 @@ function render() {
     let hH = ''; state.history.forEach(h => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; });
     document.getElementById('historyList').innerHTML = hH || 'No history.';
     
-    let iH = ''; state.inv.forEach((it, i) => { iH += `<div class="inv-item" onclick="openItemMenu(${i})"><div>${it.i}</div></div>`; });
+    let iH = ''; state.inv.forEach((it, i) => { iH += `<div class="inv-item" onclick="openItemMenu(${i})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div>${it.i}</div></div>`; });
     document.getElementById('gearGrid').innerHTML = iH || 'Empty';
     for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
     save();
 }
 
+function generateItem() { let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)]; return { ...r, v: 0, baseP: Math.floor(Math.random()*3)+1, r: 1 }; }
+
+function openItemMenu(i) {
+    selectedIdx = i; const it = state.inv[i];
+    document.getElementById('mItemTitle').innerText = it.n + (it.v>0?` +${it.v}`:'');
+    document.getElementById('mItemIcon').innerText = it.i;
+    document.getElementById('mItemStats').innerText = `Base Power: ${it.baseP}`;
+    const dupe = state.inv.findIndex((x, idx) => idx !== i && x.n === it.n && x.v === it.v && x.baseP === it.baseP);
+    document.getElementById('upgradeBtn').disabled = (dupe === -1);
+    document.getElementById('itemM').style.display = 'flex';
+}
+
+function doUpgrade() {
+    const it = state.inv[selectedIdx];
+    const dupe = state.inv.findIndex((x, idx) => idx !== selectedIdx && x.n === it.n && x.v === it.v && x.baseP === it.baseP);
+    state.inv[selectedIdx].v++; state.inv.splice(dupe, 1);
+    document.getElementById('itemM').style.display = 'none'; render();
+}
+
 function showDmg(t, a) { const b = document.getElementById(t).getBoundingClientRect(); const ar = document.getElementById('arenaBg').getBoundingClientRect(); const el = document.createElement('div'); el.className = 'dmg-num'; el.innerText = `-${a}`; el.style.left = (b.left - ar.left + 20) + 'px'; el.style.top = (b.top - ar.top) + 'px'; document.getElementById('arenaBg').appendChild(el); setTimeout(() => el.remove(), 800); }
-function heroTurn() { if(isActing) return; isActing = true; const h = document.getElementById('hF'); h.classList.add('bump-right'); setTimeout(() => { let d = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - d); showDmg('mF', d); updateBars(); h.classList.remove('bump-right'); if(curM.hp <= 0) { alert("Victory!"); state.gold += 100; state.inv.push(generateItem()); document.getElementById('battleM').style.display='none'; render(); } else { setTimeout(monsterTurn, 600); } }, 200); }
+function heroTurn() { if(isActing) return; isActing = true; const h = document.getElementById('hF'); h.classList.add('bump-right'); setTimeout(() => { let d = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - d); showDmg('mF', d); updateBars(); h.classList.remove('bump-right'); if(curM.hp <= 0) { alert("Victory!"); state.gold += 100; if(Math.random()<0.3) state.inv.push(generateItem()); document.getElementById('battleM').style.display='none'; render(); } else { setTimeout(monsterTurn, 600); } }, 200); }
 function monsterTurn() { const m = document.getElementById('mF'); m.classList.add('bump-left'); setTimeout(() => { let d = Math.max(5, curM.atk - curH.def); state.hp = Math.max(0, state.hp - d); showDmg('hF', d); updateBars(); m.classList.remove('bump-left'); if(state.hp <= 0) { alert("Defeat!"); state.hp = 20; document.getElementById('battleM').style.display='none'; render(); } else { isActing = false; } }, 200); }
-function generateItem() { let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)]; return { ...r, v: 0, baseP: Math.floor(Math.random()*3)+1, r: 1, type: 'gear' }; }
 function addQuest() { const v = document.getElementById('qInput').value; if(!v) return; state.quests.push({txt: v, status: 'open', lucky: false}); document.getElementById('qInput').value = ''; render(); }
-function openItemMenu(i) { selectedIdx = i; document.getElementById('mItemTitle').innerText = state.inv[i].n; document.getElementById('mItemIcon').innerText = state.inv[i].i; document.getElementById('itemM').style.display = 'flex'; }
 function doEquipFromMenu() { const it = state.inv.splice(selectedIdx, 1)[0]; const old = state.equip[it.s]; state.equip[it.s] = it; if(old) state.inv.push(old); document.getElementById('itemM').style.display = 'none'; render(); }
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 function buyChest() { if(state.gold < 250) return; state.gold -= 250; state.inv.push(generateItem()); render(); }
