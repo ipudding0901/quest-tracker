@@ -83,13 +83,13 @@
         </select>
         
         <div style="display:flex; gap:8px;">
-          <div class="token-box">🎫 <span id="tokens">0</span>/3</div>
+          <div class="token-box">🎫 <span id="tokens-main">0</span>/3</div>
           <div class="gold-box">💰 <span id="gold">0</span></div>
         </div>
         
         <div class="nav-btns">
           <button class="btn btn-s" onclick="openM('shopM')">🛒 SHOP</button>
-          <button id="battleBtn" class="btn btn-p" onclick="startBattle()">⚔️ BATTLE</button>
+          <button id="battleBtn" class="btn btn-p" onclick="startBattle()">⚔️ BATTLE (<span id="btn-tokens">0</span>/3)</button>
         </div>
     </div>
 
@@ -238,7 +238,7 @@ function updateQ(i, s) {
 }
 
 function startBattle() {
-    if(state.tokens < 3) return;
+    if(state.tokens < 3) { alert("Need 3 tokens! Complete quests to earn them."); return; }
     state.tokens -= 3; state.mMax = 50 + (state.lvl * 10); state.mHp = state.mMax;
     openM('battleM'); render();
 }
@@ -269,7 +269,8 @@ function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state
 
 function render() {
     document.getElementById('gold').innerText = state.gold;
-    document.getElementById('tokens').innerText = state.tokens;
+    document.getElementById('tokens-main').innerText = state.tokens;
+    document.getElementById('btn-tokens').innerText = state.tokens;
     document.getElementById('lvl').innerText = state.lvl;
     document.getElementById('h-hp-text').innerText = state.hp;
     document.getElementById('xp-bar').style.width = state.xp + "%";
