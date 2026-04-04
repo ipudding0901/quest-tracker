@@ -20,9 +20,10 @@
     .app { max-width: 1000px; margin: 0 auto; padding: 10px; display: none; }
 
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 5px 12px; border-radius: 15px; border: 1px solid var(--gold); display: flex; align-items: center; gap: 8px; }
-    .shop-btn-mini { background: var(--gold); color: #000; border: none; border-radius: 10px; padding: 2px 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
-    .shop-btn-potion { background: var(--success); color: #000; border: none; border-radius: 10px; padding: 2px 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
+    
+    /* Integrated Gold Pouch */
+    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; }
+    .gold-box:hover { transform: scale(1.05); background: #5c2304; }
     
     .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); }
 
@@ -59,6 +60,10 @@
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
+    
+    /* Shop Modal Specifics */
+    .shop-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+
     .arena { position: relative; width: 100%; height: 280px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; }
     .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
     .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
@@ -86,10 +91,8 @@
             <button class="btn" style="font-size:10px; background:var(--border); padding:4px 10px;" onclick="location.reload()">Switch Role</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
-            <div class="gold-box">
+            <div class="gold-box" onclick="document.getElementById('shopM').style.display='flex'">
                 💰 <span id="goldVal">0</span>
-                <button class="shop-btn-mini" onclick="buyChest()">📦 CHEST (250g)</button>
-                <button class="shop-btn-potion" onclick="buyPotion()">🧪 POTION (100g)</button>
             </div>
             <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
@@ -138,6 +141,30 @@
     </div>
 </div>
 
+<div id="shopM" class="modal-overlay">
+    <div class="panel" style="width:90%; max-width:400px;">
+        <h2 style="color:var(--gold); text-align:center; margin-top:0;">💰 MERCHANT'S VAULT</h2>
+        
+        <div class="shop-row">
+            <div>
+                <strong>Mystery Chest</strong><br>
+                <small style="color:var(--rarity1)">Random Gear Drop</small>
+            </div>
+            <button class="btn" style="background:var(--gold); color:black; padding:10px 15px;" onclick="buyChest()">📦 250g</button>
+        </div>
+
+        <div class="shop-row">
+            <div>
+                <strong>Health Potion</strong><br>
+                <small style="color:var(--success)">Heal 50% Max HP</small>
+            </div>
+            <button class="btn" style="background:var(--success); color:black; padding:10px 15px;" onclick="buyPotion()">🧪 100g</button>
+        </div>
+
+        <button class="btn" style="width:100%; margin-top:15px; background:var(--border);" onclick="document.getElementById('shopM').style.display='none'">CLOSE VAULT</button>
+    </div>
+</div>
+
 <div id="itemM" class="modal-overlay">
     <div class="panel" style="width:90%; max-width:320px; text-align:center;">
         <h2 id="mItemTitle"></h2>
@@ -148,7 +175,7 @@
             <button id="upgradeBtn" class="btn" style="width:100%; padding:15px; margin-bottom:10px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE</button>
         </div>
         <div id="potionActions" style="display:none;">
-            <button class="btn" style="width:100%; padding:15px; margin-bottom:10px; background:var(--success); color:black;" onclick="usePotion()">🧪 USE POTION (+50% HP)</button>
+            <button class="btn" style="width:100%; padding:15px; margin-bottom:10px; background:var(--success); color:black;" onclick="usePotion()">🧪 USE POTION</button>
         </div>
         <button class="btn btn-danger" style="width:100%; padding:12px;" onclick="doSell()">💰 SELL (50g)</button>
         <button class="btn" style="width:100%; margin-top:15px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button>
@@ -181,8 +208,8 @@ const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"}
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 50, max: 50, atk: 5, def: 2 }, curH = { atk: 0, def: 0, maxHp: 100 }, selectedIdx = -1, isActing = false;
 
-function save() { localStorage.setItem('QuestKid_Master_Final_V3', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_Master_Final_V3'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_Master_Final_Vault', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_Master_Final_Vault'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -209,8 +236,7 @@ function updateQuest(i, act) {
 function checkLevelUp() {
     let nextLvlXp = state.lvl * 100;
     if(state.xp >= nextLvlXp) {
-        state.xp -= nextLvlXp;
-        state.lvl++;
+        state.xp -= nextLvlXp; state.lvl++;
         state.hp = curH.maxHp;
         alert(`🎉 Level Up! You reached Level ${state.lvl}!`);
         checkLevelUp();
@@ -227,9 +253,7 @@ function generateItem() {
 function buyChest() {
     if(state.gold < 250) return alert("Need 250g!");
     state.gold -= 250;
-    let newItem = generateItem();
-    state.inv.push(newItem);
-    alert(`Opened: ${newItem.i} ${newItem.n}!`);
+    let newItem = generateItem(); state.inv.push(newItem);
     render();
 }
 
@@ -286,9 +310,8 @@ function openItemMenu(i) {
     selectedIdx = i; const it = state.inv[i];
     document.getElementById('mItemTitle').innerText = it.n + (it.v>0?` +${it.v}`:'');
     document.getElementById('mItemIcon').innerText = it.i;
-    
     if(it.type === 'potion') {
-        document.getElementById('mItemStats').innerText = "Restores 50% Health";
+        document.getElementById('mItemStats').innerText = "Restores 50% HP";
         document.getElementById('equipActions').style.display = 'none';
         document.getElementById('potionActions').style.display = 'block';
     } else {
@@ -318,7 +341,6 @@ function startBattle() {
     state.tokens -= 3;
     curM.max = 50 + (state.lvl * 25); curM.hp = curM.max;
     curM.atk = 6 + (state.lvl * 5); curM.def = 2 + (state.lvl * 3);
-    document.getElementById('mStatsLbl').innerText = `⚔️${curM.atk} 🛡️${curM.def}`;
     document.getElementById('battleM').style.display = 'flex';
     document.getElementById('atkBtn').disabled = false;
     document.getElementById('fleeBtn').disabled = false;
@@ -336,6 +358,7 @@ function fleeBattle() {
 function updateBars() {
     document.getElementById('hHpFill').style.width = (state.hp/curH.maxHp*100) + "%";
     document.getElementById('mHpFill').style.width = (curM.hp/curM.max*100) + "%";
+    document.getElementById('mStatsLbl').innerText = `⚔️${curM.atk} 🛡️${curM.def}`;
 }
 
 function heroTurn() {
@@ -351,12 +374,9 @@ function heroTurn() {
         updateBars(); hero.classList.remove('bump-right');
         if(curM.hp <= 0) { 
             let dropMsg = "";
-            if(Math.random() < 0.25) { 
-                let drop = generateItem(); state.inv.push(drop); dropMsg = `\n🎁 Drop: ${drop.i} ${drop.n}!`;
-            }
+            if(Math.random() < 0.25) { let drop = generateItem(); state.inv.push(drop); dropMsg = `\n🎁 Drop: ${drop.i} ${drop.n}!`; }
             alert(`Victory! +100g${dropMsg}`); state.gold += 100; document.getElementById('battleM').style.display='none'; render(); 
-        }
-        else { setTimeout(monsterTurn, 600); }
+        } else { setTimeout(monsterTurn, 600); }
     }, 200);
 }
 
@@ -368,11 +388,7 @@ function monsterTurn() {
         state.hp = Math.max(0, state.hp - dmg);
         updateBars(); monster.classList.remove('bump-left');
         if(state.hp <= 0) { alert("Defeat!"); state.hp = 20; document.getElementById('battleM').style.display='none'; render(); }
-        else { 
-            isActing = false; 
-            document.getElementById('atkBtn').disabled = false;
-            document.getElementById('fleeBtn').disabled = false;
-        }
+        else { isActing = false; document.getElementById('atkBtn').disabled = false; document.getElementById('fleeBtn').disabled = false; }
     }, 200);
 }
 
