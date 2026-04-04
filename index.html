@@ -13,17 +13,14 @@
 
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
     
-    /* Login System */
     #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
     .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; }
 
     .app { max-width: 1100px; margin: 0 auto; padding: 10px; display: none; }
 
-    /* Nav */
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--gold); }
 
-    /* Character Grid */
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
     @media (min-width: 768px) { .char-grid { grid-template-columns: 150px 1fr 150px; } }
     .slot-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -37,7 +34,6 @@
     .h-body { width: 50px; height: 60px; background: #0ea5e9; border-radius: 6px; margin: 3px auto; position: relative; }
     .pet-vis { position: absolute; bottom: 50px; left: calc(50% + 40px); font-size: 28px; z-index: 9; }
 
-    /* Panels & Collapsibles */
     .panel { background: var(--card); padding: 12px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
     .collapse-btn { width: 100%; text-align: left; background: none; border: none; color: var(--accent); font-weight: bold; padding: 5px 0; cursor: pointer; display: flex; justify-content: space-between; }
     .collapse-content { display: none; margin-top: 10px; }
@@ -47,14 +43,15 @@
     .inv-item { background: var(--card); min-width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border); text-align: center; cursor: pointer; }
 
     .btn { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-s { background: var(--gold); color: #451a03; }
+    .btn-danger { background: var(--danger); }
     .q-row { background: var(--bg); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border: 1px solid var(--border); }
     
     .lucky-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); margin-right: 8px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
-    /* Battle */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; padding: 15px; }
     .arena { position: relative; width: 100%; height: 220px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
   </style>
@@ -73,7 +70,7 @@
     <div class="nav">
         <div style="display:flex; align-items:center; gap:10px;">
             <strong id="roleLabel" style="color:var(--accent)">HERO</strong>
-            <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Switch</button>
+            <button class="btn" style="font-size:10px; background:var(--border); padding:2px 8px;" onclick="location.reload()">Logout</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
             <div class="gold-box">💰 <span id="goldVal">0</span></div>
@@ -109,7 +106,6 @@
         <div class="panel">
             <button class="collapse-btn" onclick="toggleCol('invGear')">🎒 GEAR INVENTORY <span>▼</span></button>
             <div id="invGear" class="collapse-content show"><div id="gearGrid" class="inv-grid"></div></div>
-            
             <button class="collapse-btn" onclick="toggleCol('invPets')" style="margin-top:10px;">🐾 PET COLLECTION <span>▼</span></button>
             <div id="invPets" class="collapse-content"><div id="petGrid" class="inv-grid"></div></div>
         </div>
@@ -137,7 +133,7 @@
             <div id="mF" style="position:absolute; top:40px; right:40px; font-size:50px; transition:0.3s;">👾</div>
         </div>
         <div style="display:flex; gap:10px;">
-            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="fightStep()">⚔️ STRIKE</button>
+            <button class="btn btn-p" style="flex:1; padding:15px; margin-top:10px;" id="atkBtn" onclick="heroTurn()">⚔️ STRIKE</button>
             <button class="btn btn-danger" style="padding:15px; margin-top:10px;" onclick="document.getElementById('battleM').style.display='none'">RUN</button>
         </div>
     </div>
@@ -153,8 +149,11 @@ let state = {
     equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}
 };
 
-function save() { localStorage.setItem('questKid_Final_Pro', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('questKid_Final_Pro'); if(s) state = JSON.parse(s); }
+let bActive = false;
+let mHp = 50;
+
+function save() { localStorage.setItem('questKid_Final_Fixed', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('questKid_Final_Fixed'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) {
     state.role = r;
@@ -180,7 +179,7 @@ function updateQuest(i, s) {
         let chance = q.lucky ? 0.8 : 0.3;
         if(Math.random() < chance) state.inv.push(DROPS[Math.floor(Math.random()*DROPS.length)]);
         state.history.push(state.quests.splice(i, 1)[0]);
-        if(state.xp >= 100) { state.lvl++; state.xp -= 100; }
+        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.maxHp += 10; state.hp = state.maxHp; }
     } else { q.status = s; }
     save(); render();
 }
@@ -188,8 +187,6 @@ function updateQuest(i, s) {
 function render() {
     const isP = state.role === 'parent';
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
-    
-    // Toggle Visibility of UI blocks
     document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     
@@ -199,7 +196,6 @@ function render() {
     document.getElementById('hpVal').innerText = state.hp;
     document.getElementById('xpBar').style.width = state.xp + "%";
 
-    // Quest List logic
     let qH = '';
     state.quests.forEach((q, i) => {
         let actions = '';
@@ -207,21 +203,20 @@ function render() {
             actions = `<div>
                 <span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2 Drop</span>
                 ${q.status==='pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="display:inline; padding:4px 8px;">✅</button>` : ''}
-                <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px; margin-left:5px;">🗑️</button>
+                <button onclick="state.quests.splice(${i},1); render();" class="btn btn-danger" style="display:inline; padding:4px 8px; margin-left:5px;">❌</button>
             </div>`;
         } else {
-            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : `⏳ Pending`;
+            actions = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:4px 10px;">DONE</button>` : 
+            `<button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:4px 10px;">RECALL</button>`;
         }
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${actions}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || '<small>No active tasks.</small>';
 
-    // History logic
     let hH = '';
     state.history.forEach(h => hH += `<div class="q-row" style="opacity:0.6"><span>✅ ${h.txt}</span></div>`);
     document.getElementById('historyList').innerHTML = hH || '<small>Nothing completed yet.</small>';
 
-    // Gear & Pets logic
     let gearH = '', petH = '';
     state.inv.forEach((it, i) => {
         const html = `<div class="inv-item" onclick="equip(${i})"><div>${it.i}</div><small>${it.n}</small></div>`;
@@ -230,7 +225,6 @@ function render() {
     document.getElementById('gearGrid').innerHTML = gearH || 'Empty';
     document.getElementById('petGrid').innerHTML = petH || 'Empty';
 
-    // Dollhouse visuals
     for(let s in state.equip) {
         const item = state.equip[s];
         document.getElementById('v-'+s).innerText = item ? item.i : '';
@@ -255,36 +249,55 @@ function equip(i) {
 
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
 
-let mHp = 50;
 function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3;
-    mHp = 50; 
+    mHp = 50 + (state.lvl * 5);
+    bActive = false;
     document.getElementById('mF').innerText = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
-    document.getElementById('battleMsg').innerText = "Battle Start!";
+    document.getElementById('battleMsg').innerText = "Fight!";
     document.getElementById('battleM').style.display = 'flex';
 }
 
-function fightStep() {
+function heroTurn() {
+    if(bActive) return;
+    bActive = true;
+    document.getElementById('atkBtn').disabled = true;
     document.getElementById('hF').style.transform = 'translateX(50px)';
+    
     setTimeout(() => {
-        mHp -= 20;
+        const dmg = 15 + (state.lvl * 2);
+        mHp -= dmg;
+        document.getElementById('battleMsg').innerText = `You hit for ${dmg}!`;
         document.getElementById('hF').style.transform = 'translateX(0)';
+        
         if(mHp <= 0) {
             document.getElementById('battleMsg').innerText = "Victory!";
+            state.gold += 30;
             setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
         } else {
-            document.getElementById('mF').style.transform = 'translateX(-50px)';
-            setTimeout(() => {
-                state.hp -= 10;
-                document.getElementById('mF').style.transform = 'translateX(0)';
-                if(state.hp <= 0) {
-                    document.getElementById('battleMsg').innerText = "Defeat...";
-                    state.hp = 20;
-                    setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
-                }
-                render();
-            }, 300);
+            setTimeout(monsterTurn, 800);
+        }
+    }, 300);
+}
+
+function monsterTurn() {
+    document.getElementById('mF').style.transform = 'translateX(-50px)';
+    setTimeout(() => {
+        const dmg = 10 + state.lvl;
+        state.hp -= dmg;
+        document.getElementById('battleMsg').innerText = `Monster hits for ${dmg}!`;
+        document.getElementById('mF').style.transform = 'translateX(0)';
+        
+        if(state.hp <= 0) {
+            document.getElementById('battleMsg').innerText = "Defeated...";
+            state.hp = 20; 
+            setTimeout(() => { document.getElementById('battleM').style.display='none'; render(); }, 1000);
+        } else {
+            bActive = false;
+            document.getElementById('atkBtn').disabled = false;
+            document.getElementById('battleMsg').innerText = "Your Turn!";
+            render();
         }
     }, 300);
 }
