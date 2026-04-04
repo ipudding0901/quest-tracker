@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - MASTER BUILD V7</title>
+  <title>Quest Kid RPG - MASTER BUILD V8</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -39,6 +39,7 @@
     .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-danger { background: var(--danger); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .lucky-tag { font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); margin-right: 10px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
@@ -161,8 +162,8 @@ const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"}
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 0, max: 0, atk: 0, def: 0 }, curH = { atk: 0, def: 0, maxHp: 100 }, selectedIdx = -1, isActing = false;
 
-function save() { localStorage.setItem('QuestKid_Master_V7', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_Master_V7'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_Master_V8', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_Master_V8'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -175,19 +176,14 @@ function addQuest() {
     render();
 }
 
-// FIX: Corrected task flow logic
 function updateQuest(i, act) {
     if(act === 'done') {
         const q = state.quests[i];
-        state.gold += 50; 
-        state.xp += 40; 
-        state.tokens++; 
+        state.gold += 50; state.xp += 40; state.tokens++; 
         if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(generateItem());
         state.history.unshift(state.quests.splice(i, 1)[0]);
         checkLevelUp();
-    } else { 
-        state.quests[i].status = act; 
-    }
+    } else { state.quests[i].status = act; }
     render();
 }
 
@@ -234,11 +230,9 @@ function render() {
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     document.getElementById('heroStatsNav').style.visibility = isP ? 'hidden' : 'visible';
     document.getElementById('goldVal').innerText = state.gold;
-    
     const tVal = document.getElementById('tokenVal');
     tVal.innerText = state.tokens;
     tVal.className = state.tokens < 0 ? "token-neg" : "";
-    
     document.getElementById('lvlVal').innerText = state.lvl;
     document.getElementById('xpBar').style.width = (state.xp / nextLvlXp * 100) + "%";
     document.getElementById('xpText').innerText = `${state.xp}/${nextLvlXp}`;
@@ -252,11 +246,9 @@ function render() {
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${ui}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || 'No quests.';
-    
     let hH = '';
     state.history.forEach(h => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ COMPLETED</span></div>`; });
     document.getElementById('historyList').innerHTML = hH || 'No history.';
-
     let iH = '';
     state.inv.forEach((it, i) => { iH += `<div class="inv-item" onclick="openItemMenu(${i})" style="border-color:${it.type==='potion'?'var(--success)':'var(--rarity'+it.r+')'}">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div>${it.i}</div></div>`; });
     document.getElementById('gearGrid').innerHTML = iH || 'Empty';
@@ -301,30 +293,71 @@ function startBattle() {
     isActing = false; updateBars();
 }
 
-function fleeBattle() { if(!isActing) { state.tokens -= 1; document.getElementById('battleM').style.display = 'none'; render(); } }
+function fleeBattle() { 
+    if(isActing) return; // Prevent fleeing during animation
+    state.tokens -= 1; 
+    document.getElementById('battleM').style.display = 'none'; 
+    render(); 
+}
+
 function updateBars() { document.getElementById('hHpFill').style.width = (state.hp/curH.maxHp*100) + "%"; document.getElementById('mHpFill').style.width = (curM.hp/curM.max*100) + "%"; document.getElementById('mStatsLbl').innerText = `⚔️${curM.atk} 🛡️${curM.def}`; }
 
 function heroTurn() {
-    if(isActing) return; isActing = true;
-    document.getElementById('atkBtn').disabled = true; document.getElementById('fleeBtn').disabled = true;
-    const hero = document.getElementById('hF'); hero.classList.add('bump-right');
+    if(isActing) return; 
+    isActing = true;
+    // LOCK BUTTONS
+    document.getElementById('atkBtn').disabled = true; 
+    document.getElementById('fleeBtn').disabled = true;
+    
+    const hero = document.getElementById('hF'); 
+    hero.classList.add('bump-right');
+    
     setTimeout(() => {
-        let dmg = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - dmg);
-        updateBars(); hero.classList.remove('bump-right');
+        let dmg = Math.max(5, curH.atk - curM.def); 
+        curM.hp = Math.max(0, curM.hp - dmg);
+        updateBars(); 
+        hero.classList.remove('bump-right');
+        
         if(curM.hp <= 0) { 
-            state.gold += 100; if(Math.random() < 0.25) state.inv.push(generateItem());
-            alert("Victory! +100g"); document.getElementById('battleM').style.display='none'; render(); 
-        } else { setTimeout(monsterTurn, 600); }
+            state.gold += 100; 
+            // LOOT CHECK: Confirming gear drop logic (25% chance)
+            if(Math.random() < 0.25) {
+                const drop = generateItem();
+                state.inv.push(drop);
+                alert("Victory! +100g. Found " + drop.i + " " + drop.n + "!");
+            } else {
+                alert("Victory! +100g");
+            }
+            document.getElementById('battleM').style.display='none'; 
+            render(); 
+        } else { 
+            setTimeout(monsterTurn, 600); 
+        }
     }, 200);
 }
 
 function monsterTurn() {
-    const monster = document.getElementById('mF'); monster.classList.add('bump-left');
+    // BUTTONS STAY LOCKED during monster turn
+    const monster = document.getElementById('mF'); 
+    monster.classList.add('bump-left');
+    
     setTimeout(() => {
-        let dmg = Math.max(5, curM.atk - curH.def); state.hp = Math.max(0, state.hp - dmg);
-        updateBars(); monster.classList.remove('bump-left');
-        if(state.hp <= 0) { state.hp = 20; document.getElementById('battleM').style.display='none'; render(); }
-        else { isActing = false; document.getElementById('atkBtn').disabled = false; document.getElementById('fleeBtn').disabled = false; }
+        let dmg = Math.max(5, curM.atk - curH.def); 
+        state.hp = Math.max(0, state.hp - dmg);
+        updateBars(); 
+        monster.classList.remove('bump-left');
+        
+        if(state.hp <= 0) { 
+            alert("The monster defeated you!");
+            state.hp = 20; 
+            document.getElementById('battleM').style.display='none'; 
+            render(); 
+        } else { 
+            // Turn handed back to player
+            isActing = false; 
+            document.getElementById('atkBtn').disabled = false; 
+            document.getElementById('fleeBtn').disabled = false; 
+        }
     }, 200);
 }
 
