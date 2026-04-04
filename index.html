@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - VERIFIED MASTER BUILD</title>
+  <title>Quest Kid RPG - ULTIMATE MASTER BUILD</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -56,7 +56,6 @@
     .lucky-tag { font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); margin-right: 10px; }
     .lucky-active { background: var(--gold); color: black; border-color: var(--gold); font-weight: bold; }
 
-    /* 2.5D Battle Arena Restored */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
     .arena { position: relative; width: 100%; height: 280px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; }
     .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
@@ -105,6 +104,7 @@
                 <div style="position:absolute; bottom:15px; width:100%; text-align:center; font-size:12px;">
                     LVL <span id="lvlVal">1</span>
                     <div style="width:100px; height:5px; background:rgba(0,0,0,0.5); margin:5px auto; border-radius:3px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
+                    <div style="font-size: 8px; margin-top: 2px;">XP: <span id="xpText">0/100</span></div>
                 </div>
             </div>
             <div class="slot-col">
@@ -113,6 +113,14 @@
                 <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet</span><div id="v-pet" style="font-size:24px;"></div></div>
             </div>
         </div>
+
+        <div class="panel" style="background: #2d3748; border: 1px solid var(--gold);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:var(--gold)">🛒 MERCHANT'S SHOP</strong>
+                <button class="btn" style="background:var(--gold); color:black; padding:5px 15px; font-size:12px;" onclick="buyChest()">BUY MYSTERY CHEST (250g)</button>
+            </div>
+        </div>
+
         <div class="panel">
             <strong>🎒 Inventory</strong>
             <div id="gearGrid" class="inv-grid" style="margin-top:10px;"></div>
@@ -166,8 +174,8 @@ const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"}
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 50, max: 50, atk: 5, def: 2 }, curH = { atk: 0, def: 0, maxHp: 100 }, selectedIdx = -1, isActing = false;
 
-function save() { localStorage.setItem('QuestKid_Verified_Master', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_Verified_Master'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_Ultimate_Master', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_Ultimate_Master'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -186,15 +194,36 @@ function updateQuest(i, act) {
         state.gold += 50; state.xp += 40; state.tokens = Math.min(3, state.tokens + 1);
         if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(generateItem());
         state.history.unshift(state.quests.splice(i, 1)[0]);
-        if(state.xp >= 100) { state.lvl++; state.xp -= 100; state.hp = curH.maxHp; alert("Level Up!"); }
+        checkLevelUp();
     } else { state.quests[i].status = act; }
     render();
 }
 
+function checkLevelUp() {
+    let nextLvlXp = state.lvl * 100; // Exponential Scaling
+    if(state.xp >= nextLvlXp) {
+        state.xp -= nextLvlXp;
+        state.lvl++;
+        state.hp = curH.maxHp;
+        alert(`🎉 LEVEL UP! You are now Level ${state.lvl}!\nNext level requires ${state.lvl * 100} XP.`);
+        checkLevelUp(); // Check again in case of massive XP gain
+    }
+}
+
 function generateItem() {
     let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)];
-    let rar = Math.random() < 0.1 ? 3 : (Math.random() < 0.3 ? 2 : 1);
+    let rarRoll = Math.random();
+    let rar = rarRoll < 0.05 ? 4 : (rarRoll < 0.15 ? 3 : (rarRoll < 0.4 ? 2 : 1));
     return { ...r, v: 0, baseP: Math.floor(Math.random()*3)+1, r: rar };
+}
+
+function buyChest() {
+    if(state.gold < 250) return alert("Not enough gold! You need 250g.");
+    state.gold -= 250;
+    let newItem = generateItem();
+    state.inv.push(newItem);
+    alert(`📦 You opened the chest and found: ${newItem.i} ${newItem.n}!`);
+    render();
 }
 
 function calculateStats() {
@@ -212,13 +241,17 @@ function calculateStats() {
 function render() {
     calculateStats();
     const isP = state.role === 'parent';
+    let nextLvlXp = state.lvl * 100;
+
     document.getElementById('roleLabel').innerText = isP ? "🔑 PARENT" : "🧒 HERO";
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     document.getElementById('heroStatsNav').style.visibility = isP ? 'hidden' : 'visible';
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('xpBar').style.width = state.xp + "%";
+    document.getElementById('xpBar').style.width = (state.xp / nextLvlXp * 100) + "%";
+    document.getElementById('xpText').innerText = `${state.xp}/${nextLvlXp}`;
+    
     document.getElementById('sAtk').innerText = curH.atk;
     document.getElementById('sDef').innerText = curH.def;
     document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
@@ -282,7 +315,18 @@ function heroTurn() {
         curM.hp = Math.max(0, curM.hp - dmg);
         updateBars();
         hero.classList.remove('bump-right');
-        if(curM.hp <= 0) { alert("Victory!"); state.gold += 100; document.getElementById('battleM').style.display='none'; render(); }
+        if(curM.hp <= 0) { 
+            let dropMsg = "";
+            if(Math.random() < 0.25) { // 25% Monster Drop Rate
+                let drop = generateItem();
+                state.inv.push(drop);
+                dropMsg = `\n🎁 The monster dropped: ${drop.i} ${drop.n}!`;
+            }
+            alert(`Victory! You earned 100 Gold!${dropMsg}`); 
+            state.gold += 100; 
+            document.getElementById('battleM').style.display='none'; 
+            render(); 
+        }
         else { setTimeout(monsterTurn, 600); }
     }, 200);
 }
