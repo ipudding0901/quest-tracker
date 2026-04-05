@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.2 DEFINITIVE FULL</title>
+  <title>Quest Kid RPG - V16.3 FULL</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -50,10 +50,12 @@
     
     .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
-    .arena { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; transition: background 0.5s; }
+    .arena { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; transition: background 0.8s; }
     .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
     .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
     
+    .m-mini-stats { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 5px 8px; border-radius: 5px; font-size: 10px; border: 1px solid var(--danger); color: white; }
+
     .battle-locked { pointer-events: none; opacity: 0.7; }
     .dmg-num { position: absolute; font-weight: 900; font-size: 28px; animation: floatUp 0.8s ease-out forwards; pointer-events: none; z-index: 100; text-shadow: 2px 2px #000; }
     @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
@@ -146,14 +148,15 @@
     <div class="panel" style="width:95%; max-width:450px; text-align:center;">
         <h2 id="bossTag" style="display:none; color:var(--danger); margin:0;">⚠️ BOSS ENCOUNTER ⚠️</h2>
         <div class="arena" id="arenaBg">
+            <div class="m-mini-stats">⚔️<span id="mAtkVal">0</span> 🛡️<span id="mDefVal">0</span></div>
             <div id="battleMsg" style="padding:10px; color:white; font-weight:bold; text-shadow:1px 1px #000;">Combat!</div>
             <div id="hF"><div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div><div style="width:40px; height:60px; background:var(--accent); border:2px solid white;"></div></div>
             <div id="mF"><div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div><div id="mEmoji" style="font-size:60px;">👾</div></div>
         </div>
         <div id="battleActions" style="display:flex; gap:10px;">
             <button class="btn btn-p" style="flex:2; padding:18px;" onclick="heroTurn()">⚔️ ATTACK</button>
-            <button class="btn combat-heal-btn" style="flex:1; padding:18px;" onclick="usePotion(true)">🍷 HEAL (x<span id="btlPotCount">0</span>)</button>
-            <button class="btn btn-danger" style="flex:1; padding:18px;" onclick="fleeBattle()">🏃 FLEE</button>
+            <button class="btn combat-heal-btn" style="flex:1; padding:18px;" onclick="usePotion(true)">🍷 (x<span id="btlPotCount">0</span>)</button>
+            <button class="btn btn-danger" style="flex:1; padding:18px;" onclick="fleeBattle()">🏃 FLEE (-1 🎫)</button>
         </div>
     </div>
 </div>
@@ -181,11 +184,19 @@
 
 <script>
 const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Plate",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"},{n:"Dog",i:"🐶",s:"pet"}];
+const BATTLE_BGS = [
+    "linear-gradient(#1e3a8a, #000)", // Deep Sea
+    "linear-gradient(#064e3b, #000)", // Dark Forest
+    "linear-gradient(#78350f, #000)", // Cave
+    "linear-gradient(#312e81, #000)", // Void
+    "linear-gradient(#4c1d95, #000)"  // Magic Ruins
+];
+
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null };
 let curM = { hp: 0, max: 0, atk: 0, def: 0, isBoss: false }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_V16_2', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_V16_2'); if(s) state = JSON.parse(s); checkStreak(); }
+function save() { localStorage.setItem('QuestKid_V16_3', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_V16_3'); if(s) state = JSON.parse(s); checkStreak(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
 function checkStreak() {
@@ -266,10 +277,23 @@ function startBattle() {
     if(state.tokens < 3) return alert("Need 3 Tokens!");
     state.tokens -= 3; state.battleCount++;
     curM.isBoss = (state.battleCount % 5 === 0);
-    document.getElementById('arenaBg').style.background = curM.isBoss ? "linear-gradient(#450a0a, #000)" : "linear-gradient(#1e293b, #000)";
-    document.getElementById('bossTag').style.display = curM.isBoss ? 'block' : 'none';
+    
+    // Set Background
+    if(curM.isBoss) {
+        document.getElementById('arenaBg').style.background = "linear-gradient(#450a0a, #000)";
+        document.getElementById('bossTag').style.display = 'block';
+    } else {
+        document.getElementById('arenaBg').style.background = BATTLE_BGS[Math.floor(Math.random()*BATTLE_BGS.length)];
+        document.getElementById('bossTag').style.display = 'none';
+    }
+
     curM.max = (50 + (state.lvl * 25)) * (curM.isBoss ? 2 : 1); curM.hp = curM.max; 
     curM.atk = (6 + (state.lvl * 5)); curM.def = (2 + (state.lvl * 3));
+    
+    // Show Mini Stats
+    document.getElementById('mAtkVal').innerText = curM.atk;
+    document.getElementById('mDefVal').innerText = curM.def;
+
     document.getElementById('battleM').style.display = 'flex'; updateBars();
 }
 
@@ -322,6 +346,14 @@ function usePotion(isBattle = false) {
     render(); 
 }
 
+function fleeBattle() { 
+    if(isActing) return;
+    if(state.tokens < 1) return alert("Not enough Tokens to flee! (-1 🎫 needed)");
+    state.tokens--;
+    document.getElementById('battleM').style.display = 'none'; 
+    render();
+}
+
 function buyPotion() { if(state.gold < 50) return; state.gold -= 50; state.potions++; render(); }
 function buyChest() { if(state.gold < 250) return; state.gold -= 250; state.inv.push(generateItem()); render(); }
 function openItemMenu(i) {
@@ -342,24 +374,38 @@ function doUpgrade() {
 function doSell() { state.gold += 50; state.inv.splice(selectedIdx, 1); document.getElementById('itemM').style.display = 'none'; render(); }
 function doEquipFromMenu() { const it = state.inv.splice(selectedIdx, 1)[0]; const old = state.equip[it.s]; state.equip[it.s] = it; if(old) state.inv.push(old); document.getElementById('itemM').style.display = 'none'; render(); }
 function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
+
 function addQuest() {
     const v = document.getElementById('qInput').value; if(!v) return;
     state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value, charm: document.getElementById('qCharm').checked });
     document.getElementById('qInput').value = ''; render();
 }
+
 function calculateStats() {
     curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25);
     for(let s in state.equip) { let it = state.equip[s]; if(!it) continue; let power = (it.baseP * 5) + (it.v * 10); if(it.s === 'weapon') curH.atk += power; else curH.def += power; }
 }
+
 function generateItem(isBoss = false) { let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)]; return { ...r, v: isBoss?2:0, baseP: Math.floor(Math.random()*3)+1 }; }
-function checkLevelUp() { let next = state.lvl * 100; if(state.xp >= next) { state.xp -= next; state.lvl++; checkLevelUp(); } }
+
+function checkLevelUp() { 
+    let next = state.lvl * 100; 
+    if(state.xp >= next) { 
+        state.xp -= next; 
+        state.lvl++; 
+        calculateStats(); // Recalculate for new max hp
+        state.hp = curH.maxHp; // HEAL TO MAX ON LEVEL UP
+        checkLevelUp(); 
+    } 
+}
+
 function updateBars() { document.getElementById('hHpFill').style.width = (state.hp/curH.maxHp*100) + "%"; document.getElementById('mHpFill').style.width = (curM.hp/curM.max*100) + "%"; }
 function showDmg(t, a) {
     const b = document.getElementById(t).getBoundingClientRect(); const ar = document.getElementById('arenaBg').getBoundingClientRect();
     const el = document.createElement('div'); el.className = 'dmg-num'; el.innerText = `-${a}`; el.style.left = (b.left - ar.left + 20) + 'px'; el.style.top = (b.top - ar.top) + 'px';
     document.getElementById('arenaBg').appendChild(el); setTimeout(() => el.remove(), 800);
 }
-function fleeBattle() { if(!isActing) { document.getElementById('battleM').style.display = 'none'; } }
+
 load();
 </script>
 </body>
