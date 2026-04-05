@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - MASTER BUILD V14.2</title>
+  <title>Quest Kid RPG - MASTER BUILD V14.3</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -157,8 +157,8 @@ const MONSTERS = ["👾","👹","🐉","👻","🧟","🦂"];
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null} };
 let curM = { hp: 0, max: 0, atk: 0, def: 0 }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_V14_2', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_V14_2'); if(s) state = JSON.parse(s); }
+function save() { localStorage.setItem('QuestKid_V14_3', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_V14_3'); if(s) state = JSON.parse(s); }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
@@ -175,7 +175,6 @@ function startBattle() {
     document.getElementById('battleM').style.display = 'flex'; updateBars();
 }
 
-/** CORE QUEST HANDLER: Handles Recall, Reject, and Done logic **/
 function updateQuest(i, act) {
     if(act === 'done') {
         const q = state.quests[i];
@@ -183,15 +182,8 @@ function updateQuest(i, act) {
         if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(generateItem());
         state.history.unshift(state.quests.splice(i, 1)[0]);
         checkLevelUp();
-    } else if (act === 'open') { 
-        // Parent REJECT button logic
-        state.quests[i].status = 'open'; 
-    } else if (act === 'recall') {
-        // Child RECALL button logic
-        const q = state.history.splice(i, 1)[0];
-        q.status = 'open';
-        state.quests.push(q);
     } else { 
+        // Handles "open", "pending", and recalls
         state.quests[i].status = act; 
     }
     render();
@@ -220,17 +212,33 @@ function render() {
     document.getElementById('lvlVal').innerText = state.lvl; document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100) * 100) + "%";
     document.getElementById('sAtk').innerText = curH.atk; document.getElementById('sDef').innerText = curH.def; document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
 
-    let qH = ''; state.quests.forEach((q, i) => {
-        // Parent buttons include REJECT (Red X)
-        let ui = isP ? `<div style="display:flex; gap:5px;"><span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2</span><button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅</button><button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:5px 10px;">❌</button></div>` : (q.status==='open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>` : `<span style="color:var(--gold)">⏳ PENDING</span>`);
+    let qH = ''; 
+    state.quests.forEach((q, i) => {
+        let ui = '';
+        if (isP) {
+            // Parent view
+            ui = `<div style="display:flex; gap:5px;">
+                    <span onclick="state.quests[${i}].lucky=!state.quests[${i}].lucky; render();" class="lucky-tag ${q.lucky?'lucky-active':''}">🍀 x2</span>
+                    <button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅</button>
+                    <button onclick="updateQuest(${i},'open')" class="btn btn-danger" style="padding:5px 10px;">❌</button>
+                  </div>`;
+        } else {
+            // Child view: Show DONE if open, Show PENDING + RECALL if pending
+            if (q.status === 'open') {
+                ui = `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>`;
+            } else {
+                ui = `<div style="display:flex; align-items:center; gap:10px;">
+                        <span style="color:var(--gold); font-weight:bold;">⏳ PENDING</span>
+                        <button onclick="updateQuest(${i},'open')" class="btn" style="background:var(--border); padding:5px 10px;">🔄 RECALL</button>
+                      </div>`;
+            }
+        }
         qH += `<div class="q-row"><span>${q.txt} ${q.lucky?'🍀':''}</span>${ui}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || 'No active quests.';
     
     let hH = ''; state.history.forEach((h, i) => { 
-        // Child Recall button for fixing mistakes
-        let recallBtn = !isP ? `<button onclick="updateQuest(${i},'recall')" class="btn" style="background:var(--border); font-size:10px; padding:4px 8px;">🔄 RECALL</button>` : '';
-        hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span>${recallBtn}</div>`; 
+        hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; 
     });
     document.getElementById('historyList').innerHTML = hH || 'No history.';
     
