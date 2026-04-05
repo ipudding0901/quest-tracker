@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.0 DEFINITIVE</title>
+  <title>Quest Kid RPG - V16.2 DEFINITIVE FULL</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -45,7 +45,8 @@
     .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-danger { background: var(--danger); }
-    .btn-heal { background: var(--heal); color: white; font-size: 10px; padding: 4px 8px; position: absolute; right: 10px; }
+    .btn-heal { background: var(--heal); color: white; font-size: 10px; padding: 4px 8px; }
+    .combat-heal-btn { background: var(--heal); }
     
     .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
@@ -92,7 +93,7 @@
     <div id="childGameView">
         <div class="stats-bar">
             <span>⚔️ ATK: <b id="sAtk">0</b></span> | 🛡️ DEF: <b id="sDef">0</b> | ❤️ HP: <b id="sHp">0/0</b>
-            <button class="btn btn-heal" onclick="usePotion()">🍷 HEAL (x<span id="potCount">0</span>)</button>
+            <button class="btn btn-heal" onclick="usePotion(false)" style="position:absolute; right:10px;">🍷 HEAL (x<span id="potCount">0</span>)</button>
         </div>
         <div class="char-grid">
             <div class="slot-col">
@@ -151,6 +152,7 @@
         </div>
         <div id="battleActions" style="display:flex; gap:10px;">
             <button class="btn btn-p" style="flex:2; padding:18px;" onclick="heroTurn()">⚔️ ATTACK</button>
+            <button class="btn combat-heal-btn" style="flex:1; padding:18px;" onclick="usePotion(true)">🍷 HEAL (x<span id="btlPotCount">0</span>)</button>
             <button class="btn btn-danger" style="flex:1; padding:18px;" onclick="fleeBattle()">🏃 FLEE</button>
         </div>
     </div>
@@ -182,8 +184,8 @@ const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"}
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null };
 let curM = { hp: 0, max: 0, atk: 0, def: 0, isBoss: false }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_V16', JSON.stringify(state)); }
-function load() { const s = localStorage.getItem('QuestKid_V16'); if(s) state = JSON.parse(s); checkStreak(); }
+function save() { localStorage.setItem('QuestKid_V16_2', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_V16_2'); if(s) state = JSON.parse(s); checkStreak(); }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
 function checkStreak() {
@@ -230,6 +232,7 @@ function render() {
     document.getElementById('goldVal').innerText = state.gold; 
     document.getElementById('tokenVal').innerText = state.tokens;
     document.getElementById('potCount').innerText = state.potions;
+    document.getElementById('btlPotCount').innerText = state.potions;
     document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
     document.getElementById('lvlVal').innerText = state.lvl;
     document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100) * 100) + "%";
@@ -296,7 +299,29 @@ function monsterTurn() {
     }, 200); 
 }
 
-function usePotion() { if(state.potions <= 0 || state.hp >= curH.maxHp) return; state.potions--; state.hp = Math.min(state.hp + 50, curH.maxHp); render(); }
+function usePotion(isBattle = false) { 
+    if(state.potions <= 0 || state.hp >= curH.maxHp) return; 
+    if(isBattle && isActing) return;
+
+    if(isBattle) {
+        isActing = true;
+        document.getElementById('battleActions').classList.add('battle-locked');
+        document.getElementById('battleMsg').innerText = "Healed +50 HP!";
+    }
+
+    state.potions--; state.hp = Math.min(state.hp + 50, curH.maxHp); 
+    
+    if(isBattle) {
+        updateBars();
+        setTimeout(() => {
+            document.getElementById('battleMsg').innerText = "Combat!";
+            isActing = false;
+            document.getElementById('battleActions').classList.remove('battle-locked');
+        }, 800);
+    }
+    render(); 
+}
+
 function buyPotion() { if(state.gold < 50) return; state.gold -= 50; state.potions++; render(); }
 function buyChest() { if(state.gold < 250) return; state.gold -= 250; state.inv.push(generateItem()); render(); }
 function openItemMenu(i) {
