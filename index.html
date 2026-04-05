@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - BUILD V15.3</title>
+  <title>Quest Kid RPG - V15.4 Stability</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -176,10 +176,12 @@ let state = {
 
 let curM = { hp: 0, max: 0, atk: 0, def: 0, isBoss: false }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_V15_3', JSON.stringify(state)); }
+function save() { localStorage.setItem('QuestKid_V15_4', JSON.stringify(state)); }
 function load() { 
-    const s = localStorage.getItem('QuestKid_V15_3'); 
-    if(s) state = JSON.parse(s);
+    const s = localStorage.getItem('QuestKid_V15_4'); 
+    if(s) {
+        try { state = JSON.parse(s); } catch(e) { console.error("Load failed, using default state"); }
+    }
     checkStreak();
 }
 
@@ -191,7 +193,6 @@ function checkStreak() {
         if (state.lastDate === yesterday.toDateString()) {
             state.streak++;
             state.gold += (state.streak * 50);
-            alert(`🔥 STREAK BONUS! +${state.streak * 50} Gold!`);
         } else { state.streak = 1; }
     } else { state.streak = 1; }
     state.lastDate = today;
@@ -220,13 +221,13 @@ function updateQuest(i, act) {
     const q = state.quests[i];
 
     if(act === 'done') {
-        if(!isP) return; // HERO CANNOT APPROVE OWN TASK
-        if(q.status !== 'pending') return alert("Hero must mark this done first!");
+        if(!isP) return; // Child cannot self-approve
+        if(q.status !== 'pending') return alert("Child must finish first!");
         
         const rewards = { easy: {g:25, x:20}, medium: {g:50, x:40}, hard: {g:100, x:80} };
         const tier = q.tier || 'medium';
         state.gold += rewards[tier].g; state.xp += rewards[tier].x; state.tokens++;
-        if(Math.random() < (q.lucky ? 0.8 : 0.3)) state.inv.push(generateItem());
+        if(Math.random() < 0.3) state.inv.push(generateItem());
         state.history.unshift(state.quests.splice(i, 1)[0]);
         checkLevelUp();
     } else if (act === 'delete') {
@@ -241,7 +242,6 @@ function render() {
     calculateStats();
     const isP = state.role === 'parent';
     
-    // UI Logic
     document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     
@@ -261,18 +261,18 @@ function render() {
     state.quests.forEach((q, i) => {
         let controls = '';
         if(isP) {
-            // Parent sees Approve ONLY if child marked it pending.
-            const approveBtn = q.status === 'pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅ APPROVE</button>` : `<span style="color:#94a3b8; font-size:10px;">⏳ WAITING FOR HERO</span>`;
+            // Parent can only approve if child submitted (pending)
+            const approveBtn = q.status === 'pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅ APPROVE</button>` : `<span style="color:#64748b; font-size:10px;">⏳ WAITING</span>`;
             controls = `<div style="display:flex; gap:5px;">${approveBtn}<button onclick="updateQuest(${i},'delete')" class="btn btn-danger" style="padding:5px 10px;">❌</button></div>`;
         } else {
-            // Child sees Done button if open.
-            controls = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>` : `<span style="color:var(--gold); font-size:11px;">⏳ PENDING APPROVAL</span>`;
+            // Child marks done
+            controls = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>` : `<span style="color:var(--gold); font-size:11px;">⏳ PENDING</span>`;
         }
         qH += `<div class="q-row"><span>${q.txt} <small style="color:var(--accent)">(${q.tier})</small></span>${controls}</div>`;
     });
     document.getElementById('activeQuestList').innerHTML = qH || 'No active quests.';
     
-    let hH = ''; state.history.forEach((h, i) => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; });
+    let hH = ''; state.history.forEach((h) => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; });
     document.getElementById('historyList').innerHTML = hH || 'No history.';
     
     let iH = ''; state.inv.forEach((it, i) => { iH += `<div class="inv-item" onclick="openItemMenu(${i})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div>${it.i}</div></div>`; });
@@ -288,7 +288,7 @@ function addQuest() {
     const v = document.getElementById('qInput').value;
     const tier = document.getElementById('qDifficulty').value;
     if(!v) return;
-    state.quests.push({txt: v, status: 'open', lucky: false, tier: tier});
+    state.quests.push({txt: v, status: 'open', tier: tier});
     document.getElementById('qInput').value = ''; render();
 }
 
@@ -308,12 +308,12 @@ function checkLevelUp() {
 
 function calculateStats() {
     curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25);
-    for(let s in state.equip) { let it = state.equip[s]; if(!it) continue; let p = (it.baseP * 4) + (it.v * 7); if(s === 'weapon') curH.atk += p * 2; if(['helmet','armor','shoes'].includes(s)) curH.def += p; }
+    for(let s in state.equip) { let it = state.equip[s]; if(!it) continue; let p = (it.baseP * 4) + (it.v * 7); if(it.s === 'weapon') curH.atk += p * 2; else curH.def += p; }
 }
 
 function openItemMenu(i) { selectedIdx = i; const it = state.inv[i]; document.getElementById('mItemTitle').innerText = it.n + (it.v>0?` +${it.v}`:''); document.getElementById('mItemIcon').innerText = it.i; document.getElementById('mItemStats').innerText = `Base Power: ${it.baseP}`; const dupe = state.inv.findIndex((x, idx) => idx !== i && x.n === it.n && x.v === it.v && x.baseP === it.baseP); document.getElementById('upgradeBtn').disabled = (dupe === -1); document.getElementById('itemM').style.display = 'flex'; }
 function doUpgrade() { const it = state.inv[selectedIdx]; const dupe = state.inv.findIndex((x, idx) => idx !== selectedIdx && x.n === it.n && x.v === it.v && x.baseP === it.baseP); state.inv[selectedIdx].v++; state.inv.splice(dupe, 1); document.getElementById('itemM').style.display = 'none'; render(); }
-function showDmg(t, a) { const b = document.getElementById(t).getBoundingClientRect(); const ar = document.getElementById('arenaBg').getBoundingClientRect(); const el = document.createElement('div'); el.className = 'dmg-num'; el.innerText = `-${a}`; el.style.color = '#ff4444'; el.style.left = (b.left - ar.left + 20) + 'px'; el.style.top = (b.top - ar.top) + 'px'; document.getElementById('arenaBg').appendChild(el); setTimeout(() => el.remove(), 800); }
+function showDmg(t, a) { const b = document.getElementById(t).getBoundingClientRect(); const ar = document.getElementById('arenaBg').getBoundingClientRect(); const el = document.createElement('div'); el.className = 'dmg-num'; el.innerText = `-${a}`; el.style.left = (b.left - ar.left + 20) + 'px'; el.style.top = (b.top - ar.top) + 'px'; document.getElementById('arenaBg').appendChild(el); setTimeout(() => el.remove(), 800); }
 
 function heroTurn() { 
     if(isActing) return; isActing = true; 
@@ -321,7 +321,6 @@ function heroTurn() {
     setTimeout(() => { 
         let d = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - d); showDmg('mF', d); updateBars(); h.classList.remove('bump-right'); 
         if(curM.hp <= 0) { 
-            alert(curM.isBoss ? "🔥 BOSS DEFEATED! 🔥" : "Victory!"); 
             state.gold += curM.isBoss ? 500 : 100; state.inv.push(generateItem(curM.isBoss));
             document.getElementById('battleM').style.display='none'; render(); isActing = false;
         } else { setTimeout(monsterTurn, 600); } 
@@ -332,7 +331,7 @@ function monsterTurn() {
     const m = document.getElementById('mF'); m.classList.add('bump-left'); 
     setTimeout(() => { 
         let d = Math.max(5, curM.atk - curH.def); state.hp = Math.max(0, state.hp - d); showDmg('hF', d); updateBars(); m.classList.remove('bump-left'); 
-        if(state.hp <= 0) { alert("Defeat!"); state.hp = 20; document.getElementById('battleM').style.display='none'; render(); isActing = false; } else { isActing = false; } 
+        if(state.hp <= 0) { state.hp = 20; document.getElementById('battleM').style.display='none'; render(); isActing = false; } else { isActing = false; } 
     }, 200); 
 }
 
