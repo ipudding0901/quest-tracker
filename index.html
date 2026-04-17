@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.9</title>
+  <title>Quest Kid RPG - V17.0 Full Restore</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -42,16 +42,25 @@
     .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
     .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
-    
+    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+
     .q-row { background: var(--bg); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
     .pending-row { border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.05); }
     
-    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn-p { background: var(--accent); color: #0f172a; }
-    .btn-sm { padding: 4px 8px; font-size: 10px; }
+    .btn-danger { background: var(--danger); }
     
-    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 100px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px 5px 5px 5px; margin-top: 10px; gap: 2px; }
-    .bar { width: 6px; border-radius: 2px 2px 0 0; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
+    .modal-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+    
+    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px 10px 10px 10px; margin-top: 10px; border: 1px solid var(--border); gap: 4px; }
+    .bar-stack { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
+    .bar { width: 50%; border-radius: 2px 2px 0 0; min-height: 2px; }
+    .bar.income { background: var(--success); }
+    .bar.expense { background: var(--danger); }
+    
+    .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
   </style>
 </head>
 <body>
@@ -69,35 +78,35 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <strong id="roleLabel" style="color:var(--accent);">HERO</strong>
             <span id="streakDisplay" class="streak-badge">🔥 0 DAY STREAK</span>
-            <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="save()">💾 SAVE</button>
-            <button class="btn btn-sm" style="background:var(--border);" onclick="location.reload()">EXIT</button>
+            <button class="btn" style="font-size:10px; padding:4px 8px; background:var(--success); color:black;" onclick="save()">💾 SAVE</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
-            <div class="gold-box">💰 <span id="goldVal">0</span></div>
-            <button class="btn btn-p btn-sm" onclick="alert('Battle Logic Engaged!')">⚔️ BATTLE (<span id="tokenVal">0</span>)</button>
+            <div class="gold-box" onclick="openShop()">💰 <span id="goldVal">0</span></div>
+            <button class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
     </div>
 
     <div id="childGameView">
         <div class="stats-bar">
-            <span>⚔️ <b id="sAtk">0</b></span> | 🛡️ <b id="sDef">0</b> | ❤️ <b id="sHp">0/0</b>
-            <button class="btn btn-sm" style="background:var(--heal); position:absolute; right:5px; top:5px;">🍷 HEAL</button>
+            <span>⚔️ ATK: <b id="sAtk">0</b></span> | 🛡️ DEF: <b id="sDef">0</b> | ❤️ HP: <b id="sHp">0/0</b>
+            <button class="btn" style="background:var(--heal); font-size:10px; padding:2px 8px;" onclick="usePotion()">🍷 HEAL (x<span id="potCount">0</span>)</button>
         </div>
         <div class="char-grid">
             <div class="slot-col">
-                <div class="slot"><span class="slot-label">Head</span><div id="v-helmet"></div></div>
-                <div class="slot"><span class="slot-label">Weapon</span><div id="v-weapon"></div></div>
+                <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head</span><div id="v-helmet" style="font-size:24px;"></div></div>
+                <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Weapon</span><div id="v-weapon" style="font-size:24px;"></div></div>
             </div>
             <div class="doll-house">
                 <div class="hero-base"><div class="h-head"></div><div class="h-body"></div></div>
-                <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:11px;">
+                <div style="position:absolute; bottom:15px; width:100%; text-align:center; font-size:12px;">
                     LVL <span id="lvlVal">1</span>
-                    <div style="width:80px; height:4px; background:rgba(0,0,0,0.5); margin:4px auto; border-radius:2px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
+                    <div style="width:100px; height:5px; background:rgba(0,0,0,0.5); margin:5px auto; border-radius:3px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
+                    <div id="bossInfo" style="font-size:9px; color:var(--gold);">Boss in: <span id="bossCounter">5</span></div>
                 </div>
             </div>
             <div class="slot-col">
-                <div class="slot"><span class="slot-label">Body</span><div id="v-armor"></div></div>
-                <div class="slot"><span class="slot-label">Pet</span><div id="v-pet"></div></div>
+                <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body</span><div id="v-armor" style="font-size:24px;"></div></div>
+                <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet</span><div id="v-pet" style="font-size:24px;"></div></div>
             </div>
         </div>
 
@@ -115,14 +124,14 @@
     <div class="panel">
         <h3 id="questBoardTitle">📜 Quest Board</h3>
         <div id="parentQuestInput">
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter new quest...">
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter task...">
                 <select id="qDiff" class="p-input">
                     <option value="easy">Easy (25g)</option>
                     <option value="medium" selected>Medium (50g)</option>
                     <option value="hard">Hard (100g)</option>
                 </select>
-                <button class="btn btn-p" onclick="addQuest()" style="width:40px;">+</button>
+                <button class="btn btn-p" onclick="addQuest()" style="width:50px; font-size:20px;">+</button>
             </div>
         </div>
         <div id="questList"></div>
@@ -132,116 +141,313 @@
     <div id="moneyBox" class="collapse-content show">
         <div class="panel">
             <div style="text-align:center; font-size:20px; color:var(--gold); margin-bottom:10px;">Balance: $<span id="realBalance">0.00</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:bold; color:var(--accent);">YEARLY TREND</span>
+                <select id="chartYear" class="p-input" style="padding:2px 5px; font-size:10px;" onchange="render()"></select>
+            </div>
             <div id="chartContainer" class="chart-container"></div>
+            
+            <div style="margin-top:15px; display:flex; flex-direction:column; gap:5px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                    <input id="mDate" type="date" class="p-input">
+                    <select id="mType" class="p-input"><option value="income">Income (+)</option><option value="expense">Expense (-)</option></select>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <input id="mAmt" type="number" class="p-input" style="width:80px;" placeholder="$">
+                    <input id="mDesc" class="p-input" style="flex:1;" placeholder="Description...">
+                    <button class="btn btn-p" onclick="addTrans()">ADD</button>
+                </div>
+            </div>
             <div id="ledger" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
         </div>
     </div>
 </div>
 
-<script>
-let state = { role:'child', gold:0, lvl:1, xp:0, hp:100, tokens:0, quests:[], inv:[], ledger:[], streak:0, lastDate:null };
-const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Dog",i:"🐶",s:"pet"},{n:"Shield",i:"🛡️",s:"shield"}];
+<div id="battleM" class="modal-overlay">
+    <div class="modal-card" style="text-align:center;">
+        <h2 id="battleTitle">ENEMY SPOTTED!</h2>
+        <div id="battleArena" style="height:150px; background:rgba(0,0,0,0.5); border-radius:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; font-size:60px;"></div>
+        <div style="margin-bottom:10px;">HP: <span id="eHp">0</span></div>
+        <div id="battleLog" style="height:60px; font-size:11px; overflow-y:auto; background:rgba(0,0,0,0.2); margin-bottom:15px; padding:5px;"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="btn btn-p" style="padding:15px;" onclick="attack()">⚔️ ATTACK</button>
+            <button id="fleeBtn" class="btn btn-danger" onclick="flee()">🏃 FLEE (<span id="fleeCount">0</span>)</button>
+        </div>
+    </div>
+</div>
 
-function save() { localStorage.setItem('QuestKid_Global_Save', JSON.stringify(state)); }
+<div id="shopM" class="modal-overlay">
+    <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3>🏪 SHOP</h3><button onclick="closeModals()">❌</button></div>
+        <div id="shopList"></div>
+    </div>
+</div>
+
+<div id="itemM" class="modal-overlay">
+    <div class="modal-card" id="itemDetails"></div>
+</div>
+
+<script>
+const GEAR_DB = [
+    {n:"Steel Sword",i:"⚔️",s:"weapon",v:5},{n:"Shield",i:"🛡️",s:"shield",v:5},
+    {n:"Iron Helm",i:"🪖",s:"helmet",v:3},{n:"Plate Mail",i:"👕",s:"armor",v:8},
+    {n:"Swift Boots",i:"👢",s:"shoes",v:2},{n:"Wolf",i:"🐺",s:"pet",v:10},
+    {n:"Cat",i:"🐱",s:"pet",v:2},{n:"Dragon",i:"🐲",s:"pet",v:25}
+];
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let state = { 
+    role:'child', gold:0, lvl:1, xp:0, hp:100, tokens:0, potions:0, fleeTokens:1, 
+    quests:[], inv:[], ledger:[], streak:0, lastDate:null, battleCount:0,
+    equip: {helmet:null, weapon:null, shield:null, armor:null, pet:null}
+};
+let curE = null;
+
+function save() { localStorage.setItem('QuestKid_Full_V17', JSON.stringify(state)); }
 function load() {
-    const s = localStorage.getItem('QuestKid_Global_Save');
+    const s = localStorage.getItem('QuestKid_Full_V17');
     if(s) state = JSON.parse(s);
+    if(!state.ledger) state.ledger = [];
+    document.getElementById('mDate').valueAsDate = new Date();
+    populateYearSelect();
     render();
 }
 
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 
-function addQuest() {
-    const txt = document.getElementById('qInput').value;
-    if(!txt) return;
-    state.quests.push({ id: Date.now(), txt: txt, tier: document.getElementById('qDiff').value, status: 'open' });
-    document.getElementById('qInput').value = '';
-    render();
-}
-
-// THE FIX: Status management functions
-function setQuestStatus(id, newStatus) {
-    const q = state.quests.find(x => x.id === id);
-    if(q) q.status = newStatus;
-    render();
-}
-
-function approveQuest(id) {
-    const idx = state.quests.findIndex(x => x.id === id);
-    const q = state.quests.splice(idx, 1)[0];
-    const rewards = { easy: 25, medium: 50, hard: 100 };
-    state.gold += rewards[q.tier];
-    state.xp += 20;
-    state.tokens++;
-    state.ledger.push({ date: new Date().toLocaleDateString(), amt: rewards[q.tier]/10, desc: `Quest: ${q.txt}`, type: 'income' });
-    render();
+function populateYearSelect() {
+    const s = document.getElementById('chartYear');
+    const y = new Date().getFullYear();
+    for(let i = y-1; i <= y+1; i++) {
+        let o = document.createElement('option'); o.value = i; o.text = i;
+        if(i === y) o.selected = true;
+        s.appendChild(o);
+    }
 }
 
 function render() {
     const isP = state.role === 'parent';
+    const atk = 5 + (state.lvl * 3) + (state.equip.weapon ? state.equip.weapon.v : 0);
+    const def = 2 + (state.lvl * 2) + (state.equip.armor ? state.equip.armor.v : 0);
+    const maxHp = 100 + (state.lvl * 25);
+
     document.getElementById('roleLabel').innerText = isP ? "👑 PARENT" : "🛡️ HERO";
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     document.getElementById('parentQuestInput').style.display = isP ? 'block' : 'none';
+    
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
-    
-    // Quest Rendering Logic
+    document.getElementById('sAtk').innerText = atk;
+    document.getElementById('sDef').innerText = def;
+    document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + maxHp;
+    document.getElementById('lvlVal').innerText = state.lvl;
+    document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100)) * 100 + "%";
+    document.getElementById('potCount').innerText = state.potions;
+    document.getElementById('bossCounter').innerText = 5 - (state.battleCount % 5);
+
+    // Quests Rendering
     let qH = '';
     state.quests.forEach(q => {
-        let actionBtn = '';
-        if (isP) {
-            // Parent sees APPROVE/REJECT if pending, or DELETE if open
-            if (q.status === 'pending') {
-                actionBtn = `
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
-                        <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>
-                    </div>`;
-            } else {
-                actionBtn = `<button class="btn btn-sm" style="background:var(--danger);" onclick="state.quests = state.quests.filter(x=>x.id!==${q.id}); render();">DELETE</button>`;
-            }
-        } else {
-            // Child sees DONE if open, or RECALL if pending
-            if (q.status === 'open') {
-                actionBtn = `<button class="btn btn-p btn-sm" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>`;
-            } else {
-                actionBtn = `
-                    <div style="text-align:right;">
-                        <span style="font-size:9px; color:var(--gold); display:block;">PENDING...</span>
-                        <button class="btn btn-sm" style="background:var(--danger); margin-top:3px;" onclick="setQuestStatus(${q.id}, 'open')">RECALL</button>
-                    </div>`;
-            }
-        }
-
-        qH += `
-            <div class="q-row ${q.status === 'pending' ? 'pending-row' : ''}">
-                <div>
-                    <span style="font-size:10px; color:var(--accent); font-weight:bold;">${q.tier.toUpperCase()}</span><br>
-                    ${q.txt}
-                </div>
-                ${actionBtn}
-            </div>`;
+        let btn = isP ? (q.status === 'pending' ? 
+            `<button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
+             <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>` : 
+            `<button class="btn btn-sm" style="background:var(--danger);" onclick="deleteQuest(${q.id})">DELETE</button>`) : 
+            (q.status === 'open' ? `<button class="btn btn-p" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>` : 
+            `<button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">RECALL</button>`);
+        
+        qH += `<div class="q-row ${q.status === 'pending' ? 'pending-row' : ''}">
+            <div><small style="color:var(--accent)">${q.tier.toUpperCase()}</small><br>${q.txt}</div>
+            <div style="display:flex; gap:5px;">${btn}</div>
+        </div>`;
     });
-    document.getElementById('questList').innerHTML = qH || '<div style="opacity:0.5; text-align:center;">No quests active.</div>';
+    document.getElementById('questList').innerHTML = qH || 'No quests.';
 
     // Inventory Sorting
     const gear = state.inv.filter(x => x.s !== 'pet');
     const pets = state.inv.filter(x => x.s === 'pet');
-    document.getElementById('gearGrid').innerHTML = gear.map(i => `<div class="inv-item">${i.i}</div>`).join('');
-    document.getElementById('petGrid').innerHTML = pets.map(i => `<div class="inv-item">${i.i}</div>`).join('');
+    const buildInv = (arr) => arr.map((item, i) => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(item)})">${item.i}</div>`).join('');
+    document.getElementById('gearGrid').innerHTML = buildInv(gear);
+    document.getElementById('petGrid').innerHTML = buildInv(pets);
+    
+    for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
 
-    // Money Tracker
+    // Ledger & Chart
     let bal = 0;
-    document.getElementById('ledger').innerHTML = state.ledger.map(l => {
-        bal += l.amt;
-        return `<div style="font-size:11px; border-bottom:1px solid #334155; padding:4px 0;">$${l.amt.toFixed(2)} - ${l.desc}</div>`;
-    }).reverse().join('');
+    const year = parseInt(document.getElementById('chartYear').value);
+    const monthly = Array.from({length:12}, () => ({i:0, e:0}));
+    
+    let lH = '';
+    state.ledger.forEach(t => {
+        const d = new Date(t.date);
+        bal += (t.type === 'income' ? t.amt : -t.amt);
+        if(d.getFullYear() === year) {
+            monthly[d.getMonth()][t.type === 'income' ? 'i' : 'e'] += t.amt;
+        }
+        lH += `<div style="font-size:11px; padding:3px; border-bottom:1px solid #334155;">$${t.amt.toFixed(2)} - ${t.desc}</div>`;
+    });
     document.getElementById('realBalance').innerText = bal.toFixed(2);
+    document.getElementById('ledger').innerHTML = lH;
+
+    let maxM = 1; monthly.forEach(m => maxM = Math.max(maxM, m.i, m.e));
+    document.getElementById('chartContainer').innerHTML = monthly.map((m, i) => `
+        <div style="flex:1; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;">
+            <div class="bar-stack">
+                <div class="bar income" style="height:${(m.i/maxM)*100}%"></div>
+                <div class="bar expense" style="height:${(m.e/maxM)*100}%"></div>
+            </div>
+            <span style="font-size:8px;">${MONTHS[i]}</span>
+        </div>`).join('');
 
     save();
 }
 
+// BATTLE LOGIC
+function startBattle() {
+    if(state.tokens <= 0) return alert("Complete quests for Battle Tokens!");
+    const isBoss = (state.battleCount + 1) % 5 === 0;
+    curE = { 
+        name: isBoss ? "BOSS MONSTER" : "MONSTER",
+        hp: isBoss ? 200 + (state.lvl * 50) : 50 + (state.lvl * 20),
+        atk: isBoss ? 15 + (state.lvl * 5) : 5 + (state.lvl * 2),
+        icon: isBoss ? "👹" : ["👾","👻","🐍","🐅"][Math.floor(Math.random()*4)]
+    };
+    document.getElementById('battleArena').innerText = curE.icon;
+    document.getElementById('eHp').innerText = curE.hp;
+    document.getElementById('battleTitle').innerText = isBoss ? "⚠️ BOSS BATTLE!" : "ENEMY SPOTTED!";
+    document.getElementById('fleeCount').innerText = state.fleeTokens;
+    document.getElementById('battleLog').innerHTML = "A wild monster appears!";
+    document.getElementById('battleM').style.display = 'flex';
+}
+
+function attack() {
+    const pAtk = 5 + (state.lvl * 3) + (state.equip.weapon ? state.equip.weapon.v : 0);
+    const pDef = 2 + (state.lvl * 2) + (state.equip.armor ? state.equip.armor.v : 0);
+    
+    // Player Hits
+    curE.hp -= pAtk;
+    document.getElementById('eHp').innerText = Math.max(0, curE.hp);
+    document.getElementById('battleLog').innerHTML += `<br>You hit for ${pAtk}!`;
+    
+    if(curE.hp <= 0) {
+        state.battleCount++;
+        state.tokens--;
+        state.xp += 50;
+        state.gold += 10;
+        checkLevelUp();
+        alert("VICTORY!");
+        closeModals();
+        render();
+        return;
+    }
+
+    // Enemy Hits
+    const dmg = Math.max(1, curE.atk - pDef);
+    state.hp -= dmg;
+    document.getElementById('battleLog').innerHTML += `<br>Enemy hits for ${dmg}!`;
+    
+    if(state.hp <= 0) {
+        alert("DEFEAT! You were knocked out.");
+        state.hp = 10;
+        state.tokens = 0;
+        closeModals();
+        render();
+    }
+}
+
+function flee() {
+    if(state.fleeTokens > 0) {
+        state.fleeTokens--;
+        state.tokens--;
+        closeModals();
+        render();
+    }
+}
+
+// QUESTS & OTHER
+function addQuest() {
+    const v = document.getElementById('qInput').value;
+    if(v) { state.quests.push({id:Date.now(), txt:v, status:'open', tier:document.getElementById('qDiff').value}); render(); }
+}
+function setQuestStatus(id, s) { const q = state.quests.find(x=>x.id===id); if(q) q.status = s; render(); }
+function approveQuest(id) {
+    const idx = state.quests.findIndex(x=>x.id===id);
+    const q = state.quests.splice(idx, 1)[0];
+    const rew = {easy:25, medium:50, hard:100};
+    state.gold += rew[q.tier];
+    state.xp += 20;
+    state.tokens++;
+    state.ledger.push({date:new Date().toLocaleDateString(), amt:rew[q.tier]/10, desc:`Quest: ${q.txt}`, type:'income'});
+    checkLevelUp();
+    render();
+}
+function deleteQuest(id) { state.quests = state.quests.filter(x=>x.id!==id); render(); }
+function checkLevelUp() {
+    const target = state.lvl * 100;
+    if(state.xp >= target) {
+        state.xp -= target;
+        state.lvl++;
+        state.hp = 100 + (state.lvl * 25); // Full Heal
+        state.fleeTokens++;
+        alert("LEVEL UP!");
+    }
+}
+function usePotion() {
+    if(state.potions > 0) {
+        state.hp = 100 + (state.lvl * 25);
+        state.potions--;
+        render();
+    }
+}
+function addTrans() {
+    const a = parseFloat(document.getElementById('mAmt').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value;
+    if(a && d && dt) { state.ledger.push({amt:a, desc:d, type:t, date:dt}); render(); }
+}
+function openShop() {
+    const items = [
+        {n:"Health Potion", i:"🍷", p:20, type:"pot"},
+        {n:"Steel Sword", i:"⚔️", p:150, type:"gear", s:"weapon", v:12},
+        {n:"Iron Plate", i:"👕", p:200, type:"gear", s:"armor", v:15}
+    ];
+    document.getElementById('shopList').innerHTML = items.map(it => `
+        <div class="q-row">
+            <div>${it.i} ${it.n} (${it.p}g)</div>
+            <button class="btn btn-p btn-sm" onclick="buyItem(${JSON.stringify(it).replace(/"/g, '&quot;')})">BUY</button>
+        </div>`).join('');
+    document.getElementById('shopM').style.display = 'flex';
+}
+function buyItem(it) {
+    if(state.gold >= it.p) {
+        state.gold -= it.p;
+        if(it.type === 'pot') state.potions++;
+        else state.inv.push(it);
+        render();
+    } else alert("Not enough gold!");
+}
+function openItemMenu(idx) {
+    const it = state.inv[idx];
+    document.getElementById('itemDetails').innerHTML = `
+        <h2 style="text-align:center;">${it.i} ${it.n}</h2>
+        <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="equip(${idx})">EQUIP</button>
+        <button class="btn btn-danger" style="width:100%; padding:10px;" onclick="state.inv.splice(${idx},1); closeModals(); render();">DISCARD</button>
+    `;
+    document.getElementById('itemM').style.display = 'flex';
+}
+function equip(idx) {
+    const it = state.inv.splice(idx, 1)[0];
+    if(state.equip[it.s]) state.inv.push(state.equip[it.s]);
+    state.equip[it.s] = it;
+    closeModals();
+    render();
+}
+function unequip(s) {
+    if(state.equip[s]) {
+        state.inv.push(state.equip[s]);
+        state.equip[s] = null;
+        render();
+    }
+}
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
+function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
 load();
 </script>
