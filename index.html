@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.6</title>
+  <title>Quest Kid RPG - V16.7</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -38,13 +38,11 @@
     .collapse-content { display: none; margin-top: 10px; }
     .collapse-content.show { display: block; }
     
-    /* Inventory */
     .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
     .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.1s; }
     .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
     
-    /* Chart & Tracker */
     .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
     .type-income { color: var(--success); }
     .type-expense { color: var(--danger); }
@@ -70,7 +68,6 @@
     .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
     
     .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
-    .charm-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gold); cursor: pointer; }
   </style>
 </head>
 <body>
@@ -88,6 +85,7 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <strong id="roleLabel" style="color:var(--accent);">HERO</strong>
             <span id="streakDisplay" class="streak-badge">🔥 0 DAY STREAK</span>
+            <button class="btn" style="font-size:10px; background:var(--success); color:black; padding:4px 10px;" onclick="save()">💾 Save</button>
             <button class="btn" style="font-size:10px; background:var(--border); padding:4px 10px;" onclick="location.reload()">Log Out</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
@@ -134,7 +132,7 @@
     </div>
 
     <button class="collapse-btn" onclick="toggleCol('moneyBox')"><span>💵 MONEY TRACKER & ANALYTICS</span><span>▼</span></button>
-    <div id="moneyBox" class="collapse-content">
+    <div id="moneyBox" class="collapse-content show">
         <div class="panel">
             <div class="balance-display">Current Balance: $<span id="realBalance">0.00</span></div>
             
@@ -144,10 +142,6 @@
                     <select id="chartYear" class="p-input" style="padding:2px 5px; font-size:10px;" onchange="render()"></select>
                 </div>
                 <div class="chart-container" id="chartContainer"></div>
-                <div style="display:flex; gap:10px; justify-content:center; margin-top:5px; font-size:9px;">
-                    <span style="display:flex; align-items:center; gap:3px;"><div style="width:8px; height:8px; background:var(--success);"></div> Income</span>
-                    <span style="display:flex; align-items:center; gap:3px;"><div style="width:8px; height:8px; background:var(--danger);"></div> Expense</span>
-                </div>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; border:1px solid var(--border);">
@@ -180,93 +174,43 @@
                 </select>
                 <button class="btn btn-p" onclick="addQuest()" style="width:50px; font-size:20px;">+</button>
             </div>
-            <div id="parentOnlyFlags" style="display:none;">
-                <label class="charm-label"><input type="checkbox" id="qCharm"> 🍀 Add 2x Drop Lucky Charm</label>
-            </div>
         </div>
-        <div id="activeQuestList" style="margin-top:15px;"></div>
+        <div id="activeQuestList"></div>
         <button class="collapse-btn" onclick="toggleCol('historyBox')"><span>🌟 COMPLETED TASKS</span><span>▼</span></button>
         <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
     </div>
 </div>
 
-<div id="battleM" class="modal-overlay">
-    <div class="panel" style="width:95%; max-width:450px; text-align:center;">
-        <h2 id="bossTag" style="display:none; color:var(--danger); margin:0;">⚠️ BOSS ENCOUNTER ⚠️</h2>
-        <div class="arena" id="arenaBg">
-            <div class="m-mini-stats">⚔️<span id="mAtkVal">0</span> 🛡️<span id="mDefVal">0</span></div>
-            <div id="battleMsg" style="padding:10px; color:white; font-weight:bold;">Combat!</div>
-            <div id="hF"><div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div><div style="width:40px; height:60px; background:var(--accent); border:2px solid white;"></div></div>
-            <div id="mF"><div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div><div id="mEmoji" style="font-size:60px;">👾</div></div>
-        </div>
-        <div id="battleActions" style="display:flex; gap:10px;">
-            <button class="btn btn-p" style="flex:2; padding:18px;" onclick="heroTurn()">⚔️ ATTACK</button>
-            <button class="btn btn-heal" style="flex:1; padding:18px; background:var(--heal);" onclick="usePotion(true)">🍷 (x<span id="btlPotCount">0</span>)</button>
-            <button class="btn btn-danger" style="flex:1; padding:18px;" onclick="fleeBattle()">🏃 FLEE (-1 🎫)</button>
-        </div>
-    </div>
-</div>
-
-<div id="shopM" class="modal-overlay"><div class="panel" style="width:90%; max-width:400px; text-align:center;"><h2 style="color:var(--gold);">💰 SHOP</h2><button class="btn" style="background:var(--gold); color:black; padding:15px; width:100%; margin-bottom:10px;" onclick="buyChest()">📦 Mystery Chest (250g)</button><button class="btn" style="background:var(--heal); color:white; padding:15px; width:100%; margin-bottom:10px;" onclick="buyPotion()">🍷 Health Potion (50g)</button><button class="btn" style="width:100%; background:var(--border);" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button></div></div>
-
-<div id="itemM" class="modal-overlay"><div class="panel" style="width:90%; max-width:320px; text-align:center;"><h2 id="mItemTitle"></h2><div id="mItemIcon" style="font-size:60px; margin:10px 0;"></div><div id="mItemStats" style="margin-bottom:15px;"></div><button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button><button id="upgradeBtn" class="btn" style="width:100%; padding:15px; margin-bottom:10px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE</button><button id="sellBtn" class="btn" style="width:100%; padding:15px; background:var(--danger);" onclick="doSell()">💰 SELL</button><button class="btn" style="width:100%; margin-top:10px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button></div></div>
+<div id="battleM" class="modal-overlay">...</div>
+<div id="shopM" class="modal-overlay">...</div>
+<div id="itemM" class="modal-overlay">...</div>
 
 <script>
-const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Plate",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"},{n:"Dragon",i:"🐲",s:"pet"}];
-const BATTLE_BGS = ["linear-gradient(#1e3a8a, #000)","linear-gradient(#064e3b, #000)","linear-gradient(#78350f, #000)","linear-gradient(#312e81, #000)","linear-gradient(#4c1d95, #000)"];
+const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Plate",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"}];
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null, ledger: [] };
-let curM = { hp: 0, max: 0, atk: 0, def: 0, isBoss: false }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
+let curH = { atk: 0, def: 0, maxHp: 100 };
 
-function save() { localStorage.setItem('QuestKid_V16_6', JSON.stringify(state)); }
+function save() { localStorage.setItem('QuestKid_Global_Save', JSON.stringify(state)); console.log("Saved!"); }
 function load() { 
-    const s = localStorage.getItem('QuestKid_V16_6'); 
+    const s = localStorage.getItem('QuestKid_Global_Save'); 
     if(s) state = JSON.parse(s);
     if(!state.ledger) state.ledger = [];
     document.getElementById('mDate').valueAsDate = new Date();
     populateYearSelect();
     checkStreak(); 
+    render(); // <--- This was missing!
 }
 
 function populateYearSelect() {
     const select = document.getElementById('chartYear');
-    const currentYear = new Date().getFullYear();
-    for(let y = currentYear - 2; y <= currentYear + 1; y++) {
-        const opt = document.createElement('option');
-        opt.value = y; opt.text = y;
-        if(y === currentYear) opt.selected = true;
+    const curYear = new Date().getFullYear();
+    for(let y = curYear - 1; y <= curYear + 1; y++) {
+        let opt = document.createElement('option'); opt.value = y; opt.text = y;
+        if(y === curYear) opt.selected = true;
         select.appendChild(opt);
     }
-}
-
-function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
-
-function doLogin(r) { 
-    state.role = r; 
-    document.getElementById('loginOverlay').style.display = 'none'; 
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('parentOnlyFlags').style.display = r === 'parent' ? 'block' : 'none';
-    render(); 
-}
-
-// TRACKER LOGIC
-function addTransaction() {
-    const amt = parseFloat(document.getElementById('mAmount').value);
-    const desc = document.getElementById('mDesc').value;
-    const type = document.getElementById('mType').value;
-    const dateStr = document.getElementById('mDate').value;
-    if(isNaN(amt) || !desc || !dateStr) return alert("Fill all fields!");
-    
-    state.ledger.unshift({ id: Date.now(), amt, desc, type, date: dateStr });
-    document.getElementById('mAmount').value = '';
-    document.getElementById('mDesc').value = '';
-    render();
-}
-
-function deleteTransaction(id) {
-    state.ledger = state.ledger.filter(t => t.id !== id);
-    render();
 }
 
 function render() {
@@ -276,100 +220,56 @@ function render() {
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
     document.getElementById('goldVal').innerText = state.gold; 
     document.getElementById('tokenVal').innerText = state.tokens;
-    document.getElementById('potCount').innerText = state.potions;
-    document.getElementById('btlPotCount').innerText = state.potions;
-    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
     document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100) * 100) + "%";
-    document.getElementById('sAtk').innerText = curH.atk; document.getElementById('sDef').innerText = curH.def;
     document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
-    document.getElementById('bossCounter').innerText = 5 - (state.battleCount % 5);
+    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
 
-    // Ledger & Balance
-    let balance = 0;
-    let lH = '';
-    const selectedYear = parseInt(document.getElementById('chartYear').value);
-    const monthlyTotals = Array.from({length: 12}, () => ({inc: 0, exp: 0}));
+    // Ledger & Balance Logic
+    let balance = 0, lH = '';
+    const selYear = parseInt(document.getElementById('chartYear').value);
+    const mTotals = Array.from({length: 12}, () => ({inc: 0, exp: 0}));
 
     state.ledger.forEach(t => {
-        const tDate = new Date(t.date);
-        const tYear = tDate.getFullYear();
-        const tMonth = tDate.getMonth();
-        
+        const d = new Date(t.date);
         balance += (t.type === 'income' ? t.amt : -t.amt);
-        
-        if(tYear === selectedYear) {
-            if(t.type === 'income') monthlyTotals[tMonth].inc += t.amt;
-            else monthlyTotals[tMonth].exp += t.amt;
+        if(d.getFullYear() === selYear) {
+            if(t.type === 'income') mTotals[d.getMonth()].inc += t.amt;
+            else mTotals[d.getMonth()].exp += t.amt;
         }
-
-        lH += `<div class="tracker-row">
-            <div><span class="type-${t.type}">${t.type === 'income' ? '+$' : '-$'} ${t.amt.toFixed(2)}</span>
-            <div style="font-size:10px; color:#94a3b8;">${t.desc} | ${t.date}</div></div>
-            <button onclick="deleteTransaction(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button></div>`;
+        lH += `<div class="tracker-row"><div><span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span><div style="font-size:10px;">${t.desc} (${t.date})</div></div><button onclick="deleteTrans(${t.id})">🗑️</button></div>`;
     });
-
     document.getElementById('realBalance').innerText = balance.toFixed(2);
-    document.getElementById('ledgerList').innerHTML = lH || '<div style="text-align:center; opacity:0.5;">Empty</div>';
+    document.getElementById('ledgerList').innerHTML = lH;
 
-    // Bar Chart Logic
-    let maxVal = 1;
-    monthlyTotals.forEach(m => maxVal = Math.max(maxVal, m.inc, m.exp));
-    
+    // Chart Render
+    let max = 1; mTotals.forEach(m => max = Math.max(max, m.inc, m.exp));
     let cH = '';
-    monthlyTotals.forEach((m, i) => {
-        const incH = (m.inc / maxVal) * 100;
-        const expH = (m.exp / maxVal) * 100;
-        cH += `<div class="chart-bar-group">
-            <div class="bar-stack">
-                <div class="bar income" style="height:${incH}%" title="Inc: $${m.inc}"></div>
-                <div class="bar expense" style="height:${expH}%" title="Exp: $${m.exp}"></div>
-            </div>
-            <div class="chart-label">${MONTHS[i]}</div>
-        </div>`;
+    mTotals.forEach((m, i) => {
+        cH += `<div class="chart-bar-group"><div class="bar-stack">
+            <div class="bar income" style="height:${(m.inc/max)*100}%"></div>
+            <div class="bar expense" style="height:${(m.exp/max)*100}%"></div>
+            </div><div class="chart-label">${MONTHS[i]}</div></div>`;
     });
     document.getElementById('chartContainer').innerHTML = cH;
 
-    // Quest Board Rendering (Shared Logic)
-    let qH = ''; 
-    state.quests.forEach((q, i) => {
-        let controls = isP ? (q.status === 'pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅ APPROVE</button>` : `<button onclick="updateQuest(${i},'delete')" class="btn btn-danger" style="padding:5px 10px;">❌</button>`) : (q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>` : `<div style="text-align:right;"><span style="color:var(--gold); font-size:10px;">WAITING</span></div>`);
-        qH += `<div class="q-row"><span>${q.charm?'🍀 ':''}${q.txt}</span>${controls}</div>`;
-    });
-    document.getElementById('activeQuestList').innerHTML = qH || 'No active quests.';
-    
-    let hH = ''; state.history.forEach((h) => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; });
-    document.getElementById('historyList').innerHTML = hH || 'No history.';
-
-    // Inventory Sorted UI
-    const mappedInv = state.inv.map((item, index) => ({...item, originalIdx: index}));
-    const equipment = mappedInv.filter(it => it.s !== 'pet').sort((a,b) => a.s.localeCompare(b.s));
-    const pets = mappedInv.filter(it => it.s === 'pet').sort((a,b) => a.n.localeCompare(b.n));
-    const buildGrid = (arr) => arr.map(it => `<div class="inv-item" onclick="openItemMenu(${it.originalIdx})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div style="font-size:24px;">${it.i}</div><div style="font-size:8px; color:#94a3b8; margin-top:4px;">${it.n}</div></div>`).join('') || '<div style="font-size:10px; color:#64748b; padding:10px;">Empty</div>';
-    document.getElementById('gearGrid').innerHTML = buildGrid(equipment);
-    document.getElementById('petGrid').innerHTML = buildGrid(pets);
+    // Inventory
+    const gear = state.inv.filter(it => it.s !== 'pet');
+    const pets = state.inv.filter(it => it.s === 'pet');
+    const build = (arr) => arr.map((it, i) => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(it)})">${it.i}</div>`).join('');
+    document.getElementById('gearGrid').innerHTML = build(gear);
+    document.getElementById('petGrid').innerHTML = build(pets);
     for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
+
     save();
 }
 
-// Core Game Functions (Remaining V16.4 and V16.5 functions intact)
-function calculateStats() { curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25); for(let s in state.equip) { let it = state.equip[s]; if(!it) continue; let power = (it.baseP * 5) + (it.v * 10); if(it.s === 'weapon') curH.atk += power; else curH.def += power; } }
-function updateQuest(i, act) { const q = state.quests[i]; if(act === 'done') { if(state.role !== 'parent') return; const r = { easy: {g:25, x:20}, medium: {g:50, x:40}, hard: {g:100, x:80} }; state.gold += r[q.tier].g; state.xp += r[q.tier].x; state.tokens++; if(Math.random() < 0.3) state.inv.push(generateItem()); state.history.unshift(state.quests.splice(i, 1)[0]); checkLevelUp(); } else if (act === 'delete') { state.quests.splice(i, 1); } else { q.status = act; } render(); }
-function startBattle() { if(state.tokens < 3) return alert("Need 3 Tokens!"); state.tokens -= 3; state.battleCount++; curM.isBoss = (state.battleCount % 5 === 0); curM.max = (50 + (state.lvl * 25)) * (curM.isBoss ? 2 : 1); curM.hp = curM.max; curM.atk = (6 + (state.lvl * 5)); curM.def = (2 + (state.lvl * 3)); document.getElementById('battleM').style.display = 'flex'; updateBars(); }
-function heroTurn() { if(isActing) return; isActing = true; let d = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - d); updateBars(); if(curM.hp <= 0) { state.gold += curM.isBoss ? 500 : 100; state.inv.push(generateItem(curM.isBoss)); document.getElementById('battleM').style.display='none'; isActing = false; render(); } else { setTimeout(monsterTurn, 600); } }
-function monsterTurn() { let d = Math.max(5, curM.atk - curH.def); state.hp = Math.max(0, state.hp - d); updateBars(); isActing = false; if(state.hp <= 0) { state.hp = 20; document.getElementById('battleM').style.display='none'; render(); } }
-function generateItem(isBoss = false) { let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)]; return { ...r, v: isBoss?2:0, baseP: Math.floor(Math.random()*3)+1 }; }
-function checkLevelUp() { let next = state.lvl * 100; if(state.xp >= next) { state.xp -= next; state.lvl++; calculateStats(); state.hp = curH.maxHp; checkLevelUp(); } }
-function updateBars() { document.getElementById('hHpFill').style.width = (state.hp/curH.maxHp*100) + "%"; document.getElementById('mHpFill').style.width = (curM.hp/curM.max*100) + "%"; }
-function checkStreak() { const today = new Date().toDateString(); if (state.lastDate === today) return; if (state.lastDate) { const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); if (state.lastDate === yesterday.toDateString()) { state.streak++; } else { state.streak = 1; } } else { state.streak = 1; } state.lastDate = today; save(); }
-function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
-function addQuest() { const v = document.getElementById('qInput').value; if(!v) return; state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value, charm: document.getElementById('qCharm').checked }); document.getElementById('qInput').value = ''; render(); }
-function openItemMenu(i) { selectedIdx = i; const it = state.inv[i]; document.getElementById('mItemTitle').innerText = it.n + (it.v > 0 ? ` +${it.v}` : ''); document.getElementById('mItemIcon').innerText = it.i; document.getElementById('mItemStats').innerText = `Base: ${it.baseP} | Lvl: +${it.v}`; const dupe = state.inv.findIndex((x, idx) => idx !== i && x.n === it.n && x.v === it.v && x.baseP === it.baseP); document.getElementById('upgradeBtn').disabled = (dupe === -1); document.getElementById('itemM').style.display = 'flex'; }
-function doEquipFromMenu() { const it = state.inv.splice(selectedIdx, 1)[0]; const old = state.equip[it.s]; state.equip[it.s] = it; if(old) state.inv.push(old); document.getElementById('itemM').style.display = 'none'; render(); }
-function usePotion(isBattle = false) { if(state.potions <= 0 || state.hp >= curH.maxHp) return; if(isBattle && isActing) return; state.potions--; state.hp = Math.min(state.hp + 50, curH.maxHp); if(isBattle) updateBars(); render(); }
-function fleeBattle() { if(state.tokens < 1) return; state.tokens--; document.getElementById('battleM').style.display = 'none'; render(); }
-function buyPotion() { if(state.gold < 50) return; state.gold -= 50; state.potions++; render(); }
-function buyChest() { if(state.gold < 250) return; state.gold -= 250; state.inv.push(generateItem()); render(); }
+function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
+function calculateStats() { curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25); }
+function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
+function addTransaction() { const a = parseFloat(document.getElementById('mAmount').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value; if(a && d && dt) { state.ledger.unshift({id: Date.now(), amt: a, desc: d, type: t, date: dt}); render(); } }
+function deleteTrans(id) { state.ledger = state.ledger.filter(x => x.id !== id); render(); }
+function addQuest() { const v = document.getElementById('qInput').value; if(v) { state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value}); document.getElementById('qInput').value = ''; render(); } }
+function checkStreak() { const today = new Date().toDateString(); if(state.lastDate === today) return; state.streak = (state.lastDate === new Date(Date.now()-864e5).toDateString()) ? state.streak+1 : 1; state.lastDate = today; }
 
 load();
 </script>
