@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V17.1</title>
+  <title>Quest Kid RPG - V16.4</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
       --accent: #38bdf8; --gold: #fbbf24; --danger: #f87171; --success: #34d399;
-      --slot: #334155; --border: #475569; --heal: #fb7185;
+      --slot: #334155; --border: #475569; --purple: #a855f7; --heal: #fb7185;
     }
 
     body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
@@ -19,7 +19,6 @@
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .streak-badge { background: linear-gradient(to right, #f97316, #fbbf24); color: black; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    
     .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); position: relative;}
     
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -39,45 +38,45 @@
     .collapse-content { display: none; margin-top: 10px; }
     .collapse-content.show { display: block; }
     
+    /* New Inventory UX */
     .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
-    .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
+    .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.1s; }
+    .inv-item:active { transform: scale(0.95); }
     .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
-
-    /* Restored Tracker Classes */
-    .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
-    .type-income { color: var(--success); }
-    .type-expense { color: var(--danger); }
-    .balance-display { font-size: 20px; font-weight: bold; color: var(--gold); text-align: center; padding: 10px; margin-bottom: 10px; }
-
-    .q-row { background: var(--bg); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
-    .pending-row { border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.1); }
     
     .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
     .btn-p { background: var(--accent); color: #0f172a; }
     .btn-danger { background: var(--danger); }
-    .btn-sm { padding: 4px 8px; font-size: 10px; }
+    .btn-heal { background: var(--heal); color: white; font-size: 10px; padding: 4px 8px; }
+    .combat-heal-btn { background: var(--heal); }
     
+    .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
-    .modal-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+    .arena { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; transition: background 0.8s; }
+    .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
+    .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
     
-    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px 10px 10px 10px; margin-top: 10px; border: 1px solid var(--border); gap: 4px; }
-    .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
-    .bar-stack { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
-    .bar { width: 50%; border-radius: 2px 2px 0 0; min-height: 2px; }
-    .bar.income { background: var(--success); }
-    .bar.expense { background: var(--danger); }
-    .chart-label { font-size: 8px; color: #94a3b8; margin-top: 4px; transform: rotate(-45deg); height: 15px; }
+    .m-mini-stats { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 5px 8px; border-radius: 5px; font-size: 10px; border: 1px solid var(--danger); color: white; }
+    .battle-locked { pointer-events: none; opacity: 0.7; }
+    .dmg-num { position: absolute; font-weight: 900; font-size: 28px; animation: floatUp 0.8s ease-out forwards; pointer-events: none; z-index: 100; text-shadow: 2px 2px #000; }
+    @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+    
+    #hF { position: absolute; bottom: 40px; left: 40px; transition: 0.2s; text-align: center; z-index: 10; }
+    #mF { position: absolute; top: 40px; right: 40px; transition: 0.2s; text-align: center; z-index: 10; }
+    .bump-right { transform: translate(120px, -40px); }
+    .bump-left { transform: translate(-120px, 40px); }
     
     .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
+    .charm-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gold); cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h1 style="color:var(--accent); letter-spacing: 2px;">QUEST KID</h1>
-        <button class="btn btn-p" style="width:100%; padding:20px; margin-bottom:15px;" onclick="doLogin('child')">🧒 HERO LOGIN</button>
+        <h1 style="color:var(--accent);">QUEST KID</h1>
+        <button class="btn btn-p" style="width:100%; padding:20px; margin-bottom:15px;" onclick="doLogin('child')">🧒 CHILD LOGIN</button>
         <button class="btn" style="width:100%; padding:20px; background:var(--gold); color:black;" onclick="doLogin('parent')">🔑 PARENT LOGIN</button>
     </div>
 </div>
@@ -87,35 +86,36 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <strong id="roleLabel" style="color:var(--accent);">HERO</strong>
             <span id="streakDisplay" class="streak-badge">🔥 0 DAY STREAK</span>
-            <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="save()">💾 SAVE</button>
-            <button class="btn btn-sm" style="background:var(--border);" onclick="location.reload()">EXIT</button>
+            <button class="btn" style="font-size:10px; background:var(--border); padding:4px 10px;" onclick="location.reload()">Log Out</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
-            <div class="gold-box" onclick="openShop()">💰 <span id="goldVal">0</span></div>
-            <button class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
+            <div class="gold-box" onclick="document.getElementById('shopM').style.display='flex'">💰 <span id="goldVal">0</span></div>
+            <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
     </div>
 
     <div id="childGameView">
         <div class="stats-bar">
             <span>⚔️ ATK: <b id="sAtk">0</b></span> | 🛡️ DEF: <b id="sDef">0</b> | ❤️ HP: <b id="sHp">0/0</b>
-            <button class="btn btn-sm" style="background:var(--heal); padding:2px 8px; position:absolute; right:10px; top:10px;" onclick="usePotion()">🍷 HEAL (<span id="potCount">0</span>)</button>
+            <button class="btn btn-heal" onclick="usePotion(false)" style="position:absolute; right:10px;">🍷 HEAL (x<span id="potCount">0</span>)</button>
         </div>
         <div class="char-grid">
             <div class="slot-col">
                 <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head</span><div id="v-helmet" style="font-size:24px;"></div></div>
                 <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Weapon</span><div id="v-weapon" style="font-size:24px;"></div></div>
+                <div class="slot" onclick="unequip('shield')"><span class="slot-label">Offhand</span><div id="v-shield" style="font-size:24px;"></div></div>
             </div>
             <div class="doll-house">
                 <div class="hero-base"><div class="h-head"></div><div class="h-body"></div></div>
                 <div style="position:absolute; bottom:15px; width:100%; text-align:center; font-size:12px;">
                     LVL <span id="lvlVal">1</span>
                     <div style="width:100px; height:5px; background:rgba(0,0,0,0.5); margin:5px auto; border-radius:3px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
-                    <div id="bossInfo" style="font-size:9px; color:var(--gold);">Boss in: <span id="bossCounter">5</span></div>
+                    <div style="font-size: 9px; color: var(--gold); margin-top:5px;">Boss in: <span id="bossCounter">5</span></div>
                 </div>
             </div>
             <div class="slot-col">
                 <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body</span><div id="v-armor" style="font-size:24px;"></div></div>
+                <div class="slot" onclick="unequip('shoes')"><span class="slot-label">Boots</span><div id="v-shoes" style="font-size:24px;"></div></div>
                 <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet</span><div id="v-pet" style="font-size:24px;"></div></div>
             </div>
         </div>
@@ -132,372 +132,293 @@
     </div>
 
     <div class="panel">
-        <h3 id="questBoardTitle">📜 Quest Board</h3>
+        <h3>📜 Quest Board</h3>
         <div id="questInputArea">
             <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter new task...">
-                <select id="qDiff" class="p-input">
+                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter task...">
+                <select id="qDifficulty" class="p-input">
                     <option value="easy">Easy (25g)</option>
                     <option value="medium" selected>Medium (50g)</option>
                     <option value="hard">Hard (100g)</option>
                 </select>
                 <button class="btn btn-p" onclick="addQuest()" style="width:50px; font-size:20px;">+</button>
             </div>
+            <div id="parentOnlyFlags" style="display:none;">
+                <label class="charm-label"><input type="checkbox" id="qCharm"> 🍀 Add 2x Drop Lucky Charm</label>
+            </div>
         </div>
-        <div id="questList"></div>
-
+        <div id="activeQuestList" style="margin-top:15px;"></div>
         <button class="collapse-btn" onclick="toggleCol('historyBox')"><span>🌟 COMPLETED TASKS</span><span>▼</span></button>
         <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
-    </div>
-
-    <button class="collapse-btn" onclick="toggleCol('moneyBox')"><span>💵 MONEY & ANALYTICS</span><span>▼</span></button>
-    <div id="moneyBox" class="collapse-content">
-        <div class="panel">
-            <div class="balance-display">Current Balance: $<span id="realBalance">0.00</span></div>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11px; font-weight:bold; color:var(--accent);">YEARLY TREND</span>
-                <select id="chartYear" class="p-input" style="padding:2px 5px; font-size:10px;" onchange="render()"></select>
-            </div>
-            <div id="chartContainer" class="chart-container"></div>
-            
-            <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; border:1px solid var(--border);">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
-                    <input id="mDate" type="date" class="p-input">
-                    <select id="mType" class="p-input"><option value="income">Income (+)</option><option value="expense">Expense (-)</option></select>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <input id="mAmt" type="number" class="p-input" style="width:80px;" placeholder="$ 0.00">
-                    <input id="mDesc" class="p-input" style="flex:1;" placeholder="Description...">
-                    <button class="btn btn-p" onclick="addTrans()" style="padding:0 15px;">ADD</button>
-                </div>
-            </div>
-            <div id="ledgerList" style="margin-top:15px; max-height:200px; overflow-y:auto;"></div>
-        </div>
     </div>
 </div>
 
 <div id="battleM" class="modal-overlay">
-    <div class="modal-card" style="text-align:center;">
-        <h2 id="battleTitle">ENEMY SPOTTED!</h2>
-        <div id="battleArena" style="height:150px; background:rgba(0,0,0,0.5); border-radius:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; font-size:60px;"></div>
-        <div style="margin-bottom:10px;">HP: <span id="eHp">0</span></div>
-        <div id="battleLog" style="height:60px; font-size:11px; overflow-y:auto; background:rgba(0,0,0,0.2); margin-bottom:15px; padding:5px;"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button class="btn btn-p" style="padding:15px;" onclick="attack()">⚔️ ATTACK</button>
-            <button id="fleeBtn" class="btn btn-danger" onclick="flee()">🏃 FLEE (<span id="fleeCount">0</span>)</button>
+    <div class="panel" style="width:95%; max-width:450px; text-align:center;">
+        <h2 id="bossTag" style="display:none; color:var(--danger); margin:0;">⚠️ BOSS ENCOUNTER ⚠️</h2>
+        <div class="arena" id="arenaBg">
+            <div class="m-mini-stats">⚔️<span id="mAtkVal">0</span> 🛡️<span id="mDefVal">0</span></div>
+            <div id="battleMsg" style="padding:10px; color:white; font-weight:bold; text-shadow:1px 1px #000;">Combat!</div>
+            <div id="hF"><div class="hp-bar-outer"><div id="hHpFill" class="hp-bar-inner" style="background:var(--success)"></div></div><div style="width:40px; height:60px; background:var(--accent); border:2px solid white;"></div></div>
+            <div id="mF"><div class="hp-bar-outer"><div id="mHpFill" class="hp-bar-inner" style="background:var(--danger)"></div></div><div id="mEmoji" style="font-size:60px;">👾</div></div>
+        </div>
+        <div id="battleActions" style="display:flex; gap:10px;">
+            <button class="btn btn-p" style="flex:2; padding:18px;" onclick="heroTurn()">⚔️ ATTACK</button>
+            <button class="btn combat-heal-btn" style="flex:1; padding:18px;" onclick="usePotion(true)">🍷 (x<span id="btlPotCount">0</span>)</button>
+            <button class="btn btn-danger" style="flex:1; padding:18px;" onclick="fleeBattle()">🏃 FLEE (-1 🎫)</button>
         </div>
     </div>
 </div>
 
 <div id="shopM" class="modal-overlay">
-    <div class="modal-card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3>🏪 SHOP</h3><button onclick="closeModals()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">❌</button></div>
-        <div id="shopList"></div>
+    <div class="panel" style="width:90%; max-width:400px; text-align:center;">
+        <h2 style="color:var(--gold);">💰 SHOP</h2>
+        <button class="btn" style="background:var(--gold); color:black; padding:15px; width:100%; margin-bottom:10px;" onclick="buyChest()">📦 Mystery Chest (250g)</button>
+        <button class="btn" style="background:var(--heal); color:white; padding:15px; width:100%; margin-bottom:10px;" onclick="buyPotion()">🍷 Health Potion (50g)</button>
+        <button class="btn" style="width:100%; background:var(--border);" onclick="document.getElementById('shopM').style.display='none'">CLOSE</button>
     </div>
 </div>
 
 <div id="itemM" class="modal-overlay">
-    <div class="modal-card" id="itemDetails"></div>
+    <div class="panel" style="width:90%; max-width:320px; text-align:center;">
+        <h2 id="mItemTitle"></h2>
+        <div id="mItemIcon" style="font-size:60px; margin:10px 0;"></div>
+        <div id="mItemStats" style="margin-bottom:15px;"></div>
+        <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="doEquipFromMenu()">🛡️ EQUIP</button>
+        <button id="upgradeBtn" class="btn" style="width:100%; padding:15px; margin-bottom:10px; background:var(--gold); color:black;" onclick="doUpgrade()">⭐ UPGRADE</button>
+        <button id="sellBtn" class="btn" style="width:100%; padding:15px; background:var(--danger);" onclick="doSell()">💰 SELL</button>
+        <button class="btn" style="width:100%; margin-top:10px; background:var(--border);" onclick="document.getElementById('itemM').style.display='none'">CANCEL</button>
+    </div>
 </div>
 
 <script>
 const GEAR_DB = [
-    {n:"Steel Sword",i:"⚔️",s:"weapon",v:5},{n:"Shield",i:"🛡️",s:"shield",v:5},
-    {n:"Iron Helm",i:"🪖",s:"helmet",v:3},{n:"Plate Mail",i:"👕",s:"armor",v:8},
-    {n:"Swift Boots",i:"👢",s:"shoes",v:2},{n:"Wolf",i:"🐺",s:"pet",v:10},
-    {n:"Cat",i:"🐱",s:"pet",v:2},{n:"Dragon",i:"🐲",s:"pet",v:25}
+    {n:"Sword",i:"⚔️",s:"weapon"},{n:"Axe",i:"🪓",s:"weapon"},
+    {n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},
+    {n:"Plate",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"},
+    {n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"},{n:"Dragon",i:"🐲",s:"pet"}
 ];
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const BATTLE_BGS = ["linear-gradient(#1e3a8a, #000)","linear-gradient(#064e3b, #000)","linear-gradient(#78350f, #000)","linear-gradient(#312e81, #000)","linear-gradient(#4c1d95, #000)"];
 
-let state = { 
-    role:'child', gold:0, lvl:1, xp:0, hp:100, tokens:0, potions:0, fleeTokens:1, 
-    quests:[], history:[], inv:[], ledger:[], streak:0, lastDate:null, battleCount:0,
-    equip: {helmet:null, weapon:null, shield:null, armor:null, pet:null}
-};
-let curE = null;
+let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null };
+let curM = { hp: 0, max: 0, atk: 0, def: 0, isBoss: false }, curH = { atk: 0, def: 0, maxHp: 100 }, isActing = false, selectedIdx = -1;
 
-function save() { localStorage.setItem('QuestKid_Full_V17_1', JSON.stringify(state)); }
-function load() {
-    const s = localStorage.getItem('QuestKid_Full_V17_1') || localStorage.getItem('QuestKid_Full_V17'); // Fallback compatibility
-    if(s) state = JSON.parse(s);
-    if(!state.ledger) state.ledger = [];
-    if(!state.history) state.history = [];
-    document.getElementById('mDate').valueAsDate = new Date();
-    populateYearSelect();
-    checkStreak();
-    render();
-}
+function save() { localStorage.setItem('QuestKid_V16_4', JSON.stringify(state)); }
+function load() { const s = localStorage.getItem('QuestKid_V16_4'); if(s) state = JSON.parse(s); checkStreak(); }
+function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 
 function checkStreak() {
     const today = new Date().toDateString();
-    if(state.lastDate === today) return;
-    state.streak = (state.lastDate === new Date(Date.now()-864e5).toDateString()) ? state.streak+1 : 1;
-    state.lastDate = today;
+    if (state.lastDate === today) return;
+    if (state.lastDate) {
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+        if (state.lastDate === yesterday.toDateString()) { state.streak++; } else { state.streak = 1; }
+    } else { state.streak = 1; }
+    state.lastDate = today; save();
 }
 
-function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
+function doLogin(r) { 
+    state.role = r; 
+    document.getElementById('loginOverlay').style.display = 'none'; 
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('parentOnlyFlags').style.display = r === 'parent' ? 'block' : 'none';
+    render(); 
+}
 
-function populateYearSelect() {
-    const s = document.getElementById('chartYear');
-    const y = new Date().getFullYear();
-    for(let i = y-1; i <= y+1; i++) {
-        let o = document.createElement('option'); o.value = i; o.text = i;
-        if(i === y) o.selected = true;
-        s.appendChild(o);
-    }
+function updateQuest(i, act) {
+    const q = state.quests[i];
+    if(act === 'done') {
+        if(state.role !== 'parent') return;
+        const rewards = { easy: {g:25, x:20}, medium: {g:50, x:40}, hard: {g:100, x:80} };
+        state.gold += rewards[q.tier].g; state.xp += rewards[q.tier].x; state.tokens++;
+        if(Math.random() < 0.3) {
+            state.inv.push(generateItem());
+            if(q.charm) state.inv.push(generateItem());
+        }
+        state.history.unshift(state.quests.splice(i, 1)[0]);
+        checkLevelUp();
+    } else if (act === 'recall') { q.status = 'open'; }
+    else if (act === 'delete') { state.quests.splice(i, 1); }
+    else { q.status = act; }
+    render();
 }
 
 function render() {
+    calculateStats();
     const isP = state.role === 'parent';
-    const atk = 5 + (state.lvl * 3) + (state.equip.weapon ? state.equip.weapon.v : 0);
-    const def = 2 + (state.lvl * 2) + (state.equip.armor ? state.equip.armor.v : 0);
-    const maxHp = 100 + (state.lvl * 25);
-
-    document.getElementById('roleLabel').innerText = isP ? "👑 PARENT" : "🛡️ HERO";
+    document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
-    // Quest input is now explicitly shown for both roles.
-    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
-    
-    document.getElementById('goldVal').innerText = state.gold;
+    document.getElementById('goldVal').innerText = state.gold; 
     document.getElementById('tokenVal').innerText = state.tokens;
-    document.getElementById('sAtk').innerText = atk;
-    document.getElementById('sDef').innerText = def;
-    document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + maxHp;
-    document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100)) * 100 + "%";
     document.getElementById('potCount').innerText = state.potions;
+    document.getElementById('btlPotCount').innerText = state.potions;
+    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
+    document.getElementById('lvlVal').innerText = state.lvl;
+    document.getElementById('xpBar').style.width = (state.xp / (state.lvl * 100) * 100) + "%";
+    document.getElementById('sAtk').innerText = curH.atk; document.getElementById('sDef').innerText = curH.def;
+    document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
     document.getElementById('bossCounter').innerText = 5 - (state.battleCount % 5);
 
-    // Quests Rendering (Approval Logic intact)
-    let qH = '';
-    state.quests.forEach(q => {
-        let btn = isP ? (q.status === 'pending' ? 
-            `<button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
-             <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>` : 
-            `<button class="btn btn-sm" style="background:var(--danger);" onclick="deleteQuest(${q.id})">DELETE</button>`) : 
-            (q.status === 'open' ? `<button class="btn btn-p" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>` : 
-            `<div style="text-align:right;"><span style="font-size:9px; color:var(--gold); display:block;">PENDING...</span><button class="btn btn-sm" style="background:var(--danger); margin-top:3px;" onclick="setQuestStatus(${q.id}, 'open')">RECALL</button></div>`);
-        
-        qH += `<div class="q-row ${q.status === 'pending' ? 'pending-row' : ''}">
-            <div><span style="font-size:10px; color:var(--accent); font-weight:bold;">${q.tier.toUpperCase()}</span><br>${q.txt}</div>
-            <div style="display:flex; gap:5px; align-items:center;">${btn}</div>
-        </div>`;
-    });
-    document.getElementById('questList').innerHTML = qH || '<div style="opacity:0.5; text-align:center;">No quests active.</div>';
-
-    // History Restored
-    document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`).join('') || '<div style="opacity:0.5; text-align:center;">No completed tasks yet.</div>';
-
-    // Inventory Sorting Restored
-    const gear = state.inv.filter(x => x.s !== 'pet');
-    const pets = state.inv.filter(x => x.s === 'pet');
-    const buildInv = (arr) => arr.map((item, i) => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(item)})">${item.v>0?`<div class="lvl-tag">+${item.v}</div>`:''}<div style="font-size:24px;">${item.i}</div></div>`).join('');
-    document.getElementById('gearGrid').innerHTML = buildInv(gear);
-    document.getElementById('petGrid').innerHTML = buildInv(pets);
-    
-    for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
-
-    // Ledger & Chart Restored (Fixing Delete and formatting)
-    let bal = 0;
-    const year = parseInt(document.getElementById('chartYear').value);
-    const monthly = Array.from({length:12}, () => ({i:0, e:0}));
-    
-    let lH = '';
-    state.ledger.forEach(t => {
-        const d = new Date(t.date);
-        bal += (t.type === 'income' ? t.amt : -t.amt);
-        if(d.getFullYear() === year) {
-            monthly[d.getMonth()][t.type === 'income' ? 'i' : 'e'] += t.amt;
+    // Quest Board
+    let qH = ''; 
+    state.quests.forEach((q, i) => {
+        let controls = '';
+        if(isP) {
+            controls = q.status === 'pending' ? `<button onclick="updateQuest(${i},'done')" class="btn btn-p" style="padding:5px 10px;">✅ APPROVE</button>` : `<button onclick="updateQuest(${i},'delete')" class="btn btn-danger" style="padding:5px 10px;">❌</button>`;
+        } else {
+            const recall = q.status === 'pending' ? `<br><button onclick="updateQuest(${i},'recall')" style="font-size:9px; background:none; border:1px solid #475569; color:#94a3b8; cursor:pointer; margin-top:5px;">↩️ RECALL</button>` : '';
+            controls = q.status === 'open' ? `<button onclick="updateQuest(${i},'pending')" class="btn btn-p" style="padding:8px 20px;">DONE</button>` : `<div style="text-align:right;"><span style="color:var(--gold); font-size:10px;">WAITING</span>${recall}</div>`;
         }
-        lH += `<div class="tracker-row">
-            <div>
-                <span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span>
-                <div style="font-size:10px; color:#94a3b8;">${t.desc} (${t.date})</div>
-            </div>
-            <button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">🗑️</button>
-        </div>`;
+        qH += `<div class="q-row"><span>${q.charm?'🍀 ':''}${q.txt}</span>${controls}</div>`;
     });
-    document.getElementById('realBalance').innerText = bal.toFixed(2);
-    document.getElementById('ledgerList').innerHTML = lH;
+    document.getElementById('activeQuestList').innerHTML = qH || 'No active quests.';
+    
+    // History
+    let hH = ''; state.history.forEach((h) => { hH += `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`; });
+    document.getElementById('historyList').innerHTML = hH || 'No history.';
 
-    let maxM = 1; monthly.forEach(m => maxM = Math.max(maxM, m.i, m.e));
-    document.getElementById('chartContainer').innerHTML = monthly.map((m, i) => `
-        <div class="chart-bar-group">
-            <div class="bar-stack">
-                <div class="bar income" style="height:${(m.i/maxM)*100}%"></div>
-                <div class="bar expense" style="height:${(m.e/maxM)*100}%"></div>
-            </div>
-            <div class="chart-label">${MONTHS[i]}</div>
-        </div>`).join('');
+    // Sorted Inventory UI/UX
+    const mappedInv = state.inv.map((item, index) => ({...item, originalIdx: index}));
+    
+    const equipment = mappedInv.filter(it => it.s !== 'pet').sort((a,b) => a.s.localeCompare(b.s));
+    const pets = mappedInv.filter(it => it.s === 'pet').sort((a,b) => a.n.localeCompare(b.n));
 
+    const buildGrid = (arr) => arr.map(it => `
+        <div class="inv-item" onclick="openItemMenu(${it.originalIdx})">
+            ${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}
+            <div style="font-size:24px;">${it.i}</div>
+            <div style="font-size:8px; color:#94a3b8; margin-top:4px;">${it.n}</div>
+        </div>`).join('') || '<div style="font-size:10px; color:#64748b; padding:10px;">Empty</div>';
+
+    document.getElementById('gearGrid').innerHTML = buildGrid(equipment);
+    document.getElementById('petGrid').innerHTML = buildGrid(pets);
+
+    for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
     save();
 }
 
-// BATTLE LOGIC
 function startBattle() {
-    if(state.tokens <= 0) return alert("Complete quests for Battle Tokens!");
-    const isBoss = (state.battleCount + 1) % 5 === 0;
-    curE = { 
-        name: isBoss ? "BOSS MONSTER" : "MONSTER",
-        hp: isBoss ? 200 + (state.lvl * 50) : 50 + (state.lvl * 20),
-        atk: isBoss ? 15 + (state.lvl * 5) : 5 + (state.lvl * 2),
-        icon: isBoss ? "👹" : ["👾","👻","🐍","🐅"][Math.floor(Math.random()*4)]
-    };
-    document.getElementById('battleArena').innerText = curE.icon;
-    document.getElementById('eHp').innerText = curE.hp;
-    document.getElementById('battleTitle').innerText = isBoss ? "⚠️ BOSS BATTLE!" : "ENEMY SPOTTED!";
-    document.getElementById('fleeCount').innerText = state.fleeTokens;
-    document.getElementById('battleLog').innerHTML = "A wild monster appears!";
-    document.getElementById('battleM').style.display = 'flex';
+    if(state.tokens < 3) return alert("Need 3 Tokens!");
+    state.tokens -= 3; state.battleCount++;
+    curM.isBoss = (state.battleCount % 5 === 0);
+    if(curM.isBoss) {
+        document.getElementById('arenaBg').style.background = "linear-gradient(#450a0a, #000)";
+        document.getElementById('bossTag').style.display = 'block';
+    } else {
+        document.getElementById('arenaBg').style.background = BATTLE_BGS[Math.floor(Math.random()*BATTLE_BGS.length)];
+        document.getElementById('bossTag').style.display = 'none';
+    }
+    curM.max = (50 + (state.lvl * 25)) * (curM.isBoss ? 2 : 1); curM.hp = curM.max; 
+    curM.atk = (6 + (state.lvl * 5)); curM.def = (2 + (state.lvl * 3));
+    document.getElementById('mAtkVal').innerText = curM.atk;
+    document.getElementById('mDefVal').innerText = curM.def;
+    document.getElementById('battleM').style.display = 'flex'; updateBars();
 }
 
-function attack() {
-    const pAtk = 5 + (state.lvl * 3) + (state.equip.weapon ? state.equip.weapon.v : 0);
-    const pDef = 2 + (state.lvl * 2) + (state.equip.armor ? state.equip.armor.v : 0);
-    
-    // Player Hits
-    curE.hp -= pAtk;
-    document.getElementById('eHp').innerText = Math.max(0, curE.hp);
-    document.getElementById('battleLog').innerHTML += `<br>You hit for ${pAtk}!`;
-    
-    if(curE.hp <= 0) {
-        state.battleCount++;
-        state.tokens--;
-        state.xp += 50;
-        state.gold += 10;
-        checkLevelUp();
-        alert("VICTORY!");
-        closeModals();
-        render();
-        return;
-    }
-
-    // Enemy Hits
-    const dmg = Math.max(1, curE.atk - pDef);
-    state.hp -= dmg;
-    document.getElementById('battleLog').innerHTML += `<br>Enemy hits for ${dmg}!`;
-    
-    if(state.hp <= 0) {
-        alert("DEFEAT! You were knocked out.");
-        state.hp = 10;
-        state.tokens = 0;
-        closeModals();
-        render();
-    }
+function heroTurn() { 
+    if(isActing) return; isActing = true;
+    document.getElementById('battleActions').classList.add('battle-locked');
+    document.getElementById('hF').classList.add('bump-right'); 
+    setTimeout(() => { 
+        let d = Math.max(5, curH.atk - curM.def); curM.hp = Math.max(0, curM.hp - d); showDmg('mF', d); updateBars();
+        document.getElementById('hF').classList.remove('bump-right'); 
+        if(curM.hp <= 0) { 
+            state.gold += curM.isBoss ? 500 : 100; state.inv.push(generateItem(curM.isBoss));
+            document.getElementById('battleM').style.display='none'; 
+            isActing = false; document.getElementById('battleActions').classList.remove('battle-locked');
+            render(); 
+        } else { setTimeout(monsterTurn, 600); } 
+    }, 200); 
 }
 
-function flee() {
-    if(state.fleeTokens > 0) {
-        state.fleeTokens--;
-        state.tokens--;
-        closeModals();
-        render();
-    }
+function monsterTurn() { 
+    document.getElementById('mF').classList.add('bump-left'); 
+    setTimeout(() => { 
+        let d = Math.max(5, curM.atk - curH.def); state.hp = Math.max(0, state.hp - d); showDmg('hF', d); updateBars();
+        document.getElementById('mF').classList.remove('bump-left'); 
+        isActing = false; document.getElementById('battleActions').classList.remove('battle-locked');
+        if(state.hp <= 0) { state.hp = 20; document.getElementById('battleM').style.display='none'; render(); }
+    }, 200); 
 }
 
-// QUESTS & OTHER
-function addQuest() {
-    const v = document.getElementById('qInput').value;
-    if(v) { state.quests.push({id:Date.now(), txt:v, status:'open', tier:document.getElementById('qDiff').value}); document.getElementById('qInput').value = ''; render(); }
-}
-function setQuestStatus(id, s) { const q = state.quests.find(x=>x.id===id); if(q) q.status = s; render(); }
-function approveQuest(id) {
-    const idx = state.quests.findIndex(x=>x.id===id);
-    const q = state.quests.splice(idx, 1)[0];
-    const rew = {easy:25, medium:50, hard:100};
-    state.gold += rew[q.tier];
-    state.xp += 20;
-    state.tokens++;
-    
-    // Auto-log to money tracker & history
-    state.ledger.unshift({id: Date.now(), date:new Date().toLocaleDateString(), amt:rew[q.tier]/10, desc:`Quest: ${q.txt}`, type:'income'});
-    state.history.unshift(q);
-    
-    checkLevelUp();
-    render();
-}
-function deleteQuest(id) { state.quests = state.quests.filter(x=>x.id!==id); render(); }
-function checkLevelUp() {
-    const target = state.lvl * 100;
-    if(state.xp >= target) {
-        state.xp -= target;
-        state.lvl++;
-        state.hp = 100 + (state.lvl * 25); // Full Heal Rule
-        state.fleeTokens++;
-        alert("LEVEL UP!");
-        checkLevelUp(); // Recursion in case of massive XP gain
+function usePotion(isBattle = false) { 
+    if(state.potions <= 0 || state.hp >= curH.maxHp) return; 
+    if(isBattle && isActing) return;
+    if(isBattle) {
+        isActing = true;
+        document.getElementById('battleActions').classList.add('battle-locked');
+        document.getElementById('battleMsg').innerText = "Healed +50 HP!";
     }
-}
-function usePotion() {
-    if(state.potions > 0) {
-        state.hp = 100 + (state.lvl * 25);
-        state.potions--;
-        render();
+    state.potions--; state.hp = Math.min(state.hp + 50, curH.maxHp); 
+    if(isBattle) {
+        updateBars();
+        setTimeout(() => {
+            document.getElementById('battleMsg').innerText = "Combat!";
+            isActing = false;
+            document.getElementById('battleActions').classList.remove('battle-locked');
+        }, 800);
     }
+    render(); 
 }
 
-// RESTORED MONEY TRACKER FUNCTIONS
-function addTrans() {
-    const a = parseFloat(document.getElementById('mAmt').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value;
-    if(a && d && dt) { 
-        state.ledger.unshift({id: Date.now(), amt:a, desc:d, type:t, date:dt}); // Unshift places it at the top
-        document.getElementById('mAmt').value = '';
-        document.getElementById('mDesc').value = '';
-        render(); 
-    }
-}
-function deleteTrans(id) {
-    state.ledger = state.ledger.filter(x => x.id !== id);
+function fleeBattle() { 
+    if(isActing) return;
+    if(state.tokens < 1) return alert("Need 1 Token to flee!");
+    state.tokens--;
+    document.getElementById('battleM').style.display = 'none'; 
     render();
 }
 
-function openShop() {
-    const items = [
-        {n:"Health Potion", i:"🍷", p:20, type:"pot"},
-        {n:"Steel Sword", i:"⚔️", p:150, type:"gear", s:"weapon", v:12},
-        {n:"Iron Plate", i:"👕", p:200, type:"gear", s:"armor", v:15}
-    ];
-    document.getElementById('shopList').innerHTML = items.map(it => `
-        <div class="q-row">
-            <div>${it.i} ${it.n} (${it.p}g)</div>
-            <button class="btn btn-p btn-sm" onclick="buyItem(${JSON.stringify(it).replace(/"/g, '&quot;')})">BUY</button>
-        </div>`).join('');
-    document.getElementById('shopM').style.display = 'flex';
-}
-function buyItem(it) {
-    if(state.gold >= it.p) {
-        state.gold -= it.p;
-        if(it.type === 'pot') state.potions++;
-        else state.inv.push(it);
-        render();
-    } else alert("Not enough gold!");
-}
-function openItemMenu(idx) {
-    const it = state.inv[idx];
-    document.getElementById('itemDetails').innerHTML = `
-        <h2 style="text-align:center;">${it.i} ${it.n}</h2>
-        <button class="btn btn-p" style="width:100%; padding:15px; margin-bottom:10px;" onclick="equip(${idx})">EQUIP</button>
-        <button class="btn btn-danger" style="width:100%; padding:10px;" onclick="state.inv.splice(${idx},1); closeModals(); render();">DISCARD</button>
-    `;
+function buyPotion() { if(state.gold < 50) return; state.gold -= 50; state.potions++; render(); }
+function buyChest() { if(state.gold < 250) return; state.gold -= 250; state.inv.push(generateItem()); render(); }
+
+function openItemMenu(i) {
+    selectedIdx = i; const it = state.inv[i];
+    document.getElementById('mItemTitle').innerText = it.n + (it.v > 0 ? ` +${it.v}` : '');
+    document.getElementById('mItemIcon').innerText = it.i;
+    document.getElementById('mItemStats').innerText = `Base: ${it.baseP} | Lvl: +${it.v}`;
+    const dupe = state.inv.findIndex((x, idx) => idx !== i && x.n === it.n && x.v === it.v && x.baseP === it.baseP);
+    document.getElementById('upgradeBtn').disabled = (dupe === -1);
     document.getElementById('itemM').style.display = 'flex';
 }
-function equip(idx) {
-    const it = state.inv.splice(idx, 1)[0];
-    if(state.equip[it.s]) state.inv.push(state.equip[it.s]);
-    state.equip[it.s] = it;
-    closeModals();
-    render();
+function doUpgrade() {
+    const it = state.inv[selectedIdx];
+    const dupeIdx = state.inv.findIndex((x, idx) => idx !== selectedIdx && x.n === it.n && x.v === it.v && x.baseP === it.baseP);
+    state.inv[selectedIdx].v++; state.inv.splice(dupeIdx, 1);
+    document.getElementById('itemM').style.display = 'none'; render();
 }
-function unequip(s) {
-    if(state.equip[s]) {
-        state.inv.push(state.equip[s]);
-        state.equip[s] = null;
-        render();
-    }
+function doSell() { state.gold += 50; state.inv.splice(selectedIdx, 1); document.getElementById('itemM').style.display = 'none'; render(); }
+function doEquipFromMenu() { const it = state.inv.splice(selectedIdx, 1)[0]; const old = state.equip[it.s]; state.equip[it.s] = it; if(old) state.inv.push(old); document.getElementById('itemM').style.display = 'none'; render(); }
+function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s]=null; render(); } }
+
+function addQuest() {
+    const v = document.getElementById('qInput').value; if(!v) return;
+    state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value, charm: document.getElementById('qCharm').checked });
+    document.getElementById('qInput').value = ''; render();
 }
-function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
-function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+function calculateStats() {
+    curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25);
+    for(let s in state.equip) { let it = state.equip[s]; if(!it) continue; let power = (it.baseP * 5) + (it.v * 10); if(it.s === 'weapon') curH.atk += power; else curH.def += power; }
+}
+
+function generateItem(isBoss = false) { let r = GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)]; return { ...r, v: isBoss?2:0, baseP: Math.floor(Math.random()*3)+1 }; }
+
+function checkLevelUp() { 
+    let next = state.lvl * 100; 
+    if(state.xp >= next) { 
+        state.xp -= next; state.lvl++; 
+        calculateStats(); state.hp = curH.maxHp; 
+        checkLevelUp(); 
+    } 
+}
+
+function updateBars() { document.getElementById('hHpFill').style.width = (state.hp/curH.maxHp*100) + "%"; document.getElementById('mHpFill').style.width = (curM.hp/curM.max*100) + "%"; }
+function showDmg(t, a) {
+    const b = document.getElementById(t).getBoundingClientRect(); const ar = document.getElementById('arenaBg').getBoundingClientRect();
+    const el = document.createElement('div'); el.className = 'dmg-num'; el.innerText = `-${a}`; el.style.left = (b.left - ar.left + 20) + 'px'; el.style.top = (b.top - ar.top) + 'px';
+    document.getElementById('arenaBg').appendChild(el); setTimeout(() => el.remove(), 800);
+}
 
 load();
 </script>
