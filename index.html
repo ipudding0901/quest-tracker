@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.7</title>
+  <title>Quest Kid RPG - V16.8</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -41,7 +41,6 @@
     .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
     .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.1s; }
-    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
     
     .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
     .type-income { color: var(--success); }
@@ -63,11 +62,11 @@
     
     .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
-    .arena { position: relative; width: 100%; height: 280px; border-radius: 15px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 15px; }
     .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
     .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
     
     .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
+    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -132,7 +131,7 @@
     </div>
 
     <button class="collapse-btn" onclick="toggleCol('moneyBox')"><span>💵 MONEY TRACKER & ANALYTICS</span><span>▼</span></button>
-    <div id="moneyBox" class="collapse-content show">
+    <div id="moneyBox" class="collapse-content">
         <div class="panel">
             <div class="balance-display">Current Balance: $<span id="realBalance">0.00</span></div>
             
@@ -163,10 +162,10 @@
     </div>
 
     <div class="panel">
-        <h3>📜 Quest Board</h3>
+        <h3 id="questBoardTitle">📜 Quest Board</h3>
         <div id="questInputArea">
             <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter task...">
+                <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter new quest...">
                 <select id="qDifficulty" class="p-input">
                     <option value="easy">Easy (25g)</option>
                     <option value="medium" selected>Medium (50g)</option>
@@ -175,7 +174,9 @@
                 <button class="btn btn-p" onclick="addQuest()" style="width:50px; font-size:20px;">+</button>
             </div>
         </div>
+        
         <div id="activeQuestList"></div>
+
         <button class="collapse-btn" onclick="toggleCol('historyBox')"><span>🌟 COMPLETED TASKS</span><span>▼</span></button>
         <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
     </div>
@@ -192,7 +193,7 @@ const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null, ledger: [] };
 let curH = { atk: 0, def: 0, maxHp: 100 };
 
-function save() { localStorage.setItem('QuestKid_Global_Save', JSON.stringify(state)); console.log("Saved!"); }
+function save() { localStorage.setItem('QuestKid_Global_Save', JSON.stringify(state)); }
 function load() { 
     const s = localStorage.getItem('QuestKid_Global_Save'); 
     if(s) state = JSON.parse(s);
@@ -200,7 +201,7 @@ function load() {
     document.getElementById('mDate').valueAsDate = new Date();
     populateYearSelect();
     checkStreak(); 
-    render(); // <--- This was missing!
+    render(); 
 }
 
 function populateYearSelect() {
@@ -223,8 +224,9 @@ function render() {
     document.getElementById('lvlVal').innerText = state.lvl;
     document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
     document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
+    document.getElementById('roleLabel').innerText = isP ? "👑 PARENT MODE" : "🛡️ HERO MODE";
 
-    // Ledger & Balance Logic
+    // Money Tracker Logic
     let balance = 0, lH = '';
     const selYear = parseInt(document.getElementById('chartYear').value);
     const mTotals = Array.from({length: 12}, () => ({inc: 0, exp: 0}));
@@ -236,12 +238,12 @@ function render() {
             if(t.type === 'income') mTotals[d.getMonth()].inc += t.amt;
             else mTotals[d.getMonth()].exp += t.amt;
         }
-        lH += `<div class="tracker-row"><div><span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span><div style="font-size:10px;">${t.desc} (${t.date})</div></div><button onclick="deleteTrans(${t.id})">🗑️</button></div>`;
+        lH += `<div class="tracker-row"><div><span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span><div style="font-size:10px;">${t.desc} (${t.date})</div></div><button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button></div>`;
     });
     document.getElementById('realBalance').innerText = balance.toFixed(2);
     document.getElementById('ledgerList').innerHTML = lH;
 
-    // Chart Render
+    // Analytics Chart
     let max = 1; mTotals.forEach(m => max = Math.max(max, m.inc, m.exp));
     let cH = '';
     mTotals.forEach((m, i) => {
@@ -252,23 +254,82 @@ function render() {
     });
     document.getElementById('chartContainer').innerHTML = cH;
 
+    // QUEST BOARD LOGIC (The visibility fix)
+    let qH = '';
+    state.quests.forEach((q, i) => {
+        let controls = "";
+        if (isP) {
+            // Parent Controls
+            if (q.status === 'pending') {
+                controls = `<div style="display:flex; gap:5px;">
+                    <button onclick="approveQuest(${i})" class="btn" style="background:var(--success); color:black; padding:5px 10px;">APPROVE</button>
+                    <button onclick="recallQuest(${i})" class="btn" style="background:var(--danger); padding:5px 10px;">REJECT</button>
+                </div>`;
+            } else {
+                controls = `<button onclick="deleteQuest(${i})" class="btn" style="background:var(--danger); padding:5px 10px;">DELETE</button>`;
+            }
+        } else {
+            // Child Controls
+            if (q.status === 'open') {
+                controls = `<button onclick="submitQuest(${i})" class="btn btn-p" style="padding:8px 15px;">DONE</button>`;
+            } else if (q.status === 'pending') {
+                controls = `<div style="text-align:right;"><div style="font-size:9px; color:var(--gold);">WAITING...</div><button onclick="recallQuest(${i})" class="btn" style="background:var(--danger); font-size:10px; padding:2px 8px;">RECALL</button></div>`;
+            }
+        }
+
+        const statusStyle = q.status === 'pending' ? 'border: 2px solid var(--gold); background: rgba(251, 191, 36, 0.1);' : '';
+        qH += `<div class="q-row" style="${statusStyle}">
+            <div>
+                <strong style="color:var(--accent);">${q.tier.toUpperCase()}</strong>: ${q.txt}
+                ${q.status === 'pending' ? '<div style="font-size:10px; color:var(--gold);">SUBMITTED</div>' : ''}
+            </div>
+            ${controls}
+        </div>`;
+    });
+    document.getElementById('activeQuestList').innerHTML = qH || '<div style="text-align:center; padding:20px; opacity:0.5;">No active quests.</div>';
+
+    // History
+    document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`).join('') || 'Empty';
+
     // Inventory
-    const gear = state.inv.filter(it => it.s !== 'pet');
-    const pets = state.inv.filter(it => it.s === 'pet');
-    const build = (arr) => arr.map((it, i) => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(it)})">${it.i}</div>`).join('');
-    document.getElementById('gearGrid').innerHTML = build(gear);
-    document.getElementById('petGrid').innerHTML = build(pets);
+    const build = (arr) => arr.map(it => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(it)})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div style="font-size:24px;">${it.i}</div></div>`).join('');
+    document.getElementById('gearGrid').innerHTML = build(state.inv.filter(it => it.s !== 'pet'));
+    document.getElementById('petGrid').innerHTML = build(state.inv.filter(it => it.s === 'pet'));
     for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
 
     save();
 }
 
+// Quest Lifecycle Functions
+function submitQuest(i) { state.quests[i].status = 'pending'; render(); }
+function recallQuest(i) { state.quests[i].status = 'open'; render(); }
+function approveQuest(i) {
+    const q = state.quests.splice(i, 1)[0];
+    const rewards = { easy: {g:25, x:20}, medium: {g:50, x:40}, hard: {g:100, x:80} };
+    state.gold += rewards[q.tier].g;
+    state.xp += rewards[q.tier].x;
+    state.tokens++;
+    if(Math.random() < 0.2) state.inv.push({ ...GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)], v: 0, baseP: 1 });
+    state.history.unshift(q);
+    checkLevelUp();
+    render();
+}
+function deleteQuest(i) { state.quests.splice(i, 1); render(); }
+function addQuest() { 
+    const v = document.getElementById('qInput').value; 
+    if(v) { 
+        state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value}); 
+        document.getElementById('qInput').value = ''; 
+        render(); 
+    } 
+}
+
 function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 function calculateStats() { curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25); }
+function checkLevelUp() { let next = state.lvl * 100; if(state.xp >= next) { state.xp -= next; state.lvl++; state.hp = 100 + (state.lvl * 25); checkLevelUp(); } }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 function addTransaction() { const a = parseFloat(document.getElementById('mAmount').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value; if(a && d && dt) { state.ledger.unshift({id: Date.now(), amt: a, desc: d, type: t, date: dt}); render(); } }
 function deleteTrans(id) { state.ledger = state.ledger.filter(x => x.id !== id); render(); }
-function addQuest() { const v = document.getElementById('qInput').value; if(v) { state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value}); document.getElementById('qInput').value = ''; render(); } }
 function checkStreak() { const today = new Date().toDateString(); if(state.lastDate === today) return; state.streak = (state.lastDate === new Date(Date.now()-864e5).toDateString()) ? state.streak+1 : 1; state.lastDate = today; }
 
 load();
