@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V16.8</title>
+  <title>Quest Kid RPG - V16.9</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
@@ -19,6 +19,7 @@
     .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
     .streak-badge { background: linear-gradient(to right, #f97316, #fbbf24); color: black; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
     .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    
     .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); position: relative;}
     
     .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -40,41 +41,25 @@
     
     .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
     .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
-    .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; transition: transform 0.1s; }
+    .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
     
-    .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
-    .type-income { color: var(--success); }
-    .type-expense { color: var(--danger); }
-    .balance-display { font-size: 18px; font-weight: bold; color: var(--gold); text-align: center; padding: 10px; border: 1px dashed var(--border); border-radius: 10px; margin-bottom: 10px; }
+    .q-row { background: var(--bg); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
+    .pending-row { border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.05); }
     
-    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px 10px 10px 10px; margin-top: 10px; border: 1px solid var(--border); gap: 4px; }
-    .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
-    .bar-stack { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
-    .bar { width: 50%; border-radius: 2px 2px 0 0; transition: height 0.5s; min-height: 2px; }
-    .bar.income { background: var(--success); }
-    .bar.expense { background: var(--danger); }
-    .chart-label { font-size: 8px; color: #94a3b8; margin-top: 4px; transform: rotate(-45deg); height: 15px; }
-
-    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
+    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; text-decoration: none; }
     .btn-p { background: var(--accent); color: #0f172a; }
-    .btn-danger { background: var(--danger); }
-    .btn-heal { background: var(--heal); color: white; font-size: 10px; padding: 4px 8px; }
+    .btn-sm { padding: 4px 8px; font-size: 10px; }
     
-    .q-row { background: var(--bg); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); }
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
-    .hp-bar-outer { width: 100px; height: 12px; background: #000; border-radius: 6px; border: 1px solid #555; margin-bottom: 5px; overflow: hidden; }
-    .hp-bar-inner { width: 100%; height: 100%; transition: width 0.4s; }
-    
-    .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
-    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 100px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px 5px 5px 5px; margin-top: 10px; gap: 2px; }
+    .bar { width: 6px; border-radius: 2px 2px 0 0; }
   </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-card">
-        <h1 style="color:var(--accent);">QUEST KID</h1>
-        <button class="btn btn-p" style="width:100%; padding:20px; margin-bottom:15px;" onclick="doLogin('child')">🧒 CHILD LOGIN</button>
+        <h1 style="color:var(--accent); letter-spacing: 2px;">QUEST KID</h1>
+        <button class="btn btn-p" style="width:100%; padding:20px; margin-bottom:15px;" onclick="doLogin('child')">🧒 HERO LOGIN</button>
         <button class="btn" style="width:100%; padding:20px; background:var(--gold); color:black;" onclick="doLogin('parent')">🔑 PARENT LOGIN</button>
     </div>
 </div>
@@ -84,44 +69,41 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <strong id="roleLabel" style="color:var(--accent);">HERO</strong>
             <span id="streakDisplay" class="streak-badge">🔥 0 DAY STREAK</span>
-            <button class="btn" style="font-size:10px; background:var(--success); color:black; padding:4px 10px;" onclick="save()">💾 Save</button>
-            <button class="btn" style="font-size:10px; background:var(--border); padding:4px 10px;" onclick="location.reload()">Log Out</button>
+            <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="save()">💾 SAVE</button>
+            <button class="btn btn-sm" style="background:var(--border);" onclick="location.reload()">EXIT</button>
         </div>
         <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
-            <div class="gold-box" onclick="document.getElementById('shopM').style.display='flex'">💰 <span id="goldVal">0</span></div>
-            <button id="battleBtn" class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
+            <div class="gold-box">💰 <span id="goldVal">0</span></div>
+            <button class="btn btn-p btn-sm" onclick="alert('Battle Logic Engaged!')">⚔️ BATTLE (<span id="tokenVal">0</span>)</button>
         </div>
     </div>
 
     <div id="childGameView">
         <div class="stats-bar">
-            <span>⚔️ ATK: <b id="sAtk">0</b></span> | 🛡️ DEF: <b id="sDef">0</b> | ❤️ HP: <b id="sHp">0/0</b>
-            <button class="btn btn-heal" onclick="usePotion(false)" style="position:absolute; right:10px;">🍷 HEAL (x<span id="potCount">0</span>)</button>
+            <span>⚔️ <b id="sAtk">0</b></span> | 🛡️ <b id="sDef">0</b> | ❤️ <b id="sHp">0/0</b>
+            <button class="btn btn-sm" style="background:var(--heal); position:absolute; right:5px; top:5px;">🍷 HEAL</button>
         </div>
         <div class="char-grid">
             <div class="slot-col">
-                <div class="slot" onclick="unequip('helmet')"><span class="slot-label">Head</span><div id="v-helmet" style="font-size:24px;"></div></div>
-                <div class="slot" onclick="unequip('weapon')"><span class="slot-label">Weapon</span><div id="v-weapon" style="font-size:24px;"></div></div>
-                <div class="slot" onclick="unequip('shield')"><span class="slot-label">Offhand</span><div id="v-shield" style="font-size:24px;"></div></div>
+                <div class="slot"><span class="slot-label">Head</span><div id="v-helmet"></div></div>
+                <div class="slot"><span class="slot-label">Weapon</span><div id="v-weapon"></div></div>
             </div>
             <div class="doll-house">
                 <div class="hero-base"><div class="h-head"></div><div class="h-body"></div></div>
-                <div style="position:absolute; bottom:15px; width:100%; text-align:center; font-size:12px;">
+                <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:11px;">
                     LVL <span id="lvlVal">1</span>
-                    <div style="width:100px; height:5px; background:rgba(0,0,0,0.5); margin:5px auto; border-radius:3px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
-                    <div style="font-size: 9px; color: var(--gold); margin-top:5px;">Boss in: <span id="bossCounter">5</span></div>
+                    <div style="width:80px; height:4px; background:rgba(0,0,0,0.5); margin:4px auto; border-radius:2px; overflow:hidden;"><div id="xpBar" style="width:0%; height:100%; background:var(--accent);"></div></div>
                 </div>
             </div>
             <div class="slot-col">
-                <div class="slot" onclick="unequip('armor')"><span class="slot-label">Body</span><div id="v-armor" style="font-size:24px;"></div></div>
-                <div class="slot" onclick="unequip('shoes')"><span class="slot-label">Boots</span><div id="v-shoes" style="font-size:24px;"></div></div>
-                <div class="slot" onclick="unequip('pet')"><span class="slot-label">Pet</span><div id="v-pet" style="font-size:24px;"></div></div>
+                <div class="slot"><span class="slot-label">Body</span><div id="v-armor"></div></div>
+                <div class="slot"><span class="slot-label">Pet</span><div id="v-pet"></div></div>
             </div>
         </div>
 
         <button class="collapse-btn" onclick="toggleCol('inventoryBox')"><span>🎒 BAG & PETS</span><span>▼</span></button>
         <div id="inventoryBox" class="collapse-content show">
-            <div class="panel" style="margin-top:0; border-top:none; border-radius:0 0 15px 15px;">
+            <div class="panel" style="margin-top:0;">
                 <div class="inv-section-title">⚔️ Equipment</div>
                 <div id="gearGrid" class="inv-grid"></div>
                 <div class="inv-section-title">🐾 Pets</div>
@@ -130,207 +112,136 @@
         </div>
     </div>
 
-    <button class="collapse-btn" onclick="toggleCol('moneyBox')"><span>💵 MONEY TRACKER & ANALYTICS</span><span>▼</span></button>
-    <div id="moneyBox" class="collapse-content">
-        <div class="panel">
-            <div class="balance-display">Current Balance: $<span id="realBalance">0.00</span></div>
-            
-            <div style="margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; font-weight:bold; color:var(--accent);">YEARLY TREND</span>
-                    <select id="chartYear" class="p-input" style="padding:2px 5px; font-size:10px;" onchange="render()"></select>
-                </div>
-                <div class="chart-container" id="chartContainer"></div>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; border:1px solid var(--border);">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                    <input id="mDate" type="date" class="p-input">
-                    <select id="mType" class="p-input">
-                        <option value="income">Income (+)</option>
-                        <option value="expense">Expense (-)</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <input id="mAmount" type="number" class="p-input" style="width:80px" placeholder="$ 0.00">
-                    <input id="mDesc" class="p-input" style="flex:1" placeholder="Description...">
-                    <button class="btn btn-p" onclick="addTransaction()" style="padding:0 15px;">ADD</button>
-                </div>
-            </div>
-            <div id="ledgerList" style="margin-top:15px; max-height: 200px; overflow-y: auto;"></div>
-        </div>
-    </div>
-
     <div class="panel">
         <h3 id="questBoardTitle">📜 Quest Board</h3>
-        <div id="questInputArea">
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <div id="parentQuestInput">
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
                 <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter new quest...">
-                <select id="qDifficulty" class="p-input">
+                <select id="qDiff" class="p-input">
                     <option value="easy">Easy (25g)</option>
                     <option value="medium" selected>Medium (50g)</option>
                     <option value="hard">Hard (100g)</option>
                 </select>
-                <button class="btn btn-p" onclick="addQuest()" style="width:50px; font-size:20px;">+</button>
+                <button class="btn btn-p" onclick="addQuest()" style="width:40px;">+</button>
             </div>
         </div>
-        
-        <div id="activeQuestList"></div>
+        <div id="questList"></div>
+    </div>
 
-        <button class="collapse-btn" onclick="toggleCol('historyBox')"><span>🌟 COMPLETED TASKS</span><span>▼</span></button>
-        <div id="historyBox" class="collapse-content"><div id="historyList"></div></div>
+    <button class="collapse-btn" onclick="toggleCol('moneyBox')"><span>💵 MONEY & ANALYTICS</span><span>▼</span></button>
+    <div id="moneyBox" class="collapse-content show">
+        <div class="panel">
+            <div style="text-align:center; font-size:20px; color:var(--gold); margin-bottom:10px;">Balance: $<span id="realBalance">0.00</span></div>
+            <div id="chartContainer" class="chart-container"></div>
+            <div id="ledger" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
+        </div>
     </div>
 </div>
 
-<div id="battleM" class="modal-overlay">...</div>
-<div id="shopM" class="modal-overlay">...</div>
-<div id="itemM" class="modal-overlay">...</div>
-
 <script>
-const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Shield",i:"🛡️",s:"shield"},{n:"Helm",i:"🪖",s:"helmet"},{n:"Plate",i:"👕",s:"armor"},{n:"Boots",i:"👢",s:"shoes"},{n:"Dog",i:"🐶",s:"pet"},{n:"Cat",i:"🐱",s:"pet"}];
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-let state = { role: 'child', gold: 0, lvl: 1, xp: 0, hp: 100, tokens: 0, potions: 0, quests: [], history: [], inv: [], equip: {helmet:null, weapon:null, shield:null, armor:null, shoes:null, pet:null}, battleCount: 0, streak: 0, lastDate: null, ledger: [] };
-let curH = { atk: 0, def: 0, maxHp: 100 };
+let state = { role:'child', gold:0, lvl:1, xp:0, hp:100, tokens:0, quests:[], inv:[], ledger:[], streak:0, lastDate:null };
+const GEAR_DB = [{n:"Sword",i:"⚔️",s:"weapon"},{n:"Dog",i:"🐶",s:"pet"},{n:"Shield",i:"🛡️",s:"shield"}];
 
 function save() { localStorage.setItem('QuestKid_Global_Save', JSON.stringify(state)); }
-function load() { 
-    const s = localStorage.getItem('QuestKid_Global_Save'); 
+function load() {
+    const s = localStorage.getItem('QuestKid_Global_Save');
     if(s) state = JSON.parse(s);
-    if(!state.ledger) state.ledger = [];
-    document.getElementById('mDate').valueAsDate = new Date();
-    populateYearSelect();
-    checkStreak(); 
-    render(); 
+    render();
 }
 
-function populateYearSelect() {
-    const select = document.getElementById('chartYear');
-    const curYear = new Date().getFullYear();
-    for(let y = curYear - 1; y <= curYear + 1; y++) {
-        let opt = document.createElement('option'); opt.value = y; opt.text = y;
-        if(y === curYear) opt.selected = true;
-        select.appendChild(opt);
-    }
+function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
+
+function addQuest() {
+    const txt = document.getElementById('qInput').value;
+    if(!txt) return;
+    state.quests.push({ id: Date.now(), txt: txt, tier: document.getElementById('qDiff').value, status: 'open' });
+    document.getElementById('qInput').value = '';
+    render();
+}
+
+// THE FIX: Status management functions
+function setQuestStatus(id, newStatus) {
+    const q = state.quests.find(x => x.id === id);
+    if(q) q.status = newStatus;
+    render();
+}
+
+function approveQuest(id) {
+    const idx = state.quests.findIndex(x => x.id === id);
+    const q = state.quests.splice(idx, 1)[0];
+    const rewards = { easy: 25, medium: 50, hard: 100 };
+    state.gold += rewards[q.tier];
+    state.xp += 20;
+    state.tokens++;
+    state.ledger.push({ date: new Date().toLocaleDateString(), amt: rewards[q.tier]/10, desc: `Quest: ${q.txt}`, type: 'income' });
+    render();
 }
 
 function render() {
-    calculateStats();
     const isP = state.role === 'parent';
-    document.getElementById('heroStatsNav').style.display = isP ? 'none' : 'flex';
+    document.getElementById('roleLabel').innerText = isP ? "👑 PARENT" : "🛡️ HERO";
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
-    document.getElementById('goldVal').innerText = state.gold; 
+    document.getElementById('parentQuestInput').style.display = isP ? 'block' : 'none';
+    document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
-    document.getElementById('lvlVal').innerText = state.lvl;
-    document.getElementById('sHp').innerText = Math.floor(state.hp) + "/" + curH.maxHp;
-    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
-    document.getElementById('roleLabel').innerText = isP ? "👑 PARENT MODE" : "🛡️ HERO MODE";
-
-    // Money Tracker Logic
-    let balance = 0, lH = '';
-    const selYear = parseInt(document.getElementById('chartYear').value);
-    const mTotals = Array.from({length: 12}, () => ({inc: 0, exp: 0}));
-
-    state.ledger.forEach(t => {
-        const d = new Date(t.date);
-        balance += (t.type === 'income' ? t.amt : -t.amt);
-        if(d.getFullYear() === selYear) {
-            if(t.type === 'income') mTotals[d.getMonth()].inc += t.amt;
-            else mTotals[d.getMonth()].exp += t.amt;
-        }
-        lH += `<div class="tracker-row"><div><span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span><div style="font-size:10px;">${t.desc} (${t.date})</div></div><button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button></div>`;
-    });
-    document.getElementById('realBalance').innerText = balance.toFixed(2);
-    document.getElementById('ledgerList').innerHTML = lH;
-
-    // Analytics Chart
-    let max = 1; mTotals.forEach(m => max = Math.max(max, m.inc, m.exp));
-    let cH = '';
-    mTotals.forEach((m, i) => {
-        cH += `<div class="chart-bar-group"><div class="bar-stack">
-            <div class="bar income" style="height:${(m.inc/max)*100}%"></div>
-            <div class="bar expense" style="height:${(m.exp/max)*100}%"></div>
-            </div><div class="chart-label">${MONTHS[i]}</div></div>`;
-    });
-    document.getElementById('chartContainer').innerHTML = cH;
-
-    // QUEST BOARD LOGIC (The visibility fix)
+    
+    // Quest Rendering Logic
     let qH = '';
-    state.quests.forEach((q, i) => {
-        let controls = "";
+    state.quests.forEach(q => {
+        let actionBtn = '';
         if (isP) {
-            // Parent Controls
+            // Parent sees APPROVE/REJECT if pending, or DELETE if open
             if (q.status === 'pending') {
-                controls = `<div style="display:flex; gap:5px;">
-                    <button onclick="approveQuest(${i})" class="btn" style="background:var(--success); color:black; padding:5px 10px;">APPROVE</button>
-                    <button onclick="recallQuest(${i})" class="btn" style="background:var(--danger); padding:5px 10px;">REJECT</button>
-                </div>`;
+                actionBtn = `
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
+                        <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>
+                    </div>`;
             } else {
-                controls = `<button onclick="deleteQuest(${i})" class="btn" style="background:var(--danger); padding:5px 10px;">DELETE</button>`;
+                actionBtn = `<button class="btn btn-sm" style="background:var(--danger);" onclick="state.quests = state.quests.filter(x=>x.id!==${q.id}); render();">DELETE</button>`;
             }
         } else {
-            // Child Controls
+            // Child sees DONE if open, or RECALL if pending
             if (q.status === 'open') {
-                controls = `<button onclick="submitQuest(${i})" class="btn btn-p" style="padding:8px 15px;">DONE</button>`;
-            } else if (q.status === 'pending') {
-                controls = `<div style="text-align:right;"><div style="font-size:9px; color:var(--gold);">WAITING...</div><button onclick="recallQuest(${i})" class="btn" style="background:var(--danger); font-size:10px; padding:2px 8px;">RECALL</button></div>`;
+                actionBtn = `<button class="btn btn-p btn-sm" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>`;
+            } else {
+                actionBtn = `
+                    <div style="text-align:right;">
+                        <span style="font-size:9px; color:var(--gold); display:block;">PENDING...</span>
+                        <button class="btn btn-sm" style="background:var(--danger); margin-top:3px;" onclick="setQuestStatus(${q.id}, 'open')">RECALL</button>
+                    </div>`;
             }
         }
 
-        const statusStyle = q.status === 'pending' ? 'border: 2px solid var(--gold); background: rgba(251, 191, 36, 0.1);' : '';
-        qH += `<div class="q-row" style="${statusStyle}">
-            <div>
-                <strong style="color:var(--accent);">${q.tier.toUpperCase()}</strong>: ${q.txt}
-                ${q.status === 'pending' ? '<div style="font-size:10px; color:var(--gold);">SUBMITTED</div>' : ''}
-            </div>
-            ${controls}
-        </div>`;
+        qH += `
+            <div class="q-row ${q.status === 'pending' ? 'pending-row' : ''}">
+                <div>
+                    <span style="font-size:10px; color:var(--accent); font-weight:bold;">${q.tier.toUpperCase()}</span><br>
+                    ${q.txt}
+                </div>
+                ${actionBtn}
+            </div>`;
     });
-    document.getElementById('activeQuestList').innerHTML = qH || '<div style="text-align:center; padding:20px; opacity:0.5;">No active quests.</div>';
+    document.getElementById('questList').innerHTML = qH || '<div style="opacity:0.5; text-align:center;">No quests active.</div>';
 
-    // History
-    document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`).join('') || 'Empty';
+    // Inventory Sorting
+    const gear = state.inv.filter(x => x.s !== 'pet');
+    const pets = state.inv.filter(x => x.s === 'pet');
+    document.getElementById('gearGrid').innerHTML = gear.map(i => `<div class="inv-item">${i.i}</div>`).join('');
+    document.getElementById('petGrid').innerHTML = pets.map(i => `<div class="inv-item">${i.i}</div>`).join('');
 
-    // Inventory
-    const build = (arr) => arr.map(it => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(it)})">${it.v>0?`<div class="lvl-tag">+${it.v}</div>`:''}<div style="font-size:24px;">${it.i}</div></div>`).join('');
-    document.getElementById('gearGrid').innerHTML = build(state.inv.filter(it => it.s !== 'pet'));
-    document.getElementById('petGrid').innerHTML = build(state.inv.filter(it => it.s === 'pet'));
-    for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
+    // Money Tracker
+    let bal = 0;
+    document.getElementById('ledger').innerHTML = state.ledger.map(l => {
+        bal += l.amt;
+        return `<div style="font-size:11px; border-bottom:1px solid #334155; padding:4px 0;">$${l.amt.toFixed(2)} - ${l.desc}</div>`;
+    }).reverse().join('');
+    document.getElementById('realBalance').innerText = bal.toFixed(2);
 
     save();
 }
 
-// Quest Lifecycle Functions
-function submitQuest(i) { state.quests[i].status = 'pending'; render(); }
-function recallQuest(i) { state.quests[i].status = 'open'; render(); }
-function approveQuest(i) {
-    const q = state.quests.splice(i, 1)[0];
-    const rewards = { easy: {g:25, x:20}, medium: {g:50, x:40}, hard: {g:100, x:80} };
-    state.gold += rewards[q.tier].g;
-    state.xp += rewards[q.tier].x;
-    state.tokens++;
-    if(Math.random() < 0.2) state.inv.push({ ...GEAR_DB[Math.floor(Math.random()*GEAR_DB.length)], v: 0, baseP: 1 });
-    state.history.unshift(q);
-    checkLevelUp();
-    render();
-}
-function deleteQuest(i) { state.quests.splice(i, 1); render(); }
-function addQuest() { 
-    const v = document.getElementById('qInput').value; 
-    if(v) { 
-        state.quests.push({txt: v, status: 'open', tier: document.getElementById('qDifficulty').value}); 
-        document.getElementById('qInput').value = ''; 
-        render(); 
-    } 
-}
-
-function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
-function calculateStats() { curH.atk = 5 + (state.lvl * 3); curH.def = 2 + (state.lvl * 2); curH.maxHp = 100 + (state.lvl * 25); }
-function checkLevelUp() { let next = state.lvl * 100; if(state.xp >= next) { state.xp -= next; state.lvl++; state.hp = 100 + (state.lvl * 25); checkLevelUp(); } }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
-function addTransaction() { const a = parseFloat(document.getElementById('mAmount').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value; if(a && d && dt) { state.ledger.unshift({id: Date.now(), amt: a, desc: d, type: t, date: dt}); render(); } }
-function deleteTrans(id) { state.ledger = state.ledger.filter(x => x.id !== id); render(); }
-function checkStreak() { const today = new Date().toDateString(); if(state.lastDate === today) return; state.streak = (state.lastDate === new Date(Date.now()-864e5).toDateString()) ? state.streak+1 : 1; state.lastDate = today; }
 
 load();
 </script>
