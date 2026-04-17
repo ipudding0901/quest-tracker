@@ -1,75 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quest Kid RPG - V17.2 Complete</title>
-  <style>
-    :root {
-      --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
-      --accent: #38bdf8; --gold: #fbbf24; --danger: #f87171; --success: #34d399;
-      --slot: #334155; --border: #475569; --heal: #fb7185;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Kid RPG - V17.3 Final Merge</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
+            --accent: #38bdf8; --gold: #fbbf24; --danger: #f87171; --success: #34d399;
+            --slot: #334155; --border: #475569; --heal: #fb7185;
+        }
 
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
-    #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-    .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-    .app { max-width: 1000px; margin: 0 auto; padding: 10px; display: none; }
-    
-    .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
-    .streak-badge { background: linear-gradient(to right, #f97316, #fbbf24); color: black; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
-    .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    
-    .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); position: relative;}
-    
-    .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 768px) { .char-grid { grid-template-columns: 160px 1fr 160px; } }
-    .slot-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    @media (min-width: 768px) { .slot-col { display: flex; flex-direction: column; } }
-    
-    .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 12px; padding: 10px; min-height: 60px; text-align: center; cursor: pointer; position: relative; }
-    .slot-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: bold; }
-    .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 20px; height: 320px; position: relative; border: 1px solid var(--border); overflow: hidden; }
-    .hero-base { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 5; }
-    .h-head { width: 40px; height: 40px; background: #ffdbac; border-radius: 50%; margin: 0 auto; }
-    .h-body { width: 55px; height: 70px; background: #3b82f6; border-radius: 8px; margin: 4px auto; }
-    
-    .panel { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid var(--border); }
-    .collapse-btn { width: 100%; text-align: left; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--success); font-weight: bold; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px; margin-top: 10px; }
-    .collapse-content { display: none; margin-top: 10px; }
-    .collapse-content.show { display: block; }
-    
-    .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
-    .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
-    .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
-    .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; overflow-x: hidden; }
+        
+        /* Auth Overlay */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
 
-    .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
-    .type-income { color: var(--success); }
-    .type-expense { color: var(--danger); }
-    .balance-display { font-size: 20px; font-weight: bold; color: var(--gold); text-align: center; padding: 10px; margin-bottom: 10px; }
+        .app { max-width: 1000px; margin: 0 auto; padding: 10px; display: none; }
+        
+        /* UI Components */
+        .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
+        .streak-badge { background: linear-gradient(to right, #f97316, #fbbf24); color: black; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .gold-box { color: var(--gold); font-weight: bold; background: #451a03; padding: 8px 15px; border-radius: 15px; border: 2px solid var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        
+        .stats-bar { display: flex; gap: 15px; font-size: 12px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; color: var(--accent); justify-content: center; border: 1px solid var(--border); position: relative;}
+        
+        /* RPG Dollhouse */
+        .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media (min-width: 768px) { .char-grid { grid-template-columns: 160px 1fr 160px; } }
+        .slot-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        @media (min-width: 768px) { .slot-col { display: flex; flex-direction: column; } }
+        
+        .slot { background: var(--slot); border: 1px dashed var(--border); border-radius: 12px; padding: 10px; min-height: 60px; text-align: center; cursor: pointer; position: relative; }
+        .slot-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; font-weight: bold; }
+        .doll-house { background: radial-gradient(circle, #1e293b, #0f172a); border-radius: 20px; height: 320px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+        .hero-base { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 60px; height: 140px; z-index: 5; }
+        .h-head { width: 40px; height: 40px; background: #ffdbac; border-radius: 50%; margin: 0 auto; }
+        .h-body { width: 55px; height: 70px; background: #3b82f6; border-radius: 8px; margin: 4px auto; }
+        
+        /* Containers */
+        .panel { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 15px; border: 1px solid var(--border); }
+        .collapse-btn { width: 100%; text-align: left; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--success); font-weight: bold; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px; margin-top: 10px; }
+        .collapse-content { display: none; margin-top: 10px; }
+        .collapse-content.show { display: block; }
+        
+        /* Inventory */
+        .inv-section-title { font-size: 11px; color: var(--accent); margin: 10px 0 5px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; }
+        .inv-grid { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background: var(--bg); border-radius: 10px; min-height: 60px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .inv-item { background: var(--card); min-width: 65px; padding: 10px; border-radius: 10px; border: 2px solid var(--border); text-align: center; cursor: pointer; position: relative; flex-shrink: 0; }
+        .lvl-tag { position: absolute; top: -8px; right: -8px; background: var(--gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
 
-    .q-row { background: var(--bg); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
-    .pending-row { border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.1); }
-    
-    .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
-    .btn-p { background: var(--accent); color: #0f172a; }
-    .btn-danger { background: var(--danger); }
-    .btn-sm { padding: 4px 8px; font-size: 10px; }
-    
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
-    .modal-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-    
-    .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px 10px 10px 10px; margin-top: 10px; border: 1px solid var(--border); gap: 4px; }
-    .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
-    .bar-stack { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
-    .bar { width: 50%; border-radius: 2px 2px 0 0; min-height: 2px; }
-    .bar.income { background: var(--success); }
-    .bar.expense { background: var(--danger); }
-    .chart-label { font-size: 8px; color: #94a3b8; margin-top: 4px; transform: rotate(-45deg); height: 15px; }
-    
-    .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
-  </style>
+        /* Money Tracker Styles (From V16.4) */
+        .tracker-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg); border-radius: 8px; margin-bottom: 5px; border: 1px solid var(--border); }
+        .type-income { color: var(--success); }
+        .type-expense { color: var(--danger); }
+        .balance-display { font-size: 20px; font-weight: bold; color: var(--gold); text-align: center; padding: 10px; margin-bottom: 10px; }
+
+        /* Quests */
+        .q-row { background: var(--bg); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid var(--border); }
+        .pending-row { border: 1px solid var(--gold); background: rgba(251, 191, 36, 0.1); }
+        
+        .btn { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn-p { background: var(--accent); color: #0f172a; }
+        .btn-danger { background: var(--danger); }
+        .btn-sm { padding: 4px 8px; font-size: 10px; }
+        
+        /* Modals */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:4000; align-items:center; justify-content:center; padding: 10px; }
+        .modal-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        
+        .p-input { background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px; }
+
+        /* Analytics Chart */
+        .chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px 10px 10px 10px; margin-top: 10px; border: 1px solid var(--border); gap: 4px; }
+        .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar-stack { display: flex; gap: 2px; align-items: flex-end; height: 100%; width: 100%; }
+        .bar { width: 50%; border-radius: 2px 2px 0 0; min-height: 2px; }
+        .bar.income { background: var(--success); }
+        .bar.expense { background: var(--danger); }
+        .chart-label { font-size: 8px; color: #94a3b8; margin-top: 4px; transform: rotate(-45deg); height: 15px; }
+    </style>
 </head>
 <body>
 
@@ -84,14 +95,14 @@
 <div class="app" id="mainApp">
     <div class="nav">
         <div style="display:flex; align-items:center; gap:10px;">
-            <strong id="roleLabel" style="color:var(--accent);">HERO</strong>
+            <strong id="roleLabel">HERO</strong>
             <span id="streakDisplay" class="streak-badge">🔥 0 DAY STREAK</span>
             <button class="btn btn-sm" style="background:var(--success); color:black;" onclick="save()">💾 SAVE</button>
             <button class="btn btn-sm" style="background:var(--border);" onclick="location.reload()">EXIT</button>
         </div>
-        <div id="heroStatsNav" style="display:flex; gap:10px; align-items:center;">
+        <div id="statsNav" style="display:flex; gap:10px; align-items:center;">
             <div class="gold-box" onclick="openShop()">💰 <span id="goldVal">0</span></div>
-            <button class="btn btn-p" onclick="startBattle()" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
+            <button class="btn btn-p" onclick="startBattle()" id="battleBtnNav" style="padding:6px 12px; font-size:12px;">⚔️ BATTLE (<span id="tokenVal">0</span>/3)</button>
         </div>
     </div>
 
@@ -131,7 +142,7 @@
     </div>
 
     <div class="panel">
-        <h3 id="questBoardTitle">📜 Quest Board</h3>
+        <h3>📜 Quest Board</h3>
         <div id="questInputArea">
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <input id="qInput" class="p-input" style="flex:1;" placeholder="Enter new task...">
@@ -180,8 +191,8 @@
     <div class="modal-card" style="text-align:center;">
         <h2 id="battleTitle">ENEMY SPOTTED!</h2>
         <div id="battleArena" style="height:150px; border-radius:15px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; font-size:60px; border: 2px solid var(--border);"></div>
-        <div style="margin-bottom:10px; font-weight:bold; color:var(--heal);">HP: <span id="eHp">0</span></div>
-        <div id="battleLog" style="height:60px; font-size:11px; overflow-y:auto; background:rgba(0,0,0,0.2); margin-bottom:15px; padding:5px; border-radius:5px; border:1px solid var(--border);"></div>
+        <div style="margin-bottom:10px; font-weight:bold;">HP: <span id="eHp">0</span></div>
+        <div id="battleLog" style="height:60px; font-size:11px; overflow-y:auto; background:rgba(0,0,0,0.2); margin-bottom:15px; padding:5px; border-radius:5px;"></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <button class="btn btn-p" style="padding:15px;" onclick="attack()">⚔️ ATTACK</button>
             <button id="fleeBtn" class="btn btn-danger" onclick="flee()">🏃 FLEE (<span id="fleeCount">0</span>)</button>
@@ -191,7 +202,7 @@
 
 <div id="shopM" class="modal-overlay">
     <div class="modal-card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3>🏪 SHOP</h3><button onclick="closeModals()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">❌</button></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3>🏪 SHOP</h3><button onclick="closeModals()" style="background:none; border:none; color:white; font-size:20px;">❌</button></div>
         <div id="shopList"></div>
     </div>
 </div>
@@ -201,12 +212,6 @@
 </div>
 
 <script>
-const GEAR_DB = [
-    {n:"Steel Sword",i:"⚔️",s:"weapon",v:5},{n:"Shield",i:"🛡️",s:"shield",v:5},
-    {n:"Iron Helm",i:"🪖",s:"helmet",v:3},{n:"Plate Mail",i:"👕",s:"armor",v:8},
-    {n:"Swift Boots",i:"👢",s:"shoes",v:2},{n:"Wolf",i:"🐺",s:"pet",v:10},
-    {n:"Cat",i:"🐱",s:"pet",v:2},{n:"Dragon",i:"🐲",s:"pet",v:25}
-];
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 let state = { 
@@ -216,26 +221,21 @@ let state = {
 };
 let curE = null;
 
-function save() { localStorage.setItem('QuestKid_Full_V17_2', JSON.stringify(state)); }
+function save() { localStorage.setItem('QuestKid_V17_Final', JSON.stringify(state)); }
 function load() {
-    const s = localStorage.getItem('QuestKid_Full_V17_2') || localStorage.getItem('QuestKid_Full_V17_1');
+    const s = localStorage.getItem('QuestKid_V17_Final');
     if(s) state = JSON.parse(s);
-    if(!state.ledger) state.ledger = [];
-    if(!state.history) state.history = [];
     document.getElementById('mDate').valueAsDate = new Date();
     populateYearSelect();
-    checkStreak();
     render();
 }
 
-function checkStreak() {
-    const today = new Date().toDateString();
-    if(state.lastDate === today) return;
-    state.streak = (state.lastDate === new Date(Date.now()-864e5).toDateString()) ? state.streak+1 : 1;
-    state.lastDate = today;
+function doLogin(r) { 
+    state.role = r; 
+    document.getElementById('loginOverlay').style.display = 'none'; 
+    document.getElementById('mainApp').style.display = 'block'; 
+    render(); 
 }
-
-function doLogin(r) { state.role = r; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; render(); }
 
 function populateYearSelect() {
     const s = document.getElementById('chartYear');
@@ -254,8 +254,8 @@ function render() {
     const maxHp = 100 + (state.lvl * 25);
 
     document.getElementById('roleLabel').innerText = isP ? "👑 PARENT" : "🛡️ HERO";
+    document.getElementById('roleLabel').style.color = isP ? "var(--gold)" : "var(--accent)";
     document.getElementById('childGameView').style.display = isP ? 'none' : 'block';
-    document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} DAY STREAK`;
     
     document.getElementById('goldVal').innerText = state.gold;
     document.getElementById('tokenVal').innerText = state.tokens;
@@ -267,27 +267,30 @@ function render() {
     document.getElementById('potCount').innerText = state.potions;
     document.getElementById('bossCounter').innerText = 5 - (state.battleCount % 5);
 
-    // Quests Rendering
+    // Quest List (V16.6 Approval Logic)
     let qH = '';
     state.quests.forEach(q => {
-        let btn = isP ? (q.status === 'pending' ? 
-            `<button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
-             <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>` : 
-            `<button class="btn btn-sm" style="background:var(--danger);" onclick="deleteQuest(${q.id})">DELETE</button>`) : 
-            (q.status === 'open' ? `<button class="btn btn-p" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>` : 
-            `<div style="text-align:right;"><span style="font-size:9px; color:var(--gold); display:block;">PENDING...</span><button class="btn btn-sm" style="background:var(--danger); margin-top:3px;" onclick="setQuestStatus(${q.id}, 'open')">RECALL</button></div>`);
+        let btn = '';
+        if(isP) {
+            if(q.status === 'pending') {
+                btn = `<button class="btn btn-sm" style="background:var(--success); color:black;" onclick="approveQuest(${q.id})">APPROVE</button>
+                       <button class="btn btn-sm" style="background:var(--danger);" onclick="setQuestStatus(${q.id}, 'open')">REJECT</button>`;
+            } else {
+                btn = `<button class="btn btn-sm" style="background:var(--danger);" onclick="deleteQuest(${q.id})">DELETE</button>`;
+            }
+        } else {
+            btn = q.status === 'open' ? `<button class="btn btn-p" onclick="setQuestStatus(${q.id}, 'pending')">DONE</button>` : `<span style="font-size:10px; color:var(--gold);">PENDING...</span>`;
+        }
         
         qH += `<div class="q-row ${q.status === 'pending' ? 'pending-row' : ''}">
             <div><span style="font-size:10px; color:var(--accent); font-weight:bold;">${q.tier.toUpperCase()}</span><br>${q.txt}</div>
             <div style="display:flex; gap:5px; align-items:center;">${btn}</div>
         </div>`;
     });
-    document.getElementById('questList').innerHTML = qH || '<div style="opacity:0.5; text-align:center;">No quests active.</div>';
+    document.getElementById('questList').innerHTML = qH || '<div style="opacity:0.5; text-align:center;">No active quests.</div>';
+    document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`).join('');
 
-    // History
-    document.getElementById('historyList').innerHTML = state.history.map(h => `<div class="q-row" style="opacity:0.6;"><span>${h.txt}</span><span style="color:var(--success)">⭐ DONE</span></div>`).join('') || '<div style="opacity:0.5; text-align:center;">No completed tasks yet.</div>';
-
-    // Inventory Sorting
+    // Inventory (V16.4 Strict Splitting)
     const gear = state.inv.filter(x => x.s !== 'pet');
     const pets = state.inv.filter(x => x.s === 'pet');
     const buildInv = (arr) => arr.map((item, i) => `<div class="inv-item" onclick="openItemMenu(${state.inv.indexOf(item)})">${item.v>0?`<div class="lvl-tag">+${item.v}</div>`:''}<div style="font-size:24px;">${item.i}</div></div>`).join('');
@@ -296,7 +299,7 @@ function render() {
     
     for(let s in state.equip) document.getElementById('v-'+s).innerHTML = state.equip[s] ? state.equip[s].i : '';
 
-    // Ledger & Chart
+    // Money Tracker Logic (V16.4)
     let bal = 0;
     const year = parseInt(document.getElementById('chartYear').value);
     const monthly = Array.from({length:12}, () => ({i:0, e:0}));
@@ -305,15 +308,13 @@ function render() {
     state.ledger.forEach(t => {
         const d = new Date(t.date);
         bal += (t.type === 'income' ? t.amt : -t.amt);
-        if(d.getFullYear() === year) {
-            monthly[d.getMonth()][t.type === 'income' ? 'i' : 'e'] += t.amt;
-        }
+        if(d.getFullYear() === year) { monthly[d.getMonth()][t.type === 'income' ? 'i' : 'e'] += t.amt; }
         lH += `<div class="tracker-row">
             <div>
                 <span class="type-${t.type}">${t.type === 'income' ? '+' : '-'}$${t.amt.toFixed(2)}</span>
                 <div style="font-size:10px; color:#94a3b8;">${t.desc} (${t.date})</div>
             </div>
-            <button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px;">🗑️</button>
+            <button onclick="deleteTrans(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">🗑️</button>
         </div>`;
     });
     document.getElementById('realBalance').innerText = bal.toFixed(2);
@@ -332,28 +333,17 @@ function render() {
     save();
 }
 
-// BATTLE LOGIC WITH DYNAMIC BACKGROUNDS
+// BATTLE MECHANICS (V16.4)
 function startBattle() {
-    if(state.tokens <= 0) return alert("Complete quests for Battle Tokens!");
+    if(state.tokens <= 0) return alert("Earn Battle Tokens from quests!");
     const isBoss = (state.battleCount + 1) % 5 === 0;
     curE = { 
-        name: isBoss ? "BOSS MONSTER" : "MONSTER",
         hp: isBoss ? 200 + (state.lvl * 50) : 50 + (state.lvl * 20),
         atk: isBoss ? 15 + (state.lvl * 5) : 5 + (state.lvl * 2),
         icon: isBoss ? "👹" : ["👾","👻","🐍","🐅"][Math.floor(Math.random()*4)]
     };
-    
-    // Missing Feature Restored: Randomized Combat Backgrounds
-    const regularBgs = [
-        'linear-gradient(45deg, #064e3b, #0f172a)', // Forest
-        'linear-gradient(45deg, #1e3a8a, #0f172a)', // Ocean/Night
-        'linear-gradient(45deg, #4a044e, #0f172a)', // Mystic
-        'linear-gradient(45deg, #451a03, #0f172a)'  // Cave
-    ];
-    const bossBg = 'radial-gradient(circle, #7f1d1d, #000000)'; // Blood Red Boss Arena
-    
-    document.getElementById('battleArena').style.background = isBoss ? bossBg : regularBgs[Math.floor(Math.random() * regularBgs.length)];
-    
+    const bgs = ['linear-gradient(45deg, #064e3b, #0f172a)', 'linear-gradient(45deg, #451a03, #0f172a)', 'linear-gradient(45deg, #1e3a8a, #0f172a)'];
+    document.getElementById('battleArena').style.background = isBoss ? 'radial-gradient(circle, #7f1d1d, #000000)' : bgs[Math.floor(Math.random()*bgs.length)];
     document.getElementById('battleArena').innerText = curE.icon;
     document.getElementById('eHp').innerText = curE.hp;
     document.getElementById('battleTitle').innerText = isBoss ? "⚠️ BOSS BATTLE!" : "ENEMY SPOTTED!";
@@ -371,39 +361,30 @@ function attack() {
     document.getElementById('battleLog').innerHTML += `<br>You hit for ${pAtk}!`;
     
     if(curE.hp <= 0) {
-        state.battleCount++;
-        state.tokens--;
-        state.xp += 50;
-        state.gold += 10;
-        checkLevelUp();
-        alert("VICTORY!");
-        closeModals();
-        render();
-        return;
+        state.battleCount++; state.tokens--; state.xp += 50; state.gold += 10;
+        checkLevelUp(); alert("VICTORY!"); closeModals(); render(); return;
     }
 
     const dmg = Math.max(1, curE.atk - pDef);
     state.hp -= dmg;
     document.getElementById('battleLog').innerHTML += `<br>Enemy hits for ${dmg}!`;
-    
-    if(state.hp <= 0) {
-        alert("DEFEAT! You were knocked out.");
-        state.hp = 100 + (state.lvl * 25); // Revive with base HP for level
-        state.tokens = 0; // Penalty
-        closeModals();
-        render();
+    if(state.hp <= 0) { alert("DEFEAT!"); state.hp = 10; closeModals(); render(); }
+}
+
+function flee() { if(state.fleeTokens > 0) { state.fleeTokens--; state.tokens--; closeModals(); render(); } }
+
+function checkLevelUp() {
+    const target = state.lvl * 100;
+    if(state.xp >= target) {
+        state.xp -= target; state.lvl++;
+        state.hp = 100 + (state.lvl * 25); // Full Heal Mechanic
+        state.fleeTokens++;
+        alert("LEVEL UP! HP Restored!");
+        checkLevelUp();
     }
 }
 
-function flee() {
-    if(state.fleeTokens > 0) {
-        state.fleeTokens--;
-        state.tokens--;
-        closeModals();
-        render();
-    }
-}
-
+// QUEST & MONEY LOGIC
 function addQuest() {
     const v = document.getElementById('qInput').value;
     if(v) { state.quests.push({id:Date.now(), txt:v, status:'open', tier:document.getElementById('qDiff').value}); document.getElementById('qInput').value = ''; render(); }
@@ -413,52 +394,29 @@ function approveQuest(id) {
     const idx = state.quests.findIndex(x=>x.id===id);
     const q = state.quests.splice(idx, 1)[0];
     const rew = {easy:25, medium:50, hard:100};
-    state.gold += rew[q.tier];
-    state.xp += 20;
-    state.tokens++;
-    
+    state.gold += rew[q.tier]; state.xp += 20; state.tokens++;
     state.ledger.unshift({id: Date.now(), date:new Date().toLocaleDateString(), amt:rew[q.tier]/10, desc:`Quest: ${q.txt}`, type:'income'});
     state.history.unshift(q);
-    
-    checkLevelUp();
-    render();
+    checkLevelUp(); render();
 }
 function deleteQuest(id) { state.quests = state.quests.filter(x=>x.id!==id); render(); }
-function checkLevelUp() {
-    const target = state.lvl * 100;
-    if(state.xp >= target) {
-        state.xp -= target;
-        state.lvl++;
-        state.hp = 100 + (state.lvl * 25); // Full Heal Mechanic Trigger
-        state.fleeTokens++;
-        alert("LEVEL UP! HP Fully Restored!");
-        checkLevelUp(); 
-    }
-}
-function usePotion() {
-    if(state.potions > 0) {
-        state.hp = 100 + (state.lvl * 25);
-        state.potions--;
-        render();
-    }
-}
 
 function addTrans() {
     const a = parseFloat(document.getElementById('mAmt').value), d = document.getElementById('mDesc').value, t = document.getElementById('mType').value, dt = document.getElementById('mDate').value;
     if(a && d && dt) { 
         state.ledger.unshift({id: Date.now(), amt:a, desc:d, type:t, date:dt}); 
-        document.getElementById('mAmt').value = '';
-        document.getElementById('mDesc').value = '';
-        render(); 
+        document.getElementById('mAmt').value = ''; document.getElementById('mDesc').value = ''; render(); 
     }
 }
 function deleteTrans(id) { state.ledger = state.ledger.filter(x => x.id !== id); render(); }
 
+// SHOP & INVENTORY
 function openShop() {
     const items = [
         {n:"Health Potion", i:"🍷", p:20, type:"pot"},
         {n:"Steel Sword", i:"⚔️", p:150, type:"gear", s:"weapon", v:12},
-        {n:"Iron Plate", i:"👕", p:200, type:"gear", s:"armor", v:15}
+        {n:"Iron Plate", i:"👕", p:200, type:"gear", s:"armor", v:15},
+        {n:"Wolf Pet", i:"🐺", p:500, type:"gear", s:"pet", v:20}
     ];
     document.getElementById('shopList').innerHTML = items.map(it => `
         <div class="q-row">
@@ -470,8 +428,7 @@ function openShop() {
 function buyItem(it) {
     if(state.gold >= it.p) {
         state.gold -= it.p;
-        if(it.type === 'pot') state.potions++;
-        else state.inv.push(it);
+        if(it.type === 'pot') state.potions++; else state.inv.push(it);
         render();
     } else alert("Not enough gold!");
 }
@@ -487,19 +444,12 @@ function openItemMenu(idx) {
 function equip(idx) {
     const it = state.inv.splice(idx, 1)[0];
     if(state.equip[it.s]) state.inv.push(state.equip[it.s]);
-    state.equip[it.s] = it;
-    closeModals();
-    render();
+    state.equip[it.s] = it; closeModals(); render();
 }
-function unequip(s) {
-    if(state.equip[s]) {
-        state.inv.push(state.equip[s]);
-        state.equip[s] = null;
-        render();
-    }
-}
+function unequip(s) { if(state.equip[s]) { state.inv.push(state.equip[s]); state.equip[s] = null; render(); } }
 function toggleCol(id) { document.getElementById(id).classList.toggle('show'); }
 function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+function usePotion() { if(state.potions > 0) { state.hp = 100 + (state.lvl * 25); state.potions--; render(); } }
 
 load();
 </script>
